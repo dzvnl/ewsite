@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&family=MedievalSharp&family=Inter:wght@400;600;700;800&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+
+        @font-face {
+            font-family: 'Morvanh';
+            src: url('/fonts/morvanh.regular.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        /* FIX: This page keeps the screenshot background */
+        body {
+            font-family: 'Cutive Mono', monospace;
+            background: #000000;
+            /* IMPORTANT: 
+              Make sure this path points to your screenshot file! 
+            */
+            background-image: url('Screenshot 2025-11-14 12.02.58 PM.png');
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            color: #e5e5e5;
+            padding-bottom: 100px; 
+        }
+
+        .pixel-font {
+            font-family: 'VT323', monospace;
+            font-smooth: never;
+            -webkit-font-smoothing: none;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+
+        .gothic-title {
+            font-family: 'MedievalSharp', cursive;
+            font-family: 'Morvanh', 'MedievalSharp', cursive;
+            letter-spacing: 1px;
+            text-shadow: 0 0 3px #dc2626;
+        }
+
+        .font-inter { font-family: 'Inter', sans-serif; }
+
+        .game-poster-img {
+            aspect-ratio: 2 / 3;
+            object-fit: cover;
+            background-color: #1f2937;
+            border-bottom: 2px solid #881337;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="fixed top-0 left-0 p-6 sm:p-8 pixel-font z-10" style="padding-top: 50px;">
+        <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;">MAIN MENU</h1>
+        <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
+            <li><a href="/" class="hover:text-white transition-colors">HOME</a></li>
+            <li><a href="/games.html" class="hover:text-white transition-colors">GAMES</a></li>
+            <li><a href="/updates.html" class="hover:text-white transition-colors">UPDATES</a></li>
+            <li><a href="/contact.html" class="hover:text-white transition-colors">CONTACT</a></li>
+        </ul>
+    </nav>
+
+    <div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
+        <p>2.0.0-indev+20250223072026</p>
+        <p id="welcome-message">Welcome, Unknown Soldier</p>
+        <a href="#" id="auth-link" class="text-xs hover:text-white transition-colors" style="color: #969696;">
+            (sign up / sign in)
+        </a>
+    </div>
+
+    <main class="flex flex-col items-center p-6 md:p-12 text-center mt-48">
+
+        <section class="w-full max-w-7xl mx-auto pt-12">
+            <h2 class="text-5xl text-red-600 mb-12 text-center gothic-title"></h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 font-inter text-left">
+
+                <a href="ai.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://i.imgur.com/gGi14mJ.png" alt="Gemini AI" class="w-full game-poster-img" onerror="this.onerror=null;this.src='https://placehold.co/400x600/1f2937/dc2626?text=AI+CHAT';">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        0. ai
+                    </h3>
+                </a>
+
+                <a href="ppg.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://newzoo.com/wp-content/uploads/api/games/artworks/game--people-playground.jpg" alt="People Playground" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        1. People Playground
+                    </h3>
+                </a>
+
+                <a href="mc188.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHmKtxX_YAuyf7aF9-QESzvRbQ4nFMW5SOpA&s" alt="Minecraft" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        2. Minecraft 1.8.8
+                    </h3>
+                </a>
+
+                <a href="mc112.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT52op5SlzUX21S87NNiGkyzRyTOEWcm6QF7VvTEwDOsg&s" alt="Minecraft" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        3. minecraft 1.12
+                    </h3>
+                </a>
+
+                <a href="superhotline.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR6T0l26xN1XbLUC5qCTGqy9YWyCEZCS19cWSE6NT88Pw&s" alt="Superhot" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        4. superhotline
+                    </h3>
+                </a>
+                
+                <a href="goi.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://m.media-amazon.com/images/M/MV5BN2JjOGU2MGUtOGZmMC00NGViLWE0ZmUtYTJiNWM2YWVlNjVkXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpgBennett_Foddy_cover_art.jpg" alt="Getting Over It" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        5. getting Over It
+                    </h3>
+                </a>
+
+                <a href="fnafs.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Five_Nights_at_Freddy%27s.svg/330px-Five_Nights_at_Freddy%27s.svg.png">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        6. fnaf 1 - sl
+                    </h3>
+                </a>
+
+                <a href="mc121.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">                    
+                    <img src="https://ive.app.memorizer.ai/covers/cover_3566834_en.jpg" alt="Minecraft Tricky Trials" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        7. minecraft 1.21
+                    </h3>
+                </a>
+
+                <a href="sa.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/c/c4/GTASABOX.jpg" alt="GTA San Andreas" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        8. san andreas
+                    </h3>
+                </a>
+
+                <a href="tomo.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://sm.ign.com/ign_nordic/cover/t/tomodachi-/tomodachi-life-living-the-dream_xgf3.jpg" alt="Tomodachi Life" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        9. tomodachi
+                    </h3>
+                </a>
+
+                <a href="nmn.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0b/HouseGregoryHouse.png/250px-HouseGregoryHouse.png" alt="not my neighbor" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        10. not my neighbor
+                    </h3>
+                </a>
+                <a href="br.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQ3FlecKaIsaYjMMeofanfrrQwoJMzdaRVkE1gRvM9wU6bO7aj7paJOTN3UPnXrVtM-Npq&s=10" alt="Buckshot Roulette" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        11. buckshot roulette
+                    </h3>
+                </a>
+                <a href="baldi.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRfThFrHW3Wy6Ueqwc0C3-to8y1RMrS579xWghgWhC1it0uBBNskNm6GvlEOr0kRlsjxhrt&s=10" alt="Baldi's Basics" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        12. baldi
+                    </h3>
+                </a>
+                <a href="co09.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://m.media-amazon.com/images/M/MV5BOTg3YzJjYjMtOWU4MC00ODBmLWIzYzUtNDIyZGFmYmZkODIxXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" alt="Class of 09" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        13. class of 09
+                    </h3>
+                </a>
+                <a href="BL.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/LeBron_James_%2851959977144%29_%28cropped2%29.jpg/250px-LeBron_James_%2851959977144%29_%28cropped2%29.jpg" alt="R.E.P.O" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        15. basketball legends 
+                    </h3>
+                </a>
+                <a href="slender.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://m.media-amazon.com/images/M/MV5BNGIwMDBiM2ItOTJkOC00YjdlLWI3ZTAtNDgzNzQ5M2Y1YWI3XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" alt="Slender" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        16. slenderman
+                    </h3>
+                </a>
+                <a href="fish.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/e/eb/Webfishing_logo.png/250px-Webfishing_logo.png" alt="Webfishing" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        17. webfishing
+                    </h3>
+                </a>
+                <a href="yandere.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://mediaproxy.tvtropes.org/width/1200/https://static.tvtropes.org/pmwiki/pub/images/yandere_simulator.png" alt="Yandere Simulator" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        18. yandere
+                    </h3>
+                </a>
+                <a href="doom.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/5/57/Doom_cover_art.jpg" alt="Doom" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        19. doom 1
+                    </h3>
+                </a>
+                <a href="hk.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/0/04/Hollow_Knight_first_cover_art.webp/274px-Hollow_Knight_first_cover_art.webp.png" alt="Hollow Knight" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        20. hollow knight
+                    </h3>
+                </a>
+                <a href="sm64.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://m.media-amazon.com/images/M/MV5BNjhmNzg4ZTMtNWVhMy00NjgwLThhZjUtZjY4ZmU2YTVhYjUwXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" alt="Super Mario 64" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        21. super mario 64
+                    </h3>
+                </a>
+                <a href="terraria.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/1/1a/Terraria_Steam_artwork.jpg/250px-Terraria_Steam_artwork.jpg" alt="Terraria" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        22. terraria
+                    </h3>
+                </a>
+                <a href="sonic1.html" class="group block w-all text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/3O">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/b/ba/Sonic_the_Hedgehog_1_Genesis_box_art.jpg" alt="Sonic The Hedgehog" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        23. sonic 1
+                    </h3>
+                </a>
+                <a href="murder.html" class="group block w-all text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/3O">
+                    <img src="https://play-lh.googleusercontent.com/BT7zrf4JNZj4pRV5YIRT4D0DydkuLEzVvnOwKmmOxuc1sbIUJyZbeaFOhjuLK4CXWFg" alt="murder" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        24. murder
+                    </h3>
+                </a>
+                <a href="pvz2.html" class="group block w-all text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/3Video-Id">
+                    <img src="" alt="pvz2" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        25. plants vs zombies 2
+                    </h3>
+                </a>
+                <a href="balatro.html" class="group block w-all text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/3O">
+                    <img src="https://store-images.s-microsoft.com/image/apps.51959.14272217582130616.02bf9982-d980-42d9-93e6-372b4b7e36d8.31c1e585-05c9-4f32-b695-4b900c913466" alt="" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        26. balatro
+                    </h3>
+                </a>
+                <a href="gm.html" class="group block w-all text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/3O">
+                    <img src="https://e.snmc.io/lk/f/x/d2886defe7ca77323a01e50dc0d964e9/11618485" alt="" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        27. geometry dash
+                    </h3>
+                </a>
+                <a href="paper2.html" class="group block w-all text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/3O">
+                    <img src="https://yt3.googleusercontent.com/fhUEzizSlXQ_xLjCtW44QDM0RYBjjQ9upMDbpKF1Ql5V83r-UG-TQf2k3L3aBl95VlTGN75salg" alt="" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        28. paper io 2
+                    </h3>
+                </a>
+                <a href="kour.html" class="group block w-all text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/3O">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/2/29/Kour_Pour_-_Faded%2C_2011.jpg/250px-Kour_Pour_-_Faded%2C_2011.jpg" alt="" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        29. kour io
+                    </h3>
+                </a>
+                <a href="1v1.html" class="group block w-all text-left bg-gray-900/7Remember0 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/3O">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSkvAkVubE5ou91mKxv-NJ9bg_RarRc_bpws-TWA7EWzRua1nbFo4hBEMU&s" alt="" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        30. 1v1lol
+                    </h3>
+                </a>
+                <a href="ah.html" class="group block w-all text-left bg-gray-900/7Remember0 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/3O">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/2/20/Alien_Hominid_cover.png/250px-Alien_Hominid_cover.png" alt="" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        30. alien hominid
+                        </h3>
+                        </a>
+
+                <a href="solitaire.html" class="group block w-all text-left bg-gray-900/7Remember0 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/3O">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Patience_cards.jpg/250px-Patience_cards.jpg" alt="" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        30. solitaire
+                        </h3>
+                        </a>
+
+                        <a href="isaac.html" class="group block w-all text-left bg-gray-900/7Remember0 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/3O">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/f/fa/Binding_of_isaac_header.jpg/250px-Binding_of_isaac_header.jpg" alt="js imagine a small crying pink person dwarf thing with his teeth showing at the top, lmao " class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        30. binding of isaac
+                    </h3>
+                </a>
+
+                        <a href="re2.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/4/40/NTSC_Resident_Evil_2_Cover.png/250px-NTSC_Resident_Evil_2_Cover.png" alt="GTA San Andreas" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        31. resident evil 2
+                    </h3>
+                </a>
+
+
+            <a href="nplus.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/4/45/Nplus_psp.png/250px-Nplus_psp.png" alt="GTA San Andreas" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        32. nplus
+                    </h3>
+                </a>
+
+            <a href="codwow.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/6/69/WAW_Cover_Art.jpg/250px-WAW_Cover_Art.jpg" alt="GTA San Andreas" class="w-full game-poster-img">
+            <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                    33. cod world at war
+            </h3>
+            </a>
+
+            <a href="halflife.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/f/fa/Half-Life_Cover_Art.jpg/250px-Half-Life_Cover_Art.jpg" alt="GTA San Andreas" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        34. half life
+                    </h3>
+                </a>
+
+            <a href="portalflash.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/9/9f/Portal_standalonebox.jpg" alt="GTA San Andreas" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                        35. portal flash (unstable)
+                    </h3>
+                </a>
+
+            <a href="proxy.html" class="group block w-full text-left bg-gray-900/7Am0 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/280px-Google_2015_logo.svg.png" alt="GTA San Andreas" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                            36. proxy
+                    </h3>
+                    </a>
+
+                <a href="emulator.html" class="group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/DOSBox_screenshot.png/330px-DOSBox_screenshot.png" class="w-full game-poster-img">
+                    <h3 class="p-4 text-xl font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
+                            37. emulator
+                    </h3>
+                </a>                  
+
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const welcomeMessage = document.getElementById('welcome-message');
+            const authLink = document.getElementById('auth-link');
+            
+            function updateUI() {
+                let username = localStorage.getItem('username');
+                
+                if (username) {
+                    welcomeMessage.textContent = `Welcome, ${username}`;
+                    authLink.textContent = '(sign out)';
+                    authLink.onclick = signOut;
+                } else {
+                    welcomeMessage.textContent = 'Welcome, Unknown Soldier';
+                    authLink.textContent = '(sign up / sign in)';
+                    authLink.onclick = signIn;
+                }
+            }
+
+            function signIn(e) {
+                e.preventDefault();
+                const name = prompt('Enter your name:');
+                if (name && name.trim() !== '') {
+                    localStorage.setItem('username', name.trim());
+                    updateUI();
+                }
+            }
+
+            function signOut(e) {
+                e.preventDefault();
+                if (confirm('Are you sure you want to sign out?')) {
+                    localStorage.removeItem('username');
+                    updateUI();
+                }
+            }
+            updateUI();
+        });
+    </script>
+</body>
+</html>
