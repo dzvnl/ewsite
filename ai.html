@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Ensure proper mobile scaling -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fullscreen Web Viewer</title>
+    <!-- Load Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Ensure html and body take full height and hide overflow */
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Hide scrollbars on the main page */
+            /* Use Inter font, fallback to system sans-serif */
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
+                'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+                sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+                'Segoe UI Symbol', 'Noto Color Emoji';
+        }
+        
+        /* Style for the iframe container to be fixed fullscreen */
+        #iframe-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            /* Ensure it's above the background but below nothing else */
+            z-index: 10; 
+        }
+
+        /* The iframe itself should also be fullscreen with no border */
+        #webpage-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Center the input container */
+        #input-container {
+            /* Position in the center */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* Ensure it's on top */
+            z-index: 20; 
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+
+    <!-- 
+        This page is a blank, fullscreen container. 
+        The iframe below will fill the screen.
+    -->
+
+    <!-- Container for the fullscreen iframe -->
+    <div id="iframe-container">
+        <iframe 
+            id="webpage-iframe" 
+            src="about:blank"
+            title="Loaded Webpage" 
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+        ></iframe>
+        <!-- 
+            The 'sandbox' attribute improves security but may prevent some sites 
+            from functioning correctly. 'allow-same-origin' is key.
+            
+            Note: Many modern websites (like Google, Facebook, Twitter, etc.) 
+            explicitly block being loaded inside an iframe for security reasons. 
+            This tool will not work for those sites.
+        -->
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            //
+            // --- INSTRUCTIONS ---
+            // To view a website, paste the full URL (e.g., "https://example.com") 
+            // inside the quotes for 'websiteUrl' below.
+            //
+            const websiteUrl = "gemini.google.com"; // <-- PASTE YOUR LINK HERE
+            //
+            // --- END INSTRUCTIONS ---
+            //
+
+            const webpageIframe = document.getElementById('webpage-iframe');
+
+            if (websiteUrl) {
+                // Add 'https://' if it's missing (a common user error)
+                let url = websiteUrl.trim();
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    url = 'https://' + url;
+                }
+                
+                try {
+                    // Try to validate the URL format
+                    new URL(url);
+                    // Set iframe src
+                    webpageIframe.src = url;
+                } catch (error) {
+                    console.error('Invalid URL format in script:', url, error);
+                    webpageIframe.src = 'about:blank'; // Keep it blank on error
+                }
+
+            } else {
+                // If no URL is provided, the iframe remains on 'about:blank'
+                console.log("No 'websiteUrl' provided in the script. Page will remain blank.");
+            }
+        });
+    </script>
+
+</body>
+</html>
