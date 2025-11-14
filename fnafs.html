@@ -1,1 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Displayed Link</title>
+    <!-- Load Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Ensure the body fills the entire viewport */
+        body {
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="bg-black text-white flex items-center justify-center p-4">
 
+    <!-- Centered Container for the Link -->
+    <div class="text-center">
+        <!-- Reverted to a direct link that opens in a new tab -->
+        <a href="https://github.com/iceifies/hd_fnaf" 
+           target="_blank" 
+           class="text-2xl sm:text-3xl md:text-5xl font-mono text-red-700 hover:text-white transition duration-300 underline underline-offset-8 decoration-2"
+           rel="noopener noreferrer">
+            Visit Project on GitHub
+        </a>
+        <p class="mt-4 text-sm text-gray-400">
+            (The site cannot be embedded due to GitHub's security policy.)
+        </p>
+    </div>
+
+</body>
+</html>
