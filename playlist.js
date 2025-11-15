@@ -13,26 +13,26 @@ const playlist = [
     {
         title: "Digital Bath",
         artist: "Deftones",
-        src: baseURL + "music/digitalbath.mp3",
-        cover: baseURL + "music/deftones.jpg"
+        src: baseURL + "ewsongs/digitalbath.mp3",
+        cover: baseURL + "ewsongs/deftones.jpg"
     },
     {
         title: "Xtal",
         artist: "Aphex Twin",
-        src: baseURL + "music/xtal.mp3",
-        cover: baseURL + "music/aphex.jpg"
+        src: baseURL + "ewsongs/xtal.mp3",
+        cover: baseURL + "ewsongs/aphex.jpg"
     },
     {
         title: "I Don't Wanna Be Me",
         artist: "Type O Negative",
-        src: baseURL + "music/idontwannabeme.mp3",
-        cover: baseURL + "music/ton.jpg"
+        src: baseURL + "ewsongs/idontwannabeme.mp3",
+        cover: baseURL + "ewsongs/ton.jpg"
     },
     {
         title: "Bite My Lip",
         artist: "fakemink",
-        src: baseURL + "music/bitemylip.mp3",
-        cover: baseURL + "music/fakemink.jpg"
+        src: baseURL + "ewsongs/bitemylip.mp3",
+        cover: baseURL + "ewsongs/fakemink.jpg"
     }
 ];
 
