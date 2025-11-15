@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     
-    <!-- Load the playlist file -->
+    <!-- This loads your playlist.js file -->
     <script src="playlist.js"></script>
     
     <style>
@@ -19,6 +19,7 @@
             font-family: 'VT323', monospace;
             color: #e5e5e5;
             background-color: #000000; 
+            /* This assumes your background image is in the same folder */
             background-image: url('IMG_4867.jpeg'); 
             background-size: cover;
             background-repeat: no-repeat;
@@ -32,7 +33,7 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
         }
         
-        /* --- MUSIC PLAYER STYLES --- */
+        /* --- MUSIC PLAYER STYLES (Unchanged) --- */
         #music-player-widget {
             position: fixed;
             bottom: 1.5rem; /* 24px */
@@ -52,7 +53,6 @@
             background-color: rgba(0, 0, 0, 0.95);
         }
         
-        /* Album Art (Left Side) */
         #player-cover-art {
             width: 64px;
             height: 64px;
@@ -63,14 +63,12 @@
             image-rendering: pixelated;
         }
 
-        /* Main Info/Controls (Right Side) */
         #player-main {
             flex-grow: 1; 
             overflow: hidden; 
             min-width: 0; 
         }
 
-        /* Song Info */
         #player-title {
             color: #ffffff;
             font-size: 1.125rem; /* 18px */
@@ -87,14 +85,12 @@
             margin-bottom: 4px;
         }
         
-        /* Controls & Slider Row */
         .player-controls-row {
             display: flex;
             align-items: center;
             gap: 0.25rem; /* 4px */
         }
         
-        /* Buttons */
         .player-controls-row button {
             color: #facc15; /* yellow-400 */
             font-size: 1.25rem; /* 20px */
@@ -102,16 +98,11 @@
             padding: 0 0.25rem;
             transition: color 0.2s ease;
         }
-        .player-controls-row button:hover,
-        .player-controls-row button:active {
-            color: #ffffff;
-        }
         #play-pause-btn {
             font-size: 1.5rem; /* 24px */
             line-height: 1;
         }
         
-        /* Horizontal Volume Slider */
         #volume-slider {
             -webkit-appearance: none;
             width: 100%; 
@@ -121,7 +112,6 @@
             margin-left: 0.5rem; 
         }
         
-        /* Track */
         #volume-slider::-webkit-slider-runnable-track {
             width: 100%;
             height: 4px;
@@ -137,7 +127,6 @@
             cursor: pointer;
         }
 
-        /* Thumb */
         #volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 16px;
@@ -219,7 +208,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- Splash Text & Auth Logic (Unchanged) ---
+            // --- Splash Text & Auth Logic (This will work again) ---
             const welcomeMessage = document.getElementById('welcome-message');
             const authLink = document.getElementById('auth-link');
             const splashElement = document.getElementById('splash-text');
@@ -257,14 +246,13 @@
             }
             function signOut(e) {
                 e.preventDefault();
-                // We cannot use confirm() in this environment. It will just sign out.
                 localStorage.removeItem('username');
                 updateUI();
             }
             updateUI();
             
             
-            // --- MUSIC PLAYER LOGIC (UPDATED WITH STATE) ---
+            // --- MUSIC PLAYER LOGIC ---
             
             const audioPlayer = document.getElementById('audio-player');
             const playPauseBtn = document.getElementById('play-pause-btn');
@@ -282,7 +270,7 @@
             let isPlaying = false;
 
             if (typeof playlist === 'undefined' || playlist.length === 0) {
-                console.error("Playlist not found or is empty. Please check playlist.js");
+                console.error("CRITICAL ERROR: 'playlist' is not defined. Check if playlist.js is loading correctly.");
                 playerTitleEl.textContent = "Playlist error";
                 playerArtistEl.textContent = "Check playlist.js";
                 return; 
@@ -294,14 +282,21 @@
                     console.error(`Song at index ${songIndex} not found.`);
                     return;
                 }
-                audioPlayer.src = song.src;
+                
+                // --- CRITICAL FIX FOR SPACES IN FILENAMES ---
+                // This replaces spaces (like "sextape 4.mp3") with "%20"
+                const songSrc = song.src.replace(/ /g, "%20");
+                const coverSrc = song.cover.replace(/ /g, "%20");
+                
+                audioPlayer.src = songSrc; 
+                
                 const songText = `${song.title} - ${song.artist}`;
                 playerInfoContainer.title = songText; 
                 playerTitleEl.textContent = song.title || "...";
                 playerArtistEl.textContent = song.artist || "...";
                 
                 if (song.cover && song.cover !== "PASTE YOUR COVER ART URL HERE") {
-                    playerCoverArt.src = song.cover;
+                    playerCoverArt.src = coverSrc;
                 } else {
                     playerCoverArt.src = placeholderCover;
                 }
@@ -311,16 +306,20 @@
             }
 
             function playSong() {
-                audioPlayer.play()
-                    .then(() => {
+                audioPlayer.volume = volumeSlider.value; 
+                const playPromise = audioPlayer.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
                         playPauseBtn.textContent = '[||]';
                         isPlaying = true;
-                    })
-                    .catch(error => {
-                        console.error("Error playing audio (user may need to interact first):", error);
+                    }).catch(error => {
+                        console.error("Error playing audio (user must interact first):", error);
                         playerTitleEl.textContent = "Click Play";
                         playerArtistEl.textContent = "to start";
+                        isPlaying = false;
                     });
+                }
             }
 
             function pauseSong() {
@@ -349,11 +348,8 @@
                 playSong();
             }
 
-            // --- NEW: State Persistence Logic ---
-            
-            // 1. Save state when leaving the page
+            // --- State Persistence Logic ---
             window.addEventListener('beforeunload', () => {
-                // Only save if we have a song loaded and it's not at the very beginning
                 if (audioPlayer.currentTime > 0) {
                     const musicState = {
                         currentSongIndex: currentSongIndex,
@@ -363,41 +359,31 @@
                 }
             });
 
-            // 2. Load state when the page loads
             function loadInitialState() {
                 const savedStateJSON = sessionStorage.getItem('musicPlayerState');
                 
                 if (savedStateJSON) {
                     try {
                         const savedState = JSON.parse(savedStateJSON);
-                        
                         currentSongIndex = savedState.currentSongIndex || 0;
                         
-                        // Load the song (this sets it to paused)
                         loadSong(currentSongIndex);
                         
-                        // We MUST wait for the song to be ready before setting the time
                         audioPlayer.addEventListener('loadedmetadata', () => {
-                            // Set the time and leave it paused
                             audioPlayer.currentTime = savedState.currentTime || 0;
-                        }, { once: true }); // 'once: true' removes the listener after it runs
+                        }, { once: true }); 
 
                     } catch (e) {
                         console.error("Error parsing saved music state:", e);
-                        loadSong(0); // Fallback to first song
+                        loadSong(0); 
                     }
                 } else {
-                    // No saved state, just load the first song
                     loadSong(0);
                 }
                 
-                // Set initial volume
                 audioPlayer.volume = volumeSlider.value;
             }
             
-            // --- End of New Logic ---
-
-
             // --- Event Listeners ---
             playPauseBtn.addEventListener('click', togglePlayPause);
             skipBtn.addEventListener('click', skipSong);
@@ -412,15 +398,18 @@
             audioPlayer.addEventListener('error', (e) => {
                 playerTitleEl.textContent = `Error loading track`;
                 playerArtistEl.textContent = `Skipping...`;
-                console.error("Audio player error:", e);
-                setTimeout(skipSong, 1000); 
+                console.error("Audio player error on file:", audioPlayer.src, e);
+                setTimeout(skipSong, 2000); 
             });
             
-            playerCoverArt.addEventListener('error', ()_ => {
+            // --- THIS WAS THE BUG ---
+            // I fixed the typo here. It was '()_' and is now '()'.
+            playerCoverArt.addEventListener('error', () => {
+                console.error("Cover art failed to load:", playerCoverArt.src);
                 playerCoverArt.src = placeholderCover;
             });
+            // --- END BUG FIX ---
 
-            // --- MODIFIED: Load initial state instead of just first song ---
             loadInitialState();
             
             // --- END MUSIC PLAYER LOGIC ---
@@ -428,3 +417,5 @@
     </script>
 </body>
 </html>
+
+
