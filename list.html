@@ -6,6 +6,10 @@
     <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&family=MedievalSharp&family=Inter:wght@400;600;700;800&family=VT323&display=swap" rel="stylesheet">
+    
+    <!-- This loads your playlist.js file -->
+    <script src="playlist.js"></script>
+
     <style>
         html { scroll-behavior: smooth; }
 
@@ -16,20 +20,15 @@
             font-style: normal;
         }
 
-        /* FIX: This page keeps the screenshot background */
         body {
-            font-family: 'Cutive Mono', monospace;
+            font-family: 'Cutive+Mono', monospace;
             background: #000000;
-            /* IMPORTANT: 
-              Make sure this path points to your screenshot file! 
-            */
-            background-image: url('Screenshot 2025-11-14 12.02.58 PM.png');
+            background-image: url('img_4868.jpeg');
             background-attachment: fixed;
             background-size: cover;
             background-position: center;
             min-height: 100vh;
             color: #e5e5e5;
-            padding-bottom: 100px; 
         }
 
         .pixel-font {
@@ -55,9 +54,125 @@
             border-bottom: 2px solid #881337;
         }
         
-        /* Added for pagination: Hide game items by default */
         .game-item {
             display: none;
+        }
+
+        /* * --- UPDATED: MUSIC PLAYER STYLES --- 
+         * Changed 'bottom: 1.5rem' to 'top: 1.5rem'
+         * It is now in the top-right corner.
+        */
+        #music-player-widget {
+            position: fixed;
+            top: 1.5rem; /* 24px */
+            right: 1.5rem; /* 24px */
+            z-index: 50;
+            width: 320px; 
+            max-width: 90vw; /* Ensure it doesn't overflow on tiny screens */
+            height: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            border: none;
+            padding: 0.75rem; /* 12px */
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        #music-player-widget:hover {
+            background-color: rgba(0, 0, 0, 0.95);
+        }
+        
+        #player-cover-art {
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0; 
+            margin-right: 0.75rem; 
+            border: 2px dotted #969696; 
+            background-color: #111;
+            image-rendering: pixelated;
+        }
+
+        #player-main {
+            flex-grow: 1; 
+            overflow: hidden; 
+            min-width: 0; 
+        }
+
+        #player-title {
+            color: #ffffff;
+            font-size: 1.125rem; /* 18px */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #player-artist {
+            font-size: 0.875rem; /* 14px */
+            color: #969696;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+        
+        .player-controls-row {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem; /* 4px */
+        }
+        
+        .player-controls-row button {
+            color: #facc15; /* yellow-400 */
+            font-size: 1.25rem; /* 20px */
+            flex-shrink: 0;
+            padding: 0 0.25rem;
+            transition: color 0.2s ease;
+        }
+        #play-pause-btn {
+            font-size: 1.5rem; /* 24px */
+            line-height: 1;
+        }
+        
+        #volume-slider {
+            -webkit-appearance: none;
+            width: 100%; 
+            flex-grow: 1;
+            height: 16px; 
+            background: transparent;
+            margin-left: 0.5rem; 
+        }
+        
+        #volume-slider::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            border: 1px solid #969696;
+            cursor: pointer;
+        }
+        #volume-slider::-moz-range-track {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            border: 1px solid #969696;
+            cursor: pointer;
+        }
+
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #facc15; 
+            border: 1px solid #000;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-top: -7px; 
+        }
+        #volume-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #facc15; 
+            border: 1px solid #000;
+            border-radius: 50%;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -73,13 +188,11 @@
         </ul>
     </nav>
 
-    <div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
-        <p>2.0.0-indev+20250223072026</p>
-        <p id="welcome-message">Welcome, Unknown Soldier</p>
-        <a href="#" id="auth-link" class="text-xs hover:text-white transition-colors" style="color: #969696;">
-            (sign up / sign in)
-        </a>
-    </div>
+    <!-- 
+      * REMOVED: The entire 'Welcome, Unknown Soldier' block
+      * that was here. The music player (which is 'fixed')
+      * will now occupy this space from its CSS.
+    -->
 
     <main class="flex flex-col items-center p-6 md:p-12 text-center mt-48">
 
@@ -88,6 +201,7 @@
 
             <div class="grid grid-cols-4 grid-rows-2 gap-6 font-inter text-left">
 
+                <!-- All your game links are here, unchanged -->
                 <a href="ai.html" class="game-item group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
                     <img src="https://i.imgur.com/gGi14mJ.png" alt="Gemini AI" class="w-full game-poster-img" onerror="this.onerror=null;this.src='https://placehold.co/400x600/1f2937/dc2626?text=AI+CHAT';">
                     <h3 class="p-4 text-lg font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
@@ -102,6 +216,8 @@
                     </h3>
                 </a>
 
+                <!-- ... (all your other game links) ... -->
+                
                 <a href="mc188.html" class="game-item group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
                     <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHmKtxX_YAuyf7aF9-QESzvRbQ4nFMW5SOpA&s" alt="Minecraft" class="w-full game-poster-img">
                     <h3 class="p-4 text-lg font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
@@ -177,7 +293,7 @@
                     </h3>
                 </a>
                 <a href="co09.html" class="game-item group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
-                    <img src="https://m.media-amazon.com/images/M/MV5BOTg3YzJjYjMtOWU4MC00ODBmLWIzYzUtNDIyZGFmYmZkODIxXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" alt="Class of 09" class="w-full game-poster-img">
+                    <img src="httpsm.media-amazon.com/images/M/MV5BOTg3YzJjYjMtOWU4MC00ODBmLWIzYzUtNDIyZGFmYmZkODIxXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" alt="Class of 09" class="w-full game-poster-img">
                     <h3 class="p-4 text-lg font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
                         13. class of 09
                     </h3>
@@ -308,28 +424,25 @@
 
 
             <a href="nplus.html" class="game-item group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
-                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/4/45/Nplus_psp.png/250px-Nplus_psp.png" alt="N+" class="w-full game-poster-img">
+                    <img src="httpss://upload.wikimedia.org/wikipedia/en/thumb/4/45/Nplus_psp.png/250px-Nplus_psp.png" alt="N+" class="w-full game-poster-img">
                     <h3 class="p-4 text-lg font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
                         32. nplus
                     </h3>
                 </a>
 
-            <a href="codwow.html" class="game-item group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
-            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/6/69/WAW_Cover_Art.jpg/250px-WAW_Cover_Art.jpg" alt="CoD: World at War" class="w-full game-poster-img">
+            <a href="codwow.html" class="game-item group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.g/wikipedia/en/thumb/6/69/WAW_Cover_Art.jpg/250px-WAW_Cover_Art.jpg" alt="CoD: World at War" class="w-full game-poster-img">
             <h3 class="p-4 text-lg font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
                     33. cod world at war
             </h3>
             </a>
 
-            <a href="halflife.html" class="game-item group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
-                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/f/fa/Half-Life_Cover_Art.jpg/250px-Half-Life_Cover_Art.jpg" alt="Half-Life" class="w-full game-poster-img">
+            <a href="halflife.html" class="game-item group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/An/thumb/f/fa/Half-Life_Cover_Art.jpg/250px-Half-Life_Cover_Art.jpg" alt="Half-Life" class="w-full game-poster-img">
                     <h3 class="p-4 text-lg font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
                         34. half life
                     </h3>
                 </a>
 
-            <a href="portalflash.html" class="game-item group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
-                    <img src="https://upload.wikimedia.org/wikipedia/en/9/9f/Portal_standalonebox.jpg" alt="Portal" class="w-full game-poster-img">
+            <a href="portalflash.html" class="game-item group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hovo-standalonebox.jpg" alt="Portal" class="w-full game-poster-img">
                     <h3 class="p-4 text-lg font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
                         35. portal flash (unstable)
                     </h3>
@@ -349,7 +462,7 @@
                     </h3>
                 </a>                  
 
-                <a href="newgame.html" class="game-item group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
+                <a href="newgame.html" class="game-item group block w-full text-left bg-gray-900/Boolean(0) rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
                     <img src="IMG_4868.jpeg" alt="New Game" class="w-full game-poster-img">
                     <h3 class="p-4 text-lg font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
                             38. New Game
@@ -358,6 +471,11 @@
 
             </div>
             
+            <!-- 
+              * UPDATED: Removed 'mb-32'
+              * The player is no longer at the bottom, so we don't
+              * need this extra margin anymore.
+            -->
             <div class="flex justify-center items-center space-x-8 mt-12">
                 <button id="prev-page" class="pixel-font text-4xl text-gray-400 hover:text-red-900 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"><--</button>
                 <span id="page-indicator" class="pixel-font text-2xl text-yellow-400">Page 1</span>
@@ -368,43 +486,49 @@
 
     </main>
 
+    <!-- 
+      --- MUSIC PLAYER WIDGET --- 
+    -->
+    <audio id="audio-player"></audio>
+    <div id="music-player-widget" class="pixel-font">
+        <img id="player-cover-art" src="" alt="Album Cover">
+        <div id="player-main">
+            <div id="player-info-container" title="...">
+                <div id="player-title">...</div>
+                <div id="player-artist">Loading...</div>
+            </div>
+            <div class="player-controls-row">
+                <button id="rewind-btn" title="Previous">[<<]</button>
+                <button id="play-pause-btn" title="Play/Pause">[>]</button>
+                <button id="skip-btn" title="Next (Shuffle)">[>>]</button>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" title="Volume">
+            </div>
+        </div>
+    </div>
+    <!-- --- END OF MUSIC WIDGET --- -->
+
+
+    <!-- 
+      --- GAME OVERLAY ---
+    -->
+    <div id="game-overlay" class="fixed top-0 left-0 w-full h-full bg-black z-50" style="display: none;">
+        <!-- The small red 'X' button -->
+        <button id="close-game-btn" class="pixel-font fixed top-4 right-5 text-red-600 text-5xl z-[60] hover:text-white transition-colors">
+            X
+        </button>
+        <!-- The iframe that holds the game -->
+        <iframe id="game-iframe" class="w-full h-full border-0 z-[55]" src="about:blank"></iframe>
+    </div>
+    <!-- --- END OF GAME OVERLAY --- -->
+
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const welcomeMessage = document.getElementById('welcome-message');
-            const authLink = document.getElementById('auth-link');
             
-            function updateUI() {
-                let username = localStorage.getItem('username');
-                
-                if (username) {
-                    welcomeMessage.textContent = `Welcome, ${username}`;
-                    authLink.textContent = '(sign out)';
-                    authLink.onclick = signOut;
-                } else {
-                    welcomeMessage.textContent = 'Welcome, Unknown Soldier';
-                    authLink.textContent = '(sign up / sign in)';
-                    authLink.onclick = signIn;
-                }
-            }
-
-            function signIn(e) {
-                e.preventDefault();
-                const name = prompt('Enter your name:');
-                if (name && name.trim() !== '') {
-                    localStorage.setItem('username', name.trim());
-                    updateUI();
-                }
-            }
-
-            function signOut(e) {
-                e.preventDefault();
-                if (confirm('Are you sure you want to sign out?')) {
-                    localStorage.removeItem('username');
-                    updateUI();
-                }
-            }
-            updateUI();
-
+            // --- REMOVED: AUTH SCRIPT ---
+            // All the javascript for 'welcome-message' and 'auth-link'
+            // has been removed, as the HTML is also gone.
+            
             // --- PAGINATION SCRIPT ---
             let currentPage = 1;
             const itemsPerPage = 8;
@@ -416,51 +540,209 @@
             const pageIndicator = document.getElementById('page-indicator');
 
             function showPage(page) {
-                // Calculate start and end index
                 const startIndex = (page - 1) * itemsPerPage;
                 const endIndex = startIndex + itemsPerPage;
-                
-                // Hide all items
-                gameItems.forEach(item => {
-                    item.style.display = 'none';
-                });
-                
-                // Show items for the current page
-                gameItems.slice(startIndex, endIndex).forEach(item => {
-                    item.style.display = 'block';
-                });
-                
-                // Update page indicator
+                gameItems.forEach(item => { item.style.display = 'none'; });
+                gameItems.slice(startIndex, endIndex).forEach(item => { item.style.display = 'block'; });
                 pageIndicator.textContent = `Page ${page} / ${totalPages}`;
-                
-                // Update button states
                 updateButtons();
             }
-
             function updateButtons() {
                 prevButton.disabled = currentPage === 1;
                 nextButton.disabled = currentPage === totalPages;
             }
-
             prevButton.addEventListener('click', () => {
-                if (currentPage > 1) {
-                    currentPage--;
-                    showPage(currentPage);
-                    window.scrollTo(0, 0); // Scroll to top
-                }
+                if (currentPage > 1) { currentPage--; showPage(currentPage); window.scrollTo(0, 0); }
             });
-
             nextButton.addEventListener('click', () => {
-                if (currentPage < totalPages) {
-                    currentPage++;
-                    showPage(currentPage);
-                    window.scrollTo(0, 0); // Scroll to top
+                if (currentPage < totalPages) { currentPage++; showPage(currentPage); window.scrollTo(0, 0); }
+            });
+            showPage(1);
+
+
+            // --- MUSIC PLAYER LOGIC ---
+            const audioPlayer = document.getElementById('audio-player');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            const rewindBtn = document.getElementById('rewind-btn');
+            const skipBtn = document.getElementById('skip-btn');
+            const playerInfoContainer = document.getElementById('player-info-container');
+            const playerTitleEl = document.getElementById('player-title');
+            const playerArtistEl = document.getElementById('player-artist');
+            const volumeSlider = document.getElementById('volume-slider');
+            const playerCoverArt = document.getElementById('player-cover-art');
+            const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
+            playerCoverArt.src = placeholderCover; 
+
+            let currentSongIndex = 0;
+            let isPlaying = false;
+
+            // --- THIS IS WHERE YOU DEFINE YOUR SECRET SONG ---
+            const secretSong = {
+                title: "SECRET SONG TITLE",
+                artist: "SECRET ARTIST",
+                src: "REPLACE_WITH_URL/SECRET_SONG_FILENAME.mp3",
+                cover: "REPLACE_WITH_URL/SECRET_COVER_FILENAME.jpg"
+            };
+            // --- END OF SECRET SONG DEFINITION ---
+
+            // Check if playlist.js loaded
+            if (typeof playlist === 'undefined' || playlist.length === 0) {
+                console.error("CRITICAL ERROR: 'playlist' is not defined. Check if playlist.js is loading correctly.");
+                playerTitleEl.textContent = "Playlist error";
+                playerArtistEl.textContent = "Check playlist.js";
+            } else {
+                
+                function loadSong(songIndex) {
+                    const song = (songIndex === -1) ? secretSong : playlist[songIndex];
+                    if (!song) { console.error(`Song at index ${songIndex} not found.`); return; }
+                    
+                    // This fix encodes spaces (like in 'sextape 4.mp3')
+                    const songSrc = song.src.replace(/ /g, "%20");
+                    const coverSrc = song.cover.replace(/ /g, "%20");
+                    
+                    audioPlayer.src = songSrc; 
+                    const songText = `${song.title} - ${song.artist}`;
+                    playerInfoContainer.title = songText; 
+                    playerTitleEl.textContent = song.title || "...";
+                    playerArtistEl.textContent = song.artist || "...";
+                    
+                    if (song.cover && song.cover.startsWith("http")) {
+                        playerCoverArt.src = coverSrc;
+                    } else {
+                        playerCoverArt.src = placeholderCover;
+                    }
+                    playPauseBtn.textContent = '[>]';
+                    isPlaying = false;
                 }
+
+                function playSong() {
+                    audioPlayer.volume = volumeSlider.value; 
+                    const playPromise = audioPlayer.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            playPauseBtn.textContent = '[||]';
+                            isPlaying = true;
+                        }).catch(error => {
+                            console.error("Error playing audio (user must interact first):", error);
+                            playerTitleEl.textContent = "Click Play";
+                            playerArtistEl.textContent = "to start";
+                            isPlaying = false;
+                        });
+                    }
+                }
+
+                function pauseSong() {
+                    audioPlayer.pause();
+                    playPauseBtn.textContent = '[>]';
+                    isPlaying = false;
+                }
+
+                function togglePlayPause() {
+                    if (isPlaying) { pauseSong(); } else { playSong(); }
+                }
+
+                function skipSong() {
+                    let nextSongIndex = Math.floor(Math.random() * playlist.length);
+                    if (nextSongIndex === currentSongIndex && playlist.length > 1) {
+                        nextSongIndex = (nextSongIndex + 1) % playlist.length; 
+                    }
+                    currentSongIndex = nextSongIndex;
+                    loadSong(currentSongIndex);
+                    playSong();
+                }
+
+                function rewindSong() {
+                    if (currentSongIndex === -1) { skipSong(); } 
+                    else {
+                        currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
+                        loadSong(currentSongIndex);
+                        playSong();
+                    }
+                }
+
+                window.addEventListener('beforeunload', () => {
+                    if (audioPlayer.currentTime > 0) {
+                        const musicState = {
+                            currentSongIndex: currentSongIndex,
+                            currentTime: audioPlayer.currentTime
+                        };
+                        sessionStorage.setItem('musicPlayerState', JSON.stringify(musicState));
+                    }
+                });
+
+                function loadInitialState() {
+                    const savedStateJSON = sessionStorage.getItem('musicPlayerState');
+                    if (savedStateJSON) {
+                        try {
+                            const savedState = JSON.parse(savedStateJSON);
+                            currentSongIndex = savedState.currentSongIndex; 
+                            loadSong(currentSongIndex);
+                            audioPlayer.addEventListener('loadedmetadata', () => {
+                                audioPlayer.currentTime = savedState.currentTime || 0;
+                            }, { once: true }); 
+                        } catch (e) {
+                            currentSongIndex = Math.floor(Math.random() * playlist.length);
+                            loadSong(currentSongIndex); 
+                        }
+                    } else {
+                        const rareSongChance = Math.floor(Math.random() * 50);
+                        if (rareSongChance === 0 && secretSong.src !== "REPLACE_WITH_URL/SECRET_SONG_FILENAME.mp3") {
+                            console.log("RARE SONG HIT!");
+                            currentSongIndex = -1;
+                            loadSong(currentSongIndex);
+                        } else {
+                            currentSongIndex = Math.floor(Math.random() * playlist.length);
+                            loadSong(currentSongIndex);
+                        }
+                    }
+                    audioPlayer.volume = volumeSlider.value;
+                }
+                
+                playPauseBtn.addEventListener('click', togglePlayPause);
+                skipBtn.addEventListener('click', skipSong);
+                rewindBtn.addEventListener('click', rewindSong);
+                volumeSlider.addEventListener('input', (e) => { audioPlayer.volume = e.target.value; });
+                audioPlayer.addEventListener('ended', skipSong);
+                audioPlayer.addEventListener('error', (e) => {
+                    playerTitleEl.textContent = `Error loading track`;
+                    playerArtistEl.textContent = `Skipping...`;
+                    console.error("Audio player error on file:", audioPlayer.src, e);
+                    setTimeout(skipSong, 2000); 
+                });
+                playerCoverArt.addEventListener('error', () => {
+                    console.error("Cover art failed to load:", playerCoverArt.src);
+                    playerCoverArt.src = placeholderCover;
+                });
+                loadInitialState();
+            }
+            // --- END OF MUSIC PLAYER LOGIC ---
+
+
+            // --- GAME OVERLAY/IFRAME LOGIC ---
+            const gameOverlay = document.getElementById('game-overlay');
+            const gameIframe = document.getElementById('game-iframe');
+            const closeGameBtn = document.getElementById('close-game-btn');
+            const allGameLinks = document.querySelectorAll('.game-item'); 
+
+            allGameLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault(); 
+                    const gameUrl = link.href;
+                    console.log('Loading game into iframe:', gameUrl);
+                    gameIframe.src = gameUrl;
+                    gameOverlay.style.display = 'block';
+                });
             });
 
-            // Initial load
-            showPage(1);
+            closeGameBtn.addEventListener('click', () => {
+                gameOverlay.style.display = 'none';
+                gameIframe.src = 'about:blank'; 
+            });
+            // --- END OF GAME OVERLAY LOGIC ---
+            
         });
     </script>
 </body>
 </html>
+
+
