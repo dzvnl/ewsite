@@ -28,18 +28,24 @@
 <body>
 
     <nav class="fixed top-0 left-0 p-6 sm:p-8 pixel-font z-10" style="padding-top: 50px;">
+        
         <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;">MAIN MENU</h1>
         <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
-            <li><a href="/" class="hover:text-white transition-colors">HOME</a></li>
-            <li><a href="/games.html" class="hover:text-white transition-colors">GAMES</a></li>
-            <li><a href="/updates.html" class="hover:text-white transition-colors">UPDATES</a></li>
-            <li><a href="/contact.html" class="hover:text-white transition-colors">CONTACT</a></li>
+            <li><a href="/" class="hover:text-red-900 active:text-red-900 transition-colors">HOME</a></li>
+            <li><a href="/games.html" class="hover:text-red-900 active:text-red-900 transition-colors">GAMES</a></li>
+            <li><a href="/updates.html" class="hover:text-red-900 active:text-red-900 transition-colors">UPDATES</a></li>
+            <li><a href="/contact.html" class="hover:text-red-900 active:text-red-900 transition-colors">CONTACT</a></li>
             </ul>
     </nav>
 
+    <div class="fixed top-2/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pixel-font text-yellow-400 text-base lg:text-lg text-center z-10 p-4">
+        <p id="splash-text"></p>
+    </div>
+
+
     <div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
-        <p>2.0.0-indev+20250223072026</p>
-        <p id="welcome-message">Welcome, Unknown Soldier</p>
+        <p>2.0</p>
+        <p id="welcome-message">Welcome, ?</p>
         <a href="#" id="auth-link" class="text-xs hover:text-white transition-colors" style="color: #969696;">
             (sign up / sign in)
         </a>
@@ -50,6 +56,34 @@
             const welcomeMessage = document.getElementById('welcome-message');
             const authLink = document.getElementById('auth-link');
             
+            // --- SPLASH TEXT LOGIC (No change needed) ---
+            const splashElement = document.getElementById('splash-text');
+            const splashOptions = [
+                "are you a freshman?",
+                "2 sweet teas and...",
+                "bbq chicken alert", 
+                "trick or treat, smell my.. donuts..",
+                "pull up to ur block with intelligence",
+                "john deere approved!",
+                "long live futtbucker67",
+                "six seven",
+                "oh brother..",
+                "are you even an ew student?",
+                "i added the proxy and ai",
+                "get the bawlls!!",
+                "six one",
+                "add jiggletip on clash, i only got 2100 though, am willing to put up a good game",
+                "sorry but you are not a sigma",
+                "idk really what to say"
+            ];
+            
+            const randomIndex = Math.floor(Math.random() * splashOptions.length);
+            if (splashElement) {
+                splashElement.textContent = splashOptions[randomIndex];
+            }
+            // --- END SPLASH TEXT LOGIC ---
+
+
             function updateUI() {
                 let username = localStorage.getItem('username');
                 
@@ -58,7 +92,7 @@
                     authLink.textContent = '(sign out)';
                     authLink.onclick = signOut;
                 } else {
-                    welcomeMessage.textContent = 'Welcome, Unknown Soldier';
+                    welcomeMessage.textContent = 'Welcome, ?';
                     authLink.textContent = '(sign up / sign in)';
                     authLink.onclick = signIn;
                 }
@@ -80,6 +114,8 @@
                     updateUI();
                 }
             }
+            
+            // Run all startup functions
             updateUI();
         });
     </script>
