@@ -6,6 +6,13 @@
     <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    
+    <!--
+      NEW STEP: Load the playlist.js file *before* the rest of the styles.
+      This makes the 'playlist' variable available for the main script.
+    -->
+    <script src="playlist.js"></script>
+    
     <style>
         html, body {
             height: 100%;
@@ -28,69 +35,49 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
         }
         
+        /* ... All your other styles for the player are here ... */
         /* --- UPDATED MUSIC PLAYER STYLES --- */
         #music-player-widget {
             position: fixed;
             bottom: 1.5rem; /* 24px */
             right: 1.5rem; /* 24px */
             z-index: 50;
-            
-            /* Sizing: Made it smaller */
             width: 240px; 
-            
-            /* Vibe: 
-               - Changed border to dotted
-               - Removed border-radius
-               - Removed box-shadow
-            */
             background-color: rgba(0, 0, 0, 0.7);
             border: 2px dotted #facc15; /* yellow-400 */
-            
-            /* Layout */
             display: flex;
             align-items: stretch;
-            
-            /* Interactivity */
             transition: all 0.3s ease;
         }
-        
         #music-player-widget:hover {
             background-color: rgba(0, 0, 0, 0.9);
             border-color: #ffffff;
         }
-        
         #player-main {
             flex-grow: 1;
-            /* Sizing: Reduced padding */
             padding: 0.5rem; /* 8px */
             overflow: hidden;
         }
-        
         #player-now-playing {
             color: #ffffff;
-            /* Sizing: Reduced font size */
             font-size: 1.125rem; /* 18px */
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        
         #player-now-playing-label {
             font-size: 0.875rem; /* 14px */
             color: #969696;
             margin-bottom: 2px; /* Reduced margin */
         }
-        
         .player-controls {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-top: 0.5rem; /* 8px */
-            /* Sizing: Reduced font size */
             font-size: 1.5rem; /* 24px */
             color: #facc15; /* yellow-400 */
         }
-        
         .player-controls button {
             transition: color 0.2s ease;
         }
@@ -98,28 +85,21 @@
         .player-controls button:active {
             color: #ffffff;
         }
-        
         #play-pause-btn {
-            /* Sizing: Reduced font size */
             font-size: 2rem; /* 32px */
             line-height: 1;
         }
-        
         #volume-container {
             display: flex;
             align-items: center;
             padding: 0 0.5rem; /* 8px */
-            /* Vibe: Changed border to dotted */
             border-left: 2px dotted #facc15; /* yellow-400 */
             background-color: rgba(0, 0, 0, 0.3);
             transition: border-color 0.3s ease;
         }
-        
         #music-player-widget:hover #volume-container {
             border-left-color: #ffffff;
         }
-        
-        /* Styling the vertical volume slider */
         #volume-slider {
             -webkit-appearance: slider-vertical; /* WebKit */
             writing-mode: bt-lr; /* IE */
@@ -127,8 +107,6 @@
             height: 100px;
             background: transparent;
         }
-
-        /* --- Slider Track --- */
         #volume-slider::-webkit-slider-runnable-track {
             width: 6px;
             background: #333;
@@ -139,8 +117,6 @@
             background: #333;
             border: 1px solid #969696;
         }
-
-        /* --- Slider Thumb (the "dial") --- */
         #volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 18px;
@@ -148,13 +124,8 @@
             background: #facc15; /* yellow-400 */
             border: 1px solid #000;
             cursor: pointer;
-            
-            /* FIX: Made it a circle */
             border-radius: 50%;
-            
-            /* FIX: Centered it on the track */
-            margin-top: 0; /* Reset horizontal margin */
-            margin-left: -6px; /* (TrackWidth - ThumbWidth) / 2 = (6 - 18) / 2 */
+            margin-left: -6px; /* (TrackWidth - ThumbWidth) / 2 */
         }
         #volume-slider::-moz-range-thumb {
             width: 18px;
@@ -162,32 +133,26 @@
             background: #facc15; /* yellow-400 */
             border: 1px solid #000;
             cursor: pointer;
-            
-            /* FIX: Made it a circle */
             border-radius: 50%;
         }
-        
     </style>
 </head>
 <body>
 
-    <!-- Main Menu (No 'MUSIC' link) -->
+    <!-- All your other HTML (Nav, Splash Text, Auth) -->
+    <!-- ... -->
     <nav class="fixed top-0 left-0 p-6 sm:p-8 pixel-font z-10" style="padding-top: 50px;">
         <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;">MAIN MENU</h1>
         <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
-            <li><a href="/" class="hover:text-red-900 active:text-red-900 transition-colors">home</a></li>
-            <li><a href="/list.html" class="hover:text-red-900 active:text-red-900 transition-colors">games</a></li>
-            <li><a href="/updates.html" class="hover:text-red-900 active:text-red-900 transition-colors">updates</a></li>
-            <li><a href="/contact.html" class="hover:text-red-900 active:text-red-900 transition-colors">contact</a></li>
-            </ul>
+            <li><a href="/" class="hover:text-red-900 active:text-red-900 transition-colors">HOME</a></li>
+            <li><a href="/list.html" class="hover:text-red-900 active:text-red-900 transition-colors">GAMES</a></li>
+            <li><a href="/updates.html" class="hover:text-red-900 active:text-red-900 transition-colors">UPDATES</a></li>
+            <li><a href="/contact.html" class="hover:text-red-900 active:text-red-900 transition-colors">CONTACT</a></li>
+        </ul>
     </nav>
-
-    <!-- Splash Text -->
     <div class="fixed top-2/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pixel-font text-yellow-400 text-base lg:text-lg text-center z-10 p-4">
         <p id="splash-text"></p>
     </div>
-
-    <!-- Welcome/Auth -->
     <div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
         <p>2.0</p>
         <p id="welcome-message">Welcome, ?</p>
@@ -196,69 +161,44 @@
         </a>
     </div>
 
-    <!-- 
-      --- MUSIC PLAYER WIDGET --- 
-    -->
+    <!-- Music Player Widget (HTML is unchanged) -->
     <audio id="audio-player"></audio>
-    
     <div id="music-player-widget" class="pixel-font">
-        <!-- Main player part (Info & Controls) -->
         <div id="player-main">
             <div id="player-now-playing-label">NOW PLAYING:</div>
-            <div id="player-now-playing" title="...">
-                ...
-            </div>
+            <div id="player-now-playing" title="...">...</div>
             <div class="player-controls">
                 <button id="rewind-btn" title="Previous">[<<]</button>
                 <button id="play-pause-btn" title="Play/Pause">[>]</button>
                 <button id="skip-btn" title="Next">[>>]</button>
             </div>
         </div>
-        
-        <!-- Volume "Dial" -->
         <div id="volume-container">
             <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" orient="vertical">
         </div>
     </div>
-    <!-- --- END OF WIDGET --- -->
 
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // ... Your existing Splash Text and Auth logic ...
             const welcomeMessage = document.getElementById('welcome-message');
             const authLink = document.getElementById('auth-link');
-            
-            // --- SPLASH TEXT LOGIC ---
             const splashElement = document.getElementById('splash-text');
             const splashOptions = [
-                "are you a freshman?",
-                "2 sweet teas and...",
-                "bbq chicken alert", 
-                "trick or treat, smell my.. donuts..",
-                "pull up to ur block with intelligence",
-                "john deere approved!",
-                "long live futtbucker67",
-                "six seven",
-                "oh brother..",
-                "are you even an ew student?",
-                "i added the proxy and ai",
-                "get the bawlls!!",
-                "six one",
-                "add jiggletip on clash, i only got 2100 though, am willing to put up a good game",
-                "sorry but you are not a sigma",
-                "idk really what to say"
+                "are you a freshman?", "2 sweet teas and...", "bbq chicken alert", 
+                "trick or treat, smell my.. donuts..", "pull up to ur block with intelligence",
+                "john deere approved!", "long live futtbucker67", "six seven", "oh brother..",
+                "are you even an ew student?", "i added the proxy and ai", "get the bawlls!!",
+                "six one", "add jiggletip on clash, i only got 2100 though, am willing to put up a good game",
+                "sorry but you are not a sigma", "idk really what to say"
             ];
-            
             const randomIndex = Math.floor(Math.random() * splashOptions.length);
             if (splashElement) {
                 splashElement.textContent = splashOptions[randomIndex];
             }
-            // --- END SPLASH TEXT LOGIC ---
-
-            // --- AUTH LOGIC ---
             function updateUI() {
                 let username = localStorage.getItem('username');
-                
                 if (username) {
                     welcomeMessage.textContent = `Welcome, ${username}`;
                     authLink.textContent = '(sign out)';
@@ -269,7 +209,6 @@
                     authLink.onclick = signIn;
                 }
             }
-
             function signIn(e) {
                 e.preventDefault();
                 const name = prompt('Enter yourname:');
@@ -278,7 +217,6 @@
                     updateUI();
                 }
             }
-
             function signOut(e) {
                 e.preventDefault();
                 if (confirm('Are you sure you want to sign out?')) {
@@ -286,8 +224,6 @@
                     updateUI();
                 }
             }
-            
-            // Run auth startup function
             updateUI();
             
             
@@ -301,45 +237,31 @@
             const nowPlayingEl = document.getElementById('player-now-playing');
             const volumeSlider = document.getElementById('volume-slider');
             
-            // --- YOUR PLAYLIST ---
-            // !!! IMPORTANT !!!
-            // Add your .mp3 files and update their paths here.
-            const playlist = [
-                {
-                    title: "Song Title 1",
-                    artist: "Artist 1",
-                    src: "song1.mp3" // Change this to your file path
-                },
-                {
-                    title: "Song Title 2",
-                    artist: "Artist 2",
-                    src: "song2.mp3" // Change this to your file path
-                },
-                {
-                    title: "Another One",
-                    artist: "Artist 3",
-                    src: "music/another-song.mp3" // Example with a folder
-                }
-            ];
-            // --- END OF PLAYLIST ---
+            // --- PLAYLIST IS REMOVED FROM HERE ---
+            // The 'playlist' variable is now loaded from 'playlist.js'
             
             let currentSongIndex = 0;
             let isPlaying = false;
+
+            // Check if the playlist exists and is not empty
+            if (typeof playlist === 'undefined' || playlist.length === 0) {
+                console.error("Playlist not found or is empty. Please check playlist.js");
+                nowPlayingEl.textContent = "Playlist error";
+                return; // Stop the player script if no playlist
+            }
             
             // Load a song into the player
             function loadSong(songIndex) {
+                // ... (rest of the player logic is unchanged) ...
                 const song = playlist[songIndex];
                 audioPlayer.src = song.src;
                 const songText = `${song.title} - ${song.artist}`;
                 nowPlayingEl.textContent = songText;
-                nowPlayingEl.title = songText; // Add tooltip for long titles
-                
-                // Reset button to 'play'
+                nowPlayingEl.title = songText; 
                 playPauseBtn.textContent = '[>]';
                 isPlaying = false;
             }
 
-            // Play the loaded song
             function playSong() {
                 audioPlayer.play()
                     .then(() => {
@@ -352,14 +274,12 @@
                     });
             }
 
-            // Pause the song
             function pauseSong() {
                 audioPlayer.pause();
                 playPauseBtn.textContent = '[>]';
                 isPlaying = false;
             }
 
-            // Toggle play/pause
             function togglePlayPause() {
                 if (isPlaying) {
                     pauseSong();
@@ -368,18 +288,16 @@
                 }
             }
 
-            // Skip to next song
             function skipSong() {
                 currentSongIndex = (currentSongIndex + 1) % playlist.length;
                 loadSong(currentSongIndex);
-                playSong(); // Autoplay next song
+                playSong();
             }
 
-            // Go to previous song
             function rewindSong() {
                 currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
                 loadSong(currentSongIndex);
-                playSong(); // Autoplay previous song
+                playSong();
             }
 
             // --- Event Listeners for Player ---
@@ -387,15 +305,12 @@
             skipBtn.addEventListener('click', skipSong);
             rewindBtn.addEventListener('click', rewindSong);
             
-            // Volume control
             volumeSlider.addEventListener('input', (e) => {
                 audioPlayer.volume = e.target.value;
             });
 
-            // Go to next song when one finishes
             audioPlayer.addEventListener('ended', skipSong);
             
-            // Handle potential load errors
             audioPlayer.addEventListener('error', (e) => {
                 nowPlayingEl.textContent = `Error loading track`;
                 console.error("Audio player error:", e);
