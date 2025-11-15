@@ -60,7 +60,7 @@ const playlist = [
         title: "Ambilux",
         artist: "fakemink",
         src: baseURL + "ambilux.mp3",
-        cover: baseURL + "fakemink2.jpg"
+        cover: baseURL + "fakemink3.jpg"
     },
     {
         title: "I'm Like Why",
@@ -145,7 +145,102 @@ const playlist = [
         artist: "Alice In Chains",
         src: baseURL + "nutshell.mp3",
         cover: baseURL + "alice.jpg"
+    }, 
+    {
+        title: "...",
+        artist: "...",
+        src: baseURL + "...",
+        cover: baseURL + "..."
+    },
+    {
+        title: "...",
+        artist: "...",
+        src: baseURL + "...",
+        cover: baseURL + "..."
+    },
+    {
+        title: "...",
+        artist: "...",
+        src: baseURL + "...",
+        cover: baseURL + "..."
+    },
+    {
+        title: "...",
+        artist: "...",
+        src: baseURL + "...",
+        cover: baseURL + "..."
+    },
+    {
+        title: "...",
+        artist: "...",
+        src: baseURL + "...",
+        cover: baseURL + "..."
+    },
+    {
+        title: "...",
+        artist: "...",
+        src: baseURL + "...",
+        cover: baseURL + "..."
+    },
+    {
+        title: "...",
+        artist: "...",
+        src: baseURL + "...",
+        cover: baseURL + "..."
+    },
+    {
+        title: "...",
+        artist: "...",
+        src: baseURL + "...",
+        cover: baseURL + "..."
+    },
+    {
+        title: "...",
+        artist: "...",
+        src: baseURL + "...",
+        cover: baseURL + "..."
+    },
+    {
+        title: "...",
+        artist: "...",
+        src: baseURL + "...",
+        cover: baseURL + "..."
+    },
+    {
+        title: "...",
+        artist: "...",
+        src: baseURL + "...",
+        cover: baseURL + "..."
+    },
+    {
+        title: "...",
+        artist: "...",
+        src: baseURL + "...",
+        cover: baseURL + "..."
+    },
+    {
+        title: "...",
+        artist: "...",
+        src: baseURL + "...",
+        cover: baseURL + "..."
+    },
+    {
+        title: "...",
+        artist: "...",
+        src: baseURL + "...",
+        cover: baseURL + "..."
+    },
+    {
+        title: "...",
+        artist: "...",
+        src: baseURL + "...",
+        cover: baseURL + "..."
     }
+];
+
+
+
+    
 ];
 
 
