@@ -115,7 +115,7 @@ const playlist = [
         title: "MIA",
         artist: "feng",
         src: baseURL + "mia.mp3",
-        cover: baseURL + "ksuuvi.jpg"
+        cover: baseURL + "feng.jpg"
     },
     {
         title: "head in the ceiling fan",
@@ -128,12 +128,6 @@ const playlist = [
         artist: "limpbizkit/eminem",
         src: baseURL + "turnmeloose.mp3",
         cover: baseURL + "limp.jpg"
-    },
-    {
-        title: "Nutshell",
-        artist: "Alice In Chains",
-        src: baseURL + "nutshell.mp3",
-        cover: baseURL + "alice.jpg"
     }, 
     {
         title: "...",
