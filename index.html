@@ -212,18 +212,26 @@
             const welcomeMessage = document.getElementById('welcome-message');
             const authLink = document.getElementById('auth-link');
             const splashElement = document.getElementById('splash-text');
-            const splashOptions = [
-                "are you a freshman?", "2 sweet teas and...", "bbq chicken alert", 
-                "trick or treat, smell my.. donuts..", "pull up to ur block with intelligence",
-                "john deere approved!", "long live futtbucker67", "six seven", "oh brother..",
-                "are you even an ew student?", "i added the proxy and ai", "get the bawlls!!",
-                "six one", "add jiggletip on clash, i only got 2100 though, am willing to put up a good game",
-                "sorry but you are not a sigma", "idk really what to say"
-            ];
-            const randomIndex = Math.floor(Math.random() * splashOptions.length);
+            
+            const rareSplashChance = Math.floor(Math.random() * 50); 
             if (splashElement) {
-                splashElement.textContent = splashOptions[randomIndex];
+                if (rareSplashChance === 0) {
+                    splashElement.textContent = "YOUR RARE 1-in-50 LINE HERE"; 
+                } else {
+                    const splashOptions = [
+                        "are you a freshman?", "2 sweet teas and...", "bbq chicken alert", 
+                        "trick or treat, smell my.. donuts..", "pull up to ur block with intelligence",
+                        "john deere approved!", "long live futtbucker67", "six seven", "oh brother..",
+                        "are you even an ew student?", "i added the proxy and ai", "get the bawlls!!",
+                        "six one", "add jiggletip on clash, i only got 2100 though, am willing to put up a good game",
+                        "sorry but you are not a sigma", "idk really what to say"
+                    ];
+                    const randomIndex = Math.floor(Math.random() * splashOptions.length);
+                    splashElement.textContent = splashOptions[randomIndex];
+                }
             }
+            
+
             function updateUI() {
                 let username = localStorage.getItem('username');
                 if (username) {
@@ -269,6 +277,17 @@
             let currentSongIndex = 0;
             let isPlaying = false;
 
+            // --- THIS IS WHERE YOU DEFINE YOUR SECRET SONG ---
+            // --- Fill in your secret song's details here ---
+            const secretSong = {
+                title: "hey, big guy said im an easter egg",
+                artist: "i heard, if u put /secret at the end of the link",
+                src: baseURL + "it could be cool",
+                cover: baseURL + "how should i know? im just a song."
+            };
+            // --- END OF SECRET SONG DEFINITION ---
+
+
             if (typeof playlist === 'undefined' || playlist.length === 0) {
                 console.error("CRITICAL ERROR: 'playlist' is not defined. Check if playlist.js is loading correctly.");
                 playerTitleEl.textContent = "Playlist error";
@@ -277,7 +296,9 @@
             }
             
             function loadSong(songIndex) {
-                const song = playlist[songIndex];
+                // This checks if we're trying to play the secret song
+                const song = (songIndex === -1) ? secretSong : playlist[songIndex];
+                
                 if (!song) {
                     console.error(`Song at index ${songIndex} not found.`);
                     return;
@@ -334,38 +355,37 @@
                 }
             }
 
-            // --- NEW SHUFFLE LOGIC ---
             function skipSong() {
-                // Pick a new random song index
                 let nextSongIndex = Math.floor(Math.random() * playlist.length);
-                // Simple check to prevent playing the same song twice in a row
                 if (nextSongIndex === currentSongIndex && playlist.length > 1) {
-                    nextSongIndex = (nextSongIndex + 1) % playlist.length; // Just pick the next one
+                    nextSongIndex = (nextSongIndex + 1) % playlist.length; 
                 }
                 currentSongIndex = nextSongIndex;
                 loadSong(currentSongIndex);
                 playSong();
             }
 
-            // Rewind button still goes to previous song in the list
             function rewindSong() {
-                currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
-                loadSong(currentSongIndex);
-                playSong();
+                // If we are on the secret song, just go to a random song
+                if (currentSongIndex === -1) {
+                    skipSong();
+                } else {
+                    currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
+                    loadSong(currentSongIndex);
+                    playSong();
+                }
             }
 
-            // --- State Persistence Logic ---
             window.addEventListener('beforeunload', () => {
                 if (audioPlayer.currentTime > 0) {
                     const musicState = {
-                        currentSongIndex: currentSongIndex,
+                        currentSongIndex: currentSongIndex, // This will save -1 if it's the secret song
                         currentTime: audioPlayer.currentTime
                     };
                     sessionStorage.setItem('musicPlayerState', JSON.stringify(musicState));
                 }
             });
 
-            // --- NEW RANDOM START LOGIC ---
             function loadInitialState() {
                 const savedStateJSON = sessionStorage.getItem('musicPlayerState');
                 
@@ -373,7 +393,8 @@
                     // We have a saved song, load it (paused)
                     try {
                         const savedState = JSON.parse(savedStateJSON);
-                        currentSongIndex = savedState.currentSongIndex || 0;
+                        // This will correctly load -1 if that's what was saved
+                        currentSongIndex = savedState.currentSongIndex; 
                         
                         loadSong(currentSongIndex);
                         
@@ -383,20 +404,29 @@
 
                     } catch (e) {
                         console.error("Error parsing saved music state:", e);
-                        // Fallback to random song
                         currentSongIndex = Math.floor(Math.random() * playlist.length);
                         loadSong(currentSongIndex); 
                     }
                 } else {
-                    // NO saved song, pick a new random one
-                    currentSongIndex = Math.floor(Math.random() * playlist.length);
-                    loadSong(currentSongIndex);
+                    // --- NEW 1-in-50 LOGIC ---
+                    const rareSongChance = Math.floor(Math.random() * 50); // 0-49
+                    
+                    if (rareSongChance === 0) {
+                        // 1-in-50 HIT! Play the secret song.
+                        console.log("RARE SONG HIT!");
+                        currentSongIndex = -1; // Use -1 as the "secret song" index
+                        loadSong(currentSongIndex);
+                    } else {
+                        // 49-in-50 MISS. Play a normal random song.
+                        currentSongIndex = Math.floor(Math.random() * playlist.length);
+                        loadSong(currentSongIndex);
+                    }
+                    // --- END OF NEW LOGIC ---
                 }
                 
                 audioPlayer.volume = volumeSlider.value;
             }
             
-            // --- Event Listeners ---
             playPauseBtn.addEventListener('click', togglePlayPause);
             skipBtn.addEventListener('click', skipSong);
             rewindBtn.addEventListener('click', rewindSong);
@@ -405,14 +435,15 @@
                 audioPlayer.volume = e.target.value;
             });
 
-            // --- MODIFIED: 'ended' event now also calls skipSong (which is shuffle) ---
+            // When a song ends, skip to a new random one
+            // This works even if the secret song ends
             audioPlayer.addEventListener('ended', skipSong);
             
             audioPlayer.addEventListener('error', (e) => {
                 playerTitleEl.textContent = `Error loading track`;
                 playerArtistEl.textContent = `Skipping...`;
                 console.error("Audio player error on file:", audioPlayer.src, e);
-                setTimeout(skipSong, 2000); // Skip to a new random song on error
+                setTimeout(skipSong, 2000); 
             });
             
             playerCoverArt.addEventListener('error', () => {
@@ -422,7 +453,6 @@
 
             loadInitialState();
             
-            // --- END MUSIC PLAYER LOGIC ---
         });
     </script>
 </body>
