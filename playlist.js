@@ -42,7 +42,7 @@ const playlist = [
     {
         title: "Alternative Outro",
         artist: "LUCKI",
-        src: baseURL + "alternativeoutro.mp3", 
+        src: baseURL + "AlternativeOutro.mp3", 
         cover: baseURL + "lucki.jpg"
     },
     {
