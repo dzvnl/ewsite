@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-R">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,20 +11,11 @@
             height: 100%;
             scroll-behavior: smooth;
         }
-        /* UPDATED BODY STYLE:
-          Changed the background image URL to your new file.
-        */
         body {
             font-family: 'VT323', monospace;
             color: #e5e5e5;
-            
-            /* Fallback color in case image doesn't load */
             background-color: #000000; 
-            
-            /* THIS LINE IS CHANGED to your new image */
             background-image: url('IMG_4867.jpeg'); 
-            
-            /* These lines make it a fixed, fullscreen background */
             background-size: cover;
             background-repeat: no-repeat;
             background-attachment: fixed;
@@ -36,25 +27,167 @@
             -webkit-font-smoothing: none;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
         }
+        
+        /* --- UPDATED MUSIC PLAYER STYLES --- */
+        #music-player-widget {
+            position: fixed;
+            bottom: 1.5rem; /* 24px */
+            right: 1.5rem; /* 24px */
+            z-index: 50;
+            
+            /* Sizing: Made it smaller */
+            width: 240px; 
+            
+            /* Vibe: 
+               - Changed border to dotted
+               - Removed border-radius
+               - Removed box-shadow
+            */
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 2px dotted #facc15; /* yellow-400 */
+            
+            /* Layout */
+            display: flex;
+            align-items: stretch;
+            
+            /* Interactivity */
+            transition: all 0.3s ease;
+        }
+        
+        #music-player-widget:hover {
+            background-color: rgba(0, 0, 0, 0.9);
+            border-color: #ffffff;
+        }
+        
+        #player-main {
+            flex-grow: 1;
+            /* Sizing: Reduced padding */
+            padding: 0.5rem; /* 8px */
+            overflow: hidden;
+        }
+        
+        #player-now-playing {
+            color: #ffffff;
+            /* Sizing: Reduced font size */
+            font-size: 1.125rem; /* 18px */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        #player-now-playing-label {
+            font-size: 0.875rem; /* 14px */
+            color: #969696;
+            margin-bottom: 2px; /* Reduced margin */
+        }
+        
+        .player-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.5rem; /* 8px */
+            /* Sizing: Reduced font size */
+            font-size: 1.5rem; /* 24px */
+            color: #facc15; /* yellow-400 */
+        }
+        
+        .player-controls button {
+            transition: color 0.2s ease;
+        }
+        .player-controls button:hover,
+        .player-controls button:active {
+            color: #ffffff;
+        }
+        
+        #play-pause-btn {
+            /* Sizing: Reduced font size */
+            font-size: 2rem; /* 32px */
+            line-height: 1;
+        }
+        
+        #volume-container {
+            display: flex;
+            align-items: center;
+            padding: 0 0.5rem; /* 8px */
+            /* Vibe: Changed border to dotted */
+            border-left: 2px dotted #facc15; /* yellow-400 */
+            background-color: rgba(0, 0, 0, 0.3);
+            transition: border-color 0.3s ease;
+        }
+        
+        #music-player-widget:hover #volume-container {
+            border-left-color: #ffffff;
+        }
+        
+        /* Styling the vertical volume slider */
+        #volume-slider {
+            -webkit-appearance: slider-vertical; /* WebKit */
+            writing-mode: bt-lr; /* IE */
+            width: 20px;
+            height: 100px;
+            background: transparent;
+        }
+
+        /* --- Slider Track --- */
+        #volume-slider::-webkit-slider-runnable-track {
+            width: 6px;
+            background: #333;
+            border: 1px solid #969696;
+        }
+        #volume-slider::-moz-range-track {
+            width: 6px;
+            background: #333;
+            border: 1px solid #969696;
+        }
+
+        /* --- Slider Thumb (the "dial") --- */
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #facc15; /* yellow-400 */
+            border: 1px solid #000;
+            cursor: pointer;
+            
+            /* FIX: Made it a circle */
+            border-radius: 50%;
+            
+            /* FIX: Centered it on the track */
+            margin-top: 0; /* Reset horizontal margin */
+            margin-left: -6px; /* (TrackWidth - ThumbWidth) / 2 = (6 - 18) / 2 */
+        }
+        #volume-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #facc15; /* yellow-400 */
+            border: 1px solid #000;
+            cursor: pointer;
+            
+            /* FIX: Made it a circle */
+            border-radius: 50%;
+        }
+        
     </style>
 </head>
 <body>
 
+    <!-- Main Menu (No 'MUSIC' link) -->
     <nav class="fixed top-0 left-0 p-6 sm:p-8 pixel-font z-10" style="padding-top: 50px;">
         <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;">MAIN MENU</h1>
         <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
-            <li><a href="/" class="hover:text-red-900 active:text-red-900 transition-colors">HOME</a></li>
-            <li><a href="/list.html" class="hover:text-red-900 active:text-red-900 transition-colors">GAMES</a></li>
-            <li><a href="/updates.html" class="hover:text-red-900 active:text-red-900 transition-colors">UPDATES</a></li>
-            <li><a href="/contact.html" class="hover:text-red-900 active:text-red-900 transition-colors">CONTACT</a></li>
+            <li><a href="/" class="hover:text-red-900 active:text-red-900 transition-colors">home</a></li>
+            <li><a href="/list.html" class="hover:text-red-900 active:text-red-900 transition-colors">games</a></li>
+            <li><a href="/updates.html" class="hover:text-red-900 active:text-red-900 transition-colors">updates</a></li>
+            <li><a href="/contact.html" class="hover:text-red-900 active:text-red-900 transition-colors">contact</a></li>
             </ul>
     </nav>
 
+    <!-- Splash Text -->
     <div class="fixed top-2/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pixel-font text-yellow-400 text-base lg:text-lg text-center z-10 p-4">
         <p id="splash-text"></p>
     </div>
 
-
+    <!-- Welcome/Auth -->
     <div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
         <p>2.0</p>
         <p id="welcome-message">Welcome, ?</p>
@@ -62,6 +195,33 @@
             (sign up / sign in)
         </a>
     </div>
+
+    <!-- 
+      --- MUSIC PLAYER WIDGET --- 
+    -->
+    <audio id="audio-player"></audio>
+    
+    <div id="music-player-widget" class="pixel-font">
+        <!-- Main player part (Info & Controls) -->
+        <div id="player-main">
+            <div id="player-now-playing-label">NOW PLAYING:</div>
+            <div id="player-now-playing" title="...">
+                ...
+            </div>
+            <div class="player-controls">
+                <button id="rewind-btn" title="Previous">[<<]</button>
+                <button id="play-pause-btn" title="Play/Pause">[>]</button>
+                <button id="skip-btn" title="Next">[>>]</button>
+            </div>
+        </div>
+        
+        <!-- Volume "Dial" -->
+        <div id="volume-container">
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" orient="vertical">
+        </div>
+    </div>
+    <!-- --- END OF WIDGET --- -->
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -95,7 +255,7 @@
             }
             // --- END SPLASH TEXT LOGIC ---
 
-
+            // --- AUTH LOGIC ---
             function updateUI() {
                 let username = localStorage.getItem('username');
                 
@@ -127,9 +287,128 @@
                 }
             }
             
-            // Run all startup functions
+            // Run auth startup function
             updateUI();
+            
+            
+            // --- MUSIC PLAYER LOGIC ---
+            
+            // Get player elements
+            const audioPlayer = document.getElementById('audio-player');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            const rewindBtn = document.getElementById('rewind-btn');
+            const skipBtn = document.getElementById('skip-btn');
+            const nowPlayingEl = document.getElementById('player-now-playing');
+            const volumeSlider = document.getElementById('volume-slider');
+            
+            // --- YOUR PLAYLIST ---
+            // !!! IMPORTANT !!!
+            // Add your .mp3 files and update their paths here.
+            const playlist = [
+                {
+                    title: "Song Title 1",
+                    artist: "Artist 1",
+                    src: "song1.mp3" // Change this to your file path
+                },
+                {
+                    title: "Song Title 2",
+                    artist: "Artist 2",
+                    src: "song2.mp3" // Change this to your file path
+                },
+                {
+                    title: "Another One",
+                    artist: "Artist 3",
+                    src: "music/another-song.mp3" // Example with a folder
+                }
+            ];
+            // --- END OF PLAYLIST ---
+            
+            let currentSongIndex = 0;
+            let isPlaying = false;
+            
+            // Load a song into the player
+            function loadSong(songIndex) {
+                const song = playlist[songIndex];
+                audioPlayer.src = song.src;
+                const songText = `${song.title} - ${song.artist}`;
+                nowPlayingEl.textContent = songText;
+                nowPlayingEl.title = songText; // Add tooltip for long titles
+                
+                // Reset button to 'play'
+                playPauseBtn.textContent = '[>]';
+                isPlaying = false;
+            }
+
+            // Play the loaded song
+            function playSong() {
+                audioPlayer.play()
+                    .then(() => {
+                        playPauseBtn.textContent = '[||]';
+                        isPlaying = true;
+                    })
+                    .catch(error => {
+                        console.error("Error playing audio (user may need to interact first):", error);
+                        nowPlayingEl.textContent = "Click Play to start";
+                    });
+            }
+
+            // Pause the song
+            function pauseSong() {
+                audioPlayer.pause();
+                playPauseBtn.textContent = '[>]';
+                isPlaying = false;
+            }
+
+            // Toggle play/pause
+            function togglePlayPause() {
+                if (isPlaying) {
+                    pauseSong();
+                } else {
+                    playSong();
+                }
+            }
+
+            // Skip to next song
+            function skipSong() {
+                currentSongIndex = (currentSongIndex + 1) % playlist.length;
+                loadSong(currentSongIndex);
+                playSong(); // Autoplay next song
+            }
+
+            // Go to previous song
+            function rewindSong() {
+                currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
+                loadSong(currentSongIndex);
+                playSong(); // Autoplay previous song
+            }
+
+            // --- Event Listeners for Player ---
+            playPauseBtn.addEventListener('click', togglePlayPause);
+            skipBtn.addEventListener('click', skipSong);
+            rewindBtn.addEventListener('click', rewindSong);
+            
+            // Volume control
+            volumeSlider.addEventListener('input', (e) => {
+                audioPlayer.volume = e.target.value;
+            });
+
+            // Go to next song when one finishes
+            audioPlayer.addEventListener('ended', skipSong);
+            
+            // Handle potential load errors
+            audioPlayer.addEventListener('error', (e) => {
+                nowPlayingEl.textContent = `Error loading track`;
+                console.error("Audio player error:", e);
+            });
+
+            // Load the first song and set initial volume
+            loadSong(currentSongIndex);
+            audioPlayer.volume = volumeSlider.value;
+            
+            // --- END MUSIC PLAYER LOGIC ---
         });
     </script>
 </body>
 </html>
+
+
