@@ -7,10 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     
-    <!--
-      NEW STEP: Load the playlist.js file *before* the rest of the styles.
-      This makes the 'playlist' variable available for the main script.
-    -->
+    <!-- Load the playlist file -->
     <script src="playlist.js"></script>
     
     <style>
@@ -35,112 +32,135 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
         }
         
-        /* ... All your other styles for the player are here ... */
-        /* --- UPDATED MUSIC PLAYER STYLES --- */
+        /* --- MUSIC PLAYER STYLES --- */
         #music-player-widget {
             position: fixed;
             bottom: 1.5rem; /* 24px */
             right: 1.5rem; /* 24px */
             z-index: 50;
-            width: 240px; 
-            background-color: rgba(0, 0, 0, 0.7);
-            border: 2px dotted #facc15; /* yellow-400 */
+            width: 320px; 
+            height: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            border: none;
+            padding: 0.75rem; /* 12px */
             display: flex;
-            align-items: stretch;
+            align-items: center;
             transition: all 0.3s ease;
         }
+        
         #music-player-widget:hover {
-            background-color: rgba(0, 0, 0, 0.9);
-            border-color: #ffffff;
+            background-color: rgba(0, 0, 0, 0.95);
         }
+        
+        /* Album Art (Left Side) */
+        #player-cover-art {
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0; 
+            margin-right: 0.75rem; 
+            border: 2px dotted #969696; 
+            background-color: #111;
+            image-rendering: pixelated;
+        }
+
+        /* Main Info/Controls (Right Side) */
         #player-main {
-            flex-grow: 1;
-            padding: 0.5rem; /* 8px */
-            overflow: hidden;
+            flex-grow: 1; 
+            overflow: hidden; 
+            min-width: 0; 
         }
-        #player-now-playing {
+
+        /* Song Info */
+        #player-title {
             color: #ffffff;
             font-size: 1.125rem; /* 18px */
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        #player-now-playing-label {
+        #player-artist {
             font-size: 0.875rem; /* 14px */
             color: #969696;
-            margin-bottom: 2px; /* Reduced margin */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
         }
-        .player-controls {
+        
+        /* Controls & Slider Row */
+        .player-controls-row {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-top: 0.5rem; /* 8px */
-            font-size: 1.5rem; /* 24px */
-            color: #facc15; /* yellow-400 */
+            gap: 0.25rem; /* 4px */
         }
-        .player-controls button {
+        
+        /* Buttons */
+        .player-controls-row button {
+            color: #facc15; /* yellow-400 */
+            font-size: 1.25rem; /* 20px */
+            flex-shrink: 0;
+            padding: 0 0.25rem;
             transition: color 0.2s ease;
         }
-        .player-controls button:hover,
-        .player-controls button:active {
+        .player-controls-row button:hover,
+        .player-controls-row button:active {
             color: #ffffff;
         }
         #play-pause-btn {
-            font-size: 2rem; /* 32px */
+            font-size: 1.5rem; /* 24px */
             line-height: 1;
         }
-        #volume-container {
-            display: flex;
-            align-items: center;
-            padding: 0 0.5rem; /* 8px */
-            border-left: 2px dotted #facc15; /* yellow-400 */
-            background-color: rgba(0, 0, 0, 0.3);
-            transition: border-color 0.3s ease;
-        }
-        #music-player-widget:hover #volume-container {
-            border-left-color: #ffffff;
-        }
+        
+        /* Horizontal Volume Slider */
         #volume-slider {
-            -webkit-appearance: slider-vertical; /* WebKit */
-            writing-mode: bt-lr; /* IE */
-            width: 20px;
-            height: 100px;
+            -webkit-appearance: none;
+            width: 100%; 
+            flex-grow: 1;
+            height: 16px; 
             background: transparent;
+            margin-left: 0.5rem; 
         }
+        
+        /* Track */
         #volume-slider::-webkit-slider-runnable-track {
-            width: 6px;
+            width: 100%;
+            height: 4px;
             background: #333;
             border: 1px solid #969696;
+            cursor: pointer;
         }
         #volume-slider::-moz-range-track {
-            width: 6px;
+            width: 100%;
+            height: 4px;
             background: #333;
             border: 1px solid #969696;
+            cursor: pointer;
         }
+
+        /* Thumb */
         #volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            background: #facc15; /* yellow-400 */
+            width: 16px;
+            height: 16px;
+            background: #facc15; 
             border: 1px solid #000;
-            cursor: pointer;
             border-radius: 50%;
-            margin-left: -6px; /* (TrackWidth - ThumbWidth) / 2 */
+            cursor: pointer;
+            margin-top: -7px; 
         }
         #volume-slider::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            background: #facc15; /* yellow-400 */
+            width: 16px;
+            height: 16px;
+            background: #facc15; 
             border: 1px solid #000;
-            cursor: pointer;
             border-radius: 50%;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <!-- All your other HTML (Nav, Splash Text, Auth) -->
-    <!-- ... -->
+    <!-- Main Menu -->
     <nav class="fixed top-0 left-0 p-6 sm:p-8 pixel-font z-10" style="padding-top: 50px;">
         <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;">MAIN MENU</h1>
         <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
@@ -148,11 +168,15 @@
             <li><a href="/list.html" class="hover:text-red-900 active:text-red-900 transition-colors">GAMES</a></li>
             <li><a href="/updates.html" class="hover:text-red-900 active:text-red-900 transition-colors">UPDATES</a></li>
             <li><a href="/contact.html" class="hover:text-red-900 active:text-red-900 transition-colors">CONTACT</a></li>
-        </ul>
+            </ul>
     </nav>
+
+    <!-- Splash Text -->
     <div class="fixed top-2/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pixel-font text-yellow-400 text-base lg:text-lg text-center z-10 p-4">
         <p id="splash-text"></p>
     </div>
+
+    <!-- Welcome/Auth -->
     <div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
         <p>2.0</p>
         <p id="welcome-message">Welcome, ?</p>
@@ -161,27 +185,41 @@
         </a>
     </div>
 
-    <!-- Music Player Widget (HTML is unchanged) -->
+    <!-- 
+      --- "LAID DOWN" MUSIC PLAYER WIDGET --- 
+    -->
     <audio id="audio-player"></audio>
+    
     <div id="music-player-widget" class="pixel-font">
+        
+        <!-- Left Side: Album Art -->
+        <img id="player-cover-art" src="" alt="Album Cover">
+        
+        <!-- Right Side: Info, Controls, Slider -->
         <div id="player-main">
-            <div id="player-now-playing-label">NOW PLAYING:</div>
-            <div id="player-now-playing" title="...">...</div>
-            <div class="player-controls">
+            
+            <!-- Song Info (Stacked) -->
+            <div id="player-info-container" title="...">
+                <div id="player-title">...</div>
+                <div id="player-artist">Loading...</div>
+            </div>
+            
+            <!-- Controls & Slider (Side-by-side) -->
+            <div class="player-controls-row">
                 <button id="rewind-btn" title="Previous">[<<]</button>
                 <button id="play-pause-btn" title="Play/Pause">[>]</button>
                 <button id="skip-btn" title="Next">[>>]</button>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" title="Volume">
             </div>
-        </div>
-        <div id="volume-container">
-            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" orient="vertical">
+
         </div>
     </div>
+    <!-- --- END OF WIDGET --- -->
 
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // ... Your existing Splash Text and Auth logic ...
+            // --- Splash Text & Auth Logic (Unchanged) ---
             const welcomeMessage = document.getElementById('welcome-message');
             const authLink = document.getElementById('auth-link');
             const splashElement = document.getElementById('splash-text');
@@ -219,45 +257,55 @@
             }
             function signOut(e) {
                 e.preventDefault();
-                if (confirm('Are you sure you want to sign out?')) {
-                    localStorage.removeItem('username');
-                    updateUI();
-                }
+                // We cannot use confirm() in this environment. It will just sign out.
+                localStorage.removeItem('username');
+                updateUI();
             }
             updateUI();
             
             
-            // --- MUSIC PLAYER LOGIC ---
+            // --- MUSIC PLAYER LOGIC (UPDATED WITH STATE) ---
             
-            // Get player elements
             const audioPlayer = document.getElementById('audio-player');
             const playPauseBtn = document.getElementById('play-pause-btn');
             const rewindBtn = document.getElementById('rewind-btn');
             const skipBtn = document.getElementById('skip-btn');
-            const nowPlayingEl = document.getElementById('player-now-playing');
+            const playerInfoContainer = document.getElementById('player-info-container');
+            const playerTitleEl = document.getElementById('player-title');
+            const playerArtistEl = document.getElementById('player-artist');
             const volumeSlider = document.getElementById('volume-slider');
-            
-            // --- PLAYLIST IS REMOVED FROM HERE ---
-            // The 'playlist' variable is now loaded from 'playlist.js'
-            
+            const playerCoverArt = document.getElementById('player-cover-art');
+            const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
+            playerCoverArt.src = placeholderCover; 
+
             let currentSongIndex = 0;
             let isPlaying = false;
 
-            // Check if the playlist exists and is not empty
             if (typeof playlist === 'undefined' || playlist.length === 0) {
                 console.error("Playlist not found or is empty. Please check playlist.js");
-                nowPlayingEl.textContent = "Playlist error";
-                return; // Stop the player script if no playlist
+                playerTitleEl.textContent = "Playlist error";
+                playerArtistEl.textContent = "Check playlist.js";
+                return; 
             }
             
-            // Load a song into the player
             function loadSong(songIndex) {
-                // ... (rest of the player logic is unchanged) ...
                 const song = playlist[songIndex];
+                if (!song) {
+                    console.error(`Song at index ${songIndex} not found.`);
+                    return;
+                }
                 audioPlayer.src = song.src;
                 const songText = `${song.title} - ${song.artist}`;
-                nowPlayingEl.textContent = songText;
-                nowPlayingEl.title = songText; 
+                playerInfoContainer.title = songText; 
+                playerTitleEl.textContent = song.title || "...";
+                playerArtistEl.textContent = song.artist || "...";
+                
+                if (song.cover && song.cover !== "PASTE YOUR COVER ART URL HERE") {
+                    playerCoverArt.src = song.cover;
+                } else {
+                    playerCoverArt.src = placeholderCover;
+                }
+                
                 playPauseBtn.textContent = '[>]';
                 isPlaying = false;
             }
@@ -270,7 +318,8 @@
                     })
                     .catch(error => {
                         console.error("Error playing audio (user may need to interact first):", error);
-                        nowPlayingEl.textContent = "Click Play to start";
+                        playerTitleEl.textContent = "Click Play";
+                        playerArtistEl.textContent = "to start";
                     });
             }
 
@@ -300,7 +349,56 @@
                 playSong();
             }
 
-            // --- Event Listeners for Player ---
+            // --- NEW: State Persistence Logic ---
+            
+            // 1. Save state when leaving the page
+            window.addEventListener('beforeunload', () => {
+                // Only save if we have a song loaded and it's not at the very beginning
+                if (audioPlayer.currentTime > 0) {
+                    const musicState = {
+                        currentSongIndex: currentSongIndex,
+                        currentTime: audioPlayer.currentTime
+                    };
+                    sessionStorage.setItem('musicPlayerState', JSON.stringify(musicState));
+                }
+            });
+
+            // 2. Load state when the page loads
+            function loadInitialState() {
+                const savedStateJSON = sessionStorage.getItem('musicPlayerState');
+                
+                if (savedStateJSON) {
+                    try {
+                        const savedState = JSON.parse(savedStateJSON);
+                        
+                        currentSongIndex = savedState.currentSongIndex || 0;
+                        
+                        // Load the song (this sets it to paused)
+                        loadSong(currentSongIndex);
+                        
+                        // We MUST wait for the song to be ready before setting the time
+                        audioPlayer.addEventListener('loadedmetadata', () => {
+                            // Set the time and leave it paused
+                            audioPlayer.currentTime = savedState.currentTime || 0;
+                        }, { once: true }); // 'once: true' removes the listener after it runs
+
+                    } catch (e) {
+                        console.error("Error parsing saved music state:", e);
+                        loadSong(0); // Fallback to first song
+                    }
+                } else {
+                    // No saved state, just load the first song
+                    loadSong(0);
+                }
+                
+                // Set initial volume
+                audioPlayer.volume = volumeSlider.value;
+            }
+            
+            // --- End of New Logic ---
+
+
+            // --- Event Listeners ---
             playPauseBtn.addEventListener('click', togglePlayPause);
             skipBtn.addEventListener('click', skipSong);
             rewindBtn.addEventListener('click', rewindSong);
@@ -312,18 +410,21 @@
             audioPlayer.addEventListener('ended', skipSong);
             
             audioPlayer.addEventListener('error', (e) => {
-                nowPlayingEl.textContent = `Error loading track`;
+                playerTitleEl.textContent = `Error loading track`;
+                playerArtistEl.textContent = `Skipping...`;
                 console.error("Audio player error:", e);
+                setTimeout(skipSong, 1000); 
+            });
+            
+            playerCoverArt.addEventListener('error', ()_ => {
+                playerCoverArt.src = placeholderCover;
             });
 
-            // Load the first song and set initial volume
-            loadSong(currentSongIndex);
-            audioPlayer.volume = volumeSlider.value;
+            // --- MODIFIED: Load initial state instead of just first song ---
+            loadInitialState();
             
             // --- END MUSIC PLAYER LOGIC ---
         });
     </script>
 </body>
 </html>
-
-
