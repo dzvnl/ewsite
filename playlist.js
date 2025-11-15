@@ -19,7 +19,7 @@ const playlist = [
     {
         title: "Sextape",
         artist: "Deftones",
-        src: baseURL + "sextape 4.mp3", // Used your filename with the space
+        src: baseURL + "sextape.mp3", // Used your filename with the space
         cover: baseURL + "deftones.jpg"
     },
     {
@@ -49,7 +49,7 @@ const playlist = [
     {
         title: "Alternative Outro",
         artist: "LUCKI",
-        src: baseURL + "alternativeoutro .mp3", // Used your filename with the space
+        src: baseURL + "alternativeoutro.mp3", // Used your filename with the space
         cover: baseURL + "lucki.jpg"
     },
     {
@@ -108,7 +108,7 @@ const playlist = [
     },
     {
         title: "Fever",
-        artist: "Buckshot?", // My guess
+        artist: "fakemink/buckshot", // My guess
         src: baseURL + "fever.mp3",
         cover: baseURL + "ghostmountain.jpg" // Guessing
     },
