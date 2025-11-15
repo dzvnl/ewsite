@@ -1,11 +1,6 @@
-// --- YOU ARE DONE! ---
-// I have put your exact Netlify URL in.
-// I have REMOVED all the 'music/' folder paths.
-// This will work.
+
 
 const baseURL = "https://6918d613edf05dd80c139242--ewsmusic.netlify.app/";
-
-// --- YOUR PLAYLIST (BUILT FROM YOUR FILES, NO FOLDER) ---
 
 const playlist = [
     {
@@ -17,7 +12,7 @@ const playlist = [
     {
         title: "Sextape",
         artist: "Deftones",
-        src: baseURL + "sextape 4.mp3", // Kept the space
+        src: baseURL + "sextape 4.mp3", 
         cover: baseURL + "deftones.jpg"
     },
     {
@@ -47,7 +42,7 @@ const playlist = [
     {
         title: "Alternative Outro",
         artist: "LUCKI",
-        src: baseURL + "alternativeoutro.mp3", // Kept the space
+        src: baseURL + "alternativeoutro.mp3", 
         cover: baseURL + "lucki.jpg"
     },
     {
@@ -108,7 +103,7 @@ const playlist = [
         title: "Fever",
         artist: "fakemink/buckshot",
         src: baseURL + "fever.mp3",
-        cover: baseURL + "buckshot.jpg" // Using this cover as a guess
+        cover: baseURL + "buckshot.jpg"
     },
     {
         title: "Stalks",
@@ -133,12 +128,6 @@ const playlist = [
         artist: "limpbizkit/eminem",
         src: baseURL + "turnmeloose.mp3",
         cover: baseURL + "limp.jpg"
-    },
-    {
-        title: "Break da Law",
-        artist: "Three 6 Mafia", // My guess for the rest
-        src: baseURL + "breakdalaw.mp3", // My guess for the rest
-        cover: baseURL + "three6.jpg" // My guess
     },
     {
         title: "Nutshell",
