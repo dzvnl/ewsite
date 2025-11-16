@@ -12,7 +12,7 @@ const playlist = [
     {
         title: "Sextape",
         artist: "Deftones",
-        src: baseURL + "sextape 4.mp3", 
+        src: baseURL + "sextape.mp3", 
         cover: baseURL + "deftones.jpg"
     },
     {
