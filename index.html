@@ -294,3 +294,83 @@
                             currentSongIndex: currentSongIndex,
                             currentTime: audioPlayer.currentTime,
                             volume: audioPlayer.volume,
+                            isPlaying: isPlaying
+                        };
+                        sessionStorage.setItem('musicPlayerState', JSON.stringify(musicState));
+                    } else {
+                        sessionStorage.removeItem('musicPlayerState');
+                    }
+                });
+                
+                // --- 2. LOAD STATE ON NEW PAGE ---
+                function loadInitialState() {
+                    const savedStateJSON = sessionStorage.getItem('musicPlayerState');
+                    let savedState = null;
+                    
+                    if (savedStateJSON) {
+                        try {
+                            savedState = JSON.parse(savedStateJSON);
+                        } catch (e) {
+                            console.error("Error parsing saved music state:", e);
+                            sessionStorage.removeItem('musicPlayerState'); // Clear bad data
+                        }
+                    }
+
+                    if (savedState) {
+                        // We have a saved state!
+                        currentSongIndex = savedState.currentSongIndex;
+                        loadSong(currentSongIndex);
+                        volumeSlider.value = savedState.volume || 1;
+                        audioPlayer.volume = savedState.volume || 1;
+                        
+                        audioPlayer.addEventListener('loadedmetadata', () => {
+                            audioPlayer.currentTime = savedState.currentTime || 0;
+                            if (savedState.isPlaying) {
+                                playSong(); // Try to resume playing
+                            }
+                        }, { once: true }); 
+                        
+                    } else {
+                        // No saved state, load a random song (or secret)
+                        const rareSongChance = Math.floor(Math.random() * 50);
+                        currentSongIndex = (rareSongChance === 0) ? -1 : Math.floor(Math.random() * playlist.length);
+                        loadSong(currentSongIndex);
+                        audioPlayer.volume = volumeSlider.value;
+                    }
+                }
+                
+                // --- ATTACH LISTENERS ---
+                playPauseBtn.addEventListener('click', togglePlayPause);
+                skipBtn.addEventListener('click', () => skipSong(false));
+                rewindBtn.addEventListener('click', rewindSong);
+                
+                volumeSlider.addEventListener('input', (e) => {
+                    audioPlayer.volume = e.target.value;
+                });
+
+                audioPlayer.addEventListener('ended', () => skipSong(false));
+                
+                audioPlayer.addEventListener('error', (e) => {
+                    playerTitleEl.textContent = `Load Error (404)`;
+                    playerArtistEl.textContent = `Check file name`;
+                    console.error("Audio player error:", e);
+                });
+                
+                playerCoverArt.addEventListener('error', () => {
+                    playerCoverArt.src = placeholderCover;
+                    playerArtistEl.textContent = `${playerArtistEl.textContent} (no art)`;
+                });
+
+                // --- KICK IT OFF ---
+                loadInitialState();
+                
+            } catch (e) {
+                // Catch any other code-breaking typo
+                console.error("Global script error:", e);
+                playerTitleEl.textContent = "Code Error";
+                playerArtistEl.textContent = e.message;
+            }
+        });
+    </script>
+</body>
+</html>
