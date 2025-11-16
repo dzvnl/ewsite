@@ -17,9 +17,8 @@
         }
         body {
             font-family: 'VT323', monospace;
-            color: #e5e5e5;
+            color: #e5e5eF5;
             background-color: #000000; 
-            /* This assumes your background image is in the same folder */
             background-image: url('IMG_4867.jpeg'); 
             background-size: cover;
             background-repeat: no-repeat;
@@ -33,26 +32,21 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
         }
         
-        /* --- MUSIC PLAYER STYLES (Unchanged) --- */
         #music-player-widget {
             position: fixed;
-            bottom: 1.5rem; /* 24px */
-            right: 1.5rem; /* 24px */
+            bottom: 1.5rem;
+            right: 1.5rem;
             z-index: 50;
             width: 320px; 
             height: auto;
             background-color: rgba(0, 0, 0, 0.8);
             border: none;
-            padding: 0.75rem; /* 12px */
+            padding: 0.75rem;
             display: flex;
             align-items: center;
             transition: all 0.3s ease;
         }
-        
-        #music-player-widget:hover {
-            background-color: rgba(0, 0, 0, 0.95);
-        }
-        
+        #music-player-widget:hover { background-color: rgba(0, 0, 0, 0.95); }
         #player-cover-art {
             width: 64px;
             height: 64px;
@@ -62,47 +56,31 @@
             background-color: #111;
             image-rendering: pixelated;
         }
-
-        #player-main {
-            flex-grow: 1; 
-            overflow: hidden; 
-            min-width: 0; 
-        }
-
+        #player-main { flex-grow: 1; overflow: hidden; min-width: 0; }
         #player-title {
             color: #ffffff;
-            font-size: 1.125rem; /* 18px */
+            font-size: 1.125rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         #player-artist {
-            font-size: 0.875rem; /* 14px */
+            font-size: 0.875rem;
             color: #969696;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             margin-bottom: 4px;
         }
-        
-        .player-controls-row {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem; /* 4px */
-        }
-        
+        .player-controls-row { display: flex; align-items: center; gap: 0.25rem; }
         .player-controls-row button {
-            color: #facc15; /* yellow-400 */
-            font-size: 1.25rem; /* 20px */
+            color: #facc15;
+            font-size: 1.25rem;
             flex-shrink: 0;
             padding: 0 0.25rem;
             transition: color 0.2s ease;
         }
-        #play-pause-btn {
-            font-size: 1.5rem; /* 24px */
-            line-height: 1;
-        }
-        
+        #play-pause-btn { font-size: 1.5rem; line-height: 1; }
         #volume-slider {
             -webkit-appearance: none;
             width: 100%; 
@@ -111,7 +89,6 @@
             background: transparent;
             margin-left: 0.5rem; 
         }
-        
         #volume-slider::-webkit-slider-runnable-track {
             width: 100%;
             height: 4px;
@@ -126,7 +103,6 @@
             border: 1px solid #969696;
             cursor: pointer;
         }
-
         #volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 16px;
@@ -174,305 +150,252 @@
         </a>
     </div>
 
-    <!-- 
-      --- "LAID DOWN" MUSIC PLAYER WIDGET --- 
-    -->
     <audio id="audio-player"></audio>
     
     <div id="music-player-widget" class="pixel-font">
-        
-        <!-- Left Side: Album Art -->
         <img id="player-cover-art" src="" alt="Album Cover">
-        
-        <!-- Right Side: Info, Controls, Slider -->
         <div id="player-main">
-            
-            <!-- Song Info (Stacked) -->
             <div id="player-info-container" title="...">
                 <div id="player-title">...</div>
                 <div id="player-artist">Loading...</div>
             </div>
-            
-            <!-- Controls & Slider (Side-by-side) -->
             <div class="player-controls-row">
                 <button id="rewind-btn" title="Previous">[<<]</button>
                 <button id="play-pause-btn" title="Play/Pause">[>]</button>
                 <button id="skip-btn" title="Next (Shuffle)">[>>]</button>
                 <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" title="Volume">
             </div>
-
         </div>
     </div>
-    <!-- --- END OF WIDGET --- -->
 
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- Splash Text & Auth Logic (Unchanged) ---
-            const welcomeMessage = document.getElementById('welcome-message');
-            const authLink = document.getElementById('auth-link');
-            const splashElement = document.getElementById('splash-text');
             
-            const rareSplashChance = Math.floor(Math.random() * 50); 
-            if (splashElement) {
-                if (rareSplashChance === 0) {
-                    splashElement.textContent = "YOUR RARE 1-in-50 LINE HERE"; 
-                } else {
-                    const splashOptions = [
-                        "are you a freshman?", "2 sweet teas and...", "bbq chicken alert", 
-                        "trick or treat, smell my.. donuts..", "pull up to ur block with intelligence",
-                        "john deere approved!", "long live futtbucker67", "six seven", "oh brother..",
-                        "are you even an ew student?", "i added the proxy and ai", "get the bawlls!!",
-                        "six one", "add jiggletip on clash, i only got 2100 though, am willing to put up a good game",
-                        "sorry but you are not a sigma", "idk really what to say"
-                    ];
-                    const randomIndex = Math.floor(Math.random() * splashOptions.length);
-                    splashElement.textContent = splashOptions[randomIndex];
-                }
-            }
-            
-
-            function updateUI() {
-                let username = localStorage.getItem('username');
-                if (username) {
-                    welcomeMessage.textContent = `Welcome, ${username}`;
-                    authLink.textContent = '(sign out)';
-                    authLink.onclick = signOut;
-                } else {
-                    welcomeMessage.textContent = 'Welcome, ?';
-                    authLink.textContent = '(sign up / sign in)';
-                    authLink.onclick = signIn;
-                }
-            }
-            function signIn(e) {
-                e.preventDefault();
-                const name = prompt('Enter yourname:');
-                if (name && name.trim() !== '') {
-                    localStorage.setItem('username', name.trim());
-                    updateUI();
-                }
-            }
-            function signOut(e) {
-                e.preventDefault();
-                localStorage.removeItem('username');
-                updateUI();
-            }
-            updateUI();
-            
-            
-            // --- MUSIC PLAYER LOGIC ---
-            
-            const audioPlayer = document.getElementById('audio-player');
-            
-            const playPauseBtn = document.getElementById('play-pause-btn');
-            const rewindBtn = document.getElementById('rewind-btn');
-            const skipBtn = document.getElementById('skip-btn');
-            const playerInfoContainer = document.getElementById('player-info-container');
+            // --- CATCH ALL ERRORS AND SHOW THEM ---
+            // We get the player elements first, so we can show errors
             const playerTitleEl = document.getElementById('player-title');
             const playerArtistEl = document.getElementById('player-artist');
-            const volumeSlider = document.getElementById('volume-slider');
-            const playerCoverArt = document.getElementById('player-cover-art');
-            const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
-            playerCoverArt.src = placeholderCover; 
-
-            let currentSongIndex = 0;
-            let isPlaying = false;
             
-            // This script waits until *after* playlist.js has loaded
-            // so `baseURL` and `playlist` *should* be defined.
-            
-            // We MUST check if playlist.js actually loaded.
-            if (typeof playlist === 'undefined' || typeof baseURL === 'undefined') {
-                console.error("CRITICAL ERROR: 'playlist' or 'baseURL' is not defined. Check if playlist.js is uploaded and loading correctly.");
-                playerTitleEl.textContent = "Playlist error";
-                playerArtistEl.textContent = "Upload playlist.js";
-                return; // Stop the script
-            }
+            try {
+                // --- Splash Text & Auth Logic ---
+                const welcomeMessage = document.getElementById('welcome-message');
+                const authLink = document.getElementById('auth-link');
+                const splashElement = document.getElementById('splash-text');
+                
+                const rareSplashChance = Math.floor(Math.random() * 50); 
+                if (splashElement) {
+                    if (rareSplashChance === 0) {
+                        splashElement.textContent = "YOUR RARE 1-in-50 LINE HERE"; 
+                    } else {
+                        const splashOptions = [
+                            "are you a freshman?", "2 sweet teas and...", "bbq chicken alert", 
+                            "trick or treat, smell my.. donuts..", "pull up to ur block with intelligence",
+                            "john deere approved!", "long live futtbucker67", "six seven", "oh brother..",
+                            "are you even an ew student?", "i added the proxy and ai", "get the bawlls!!",
+                            "six one", "add jiggletip on clash, i only got 2100 though, am willing to put up a good game",
+                            "sorry but you are not a sigma", "idk really what to say"
+                        ];
+                        const randomIndex = Math.floor(Math.random() * splashOptions.length);
+                        splashElement.textContent = splashOptions[randomIndex];
+                    }
+                }
+                
+                function updateUI() {
+                    let username = localStorage.getItem('username');
+                    if (username) {
+                        welcomeMessage.textContent = `Welcome, ${username}`;
+                        authLink.textContent = '(sign out)';
+                        authLink.onclick = signOut;
+                    } else {
+                        welcomeMessage.textContent = 'Welcome, ?';
+                        authLink.textContent = '(sign up / sign in)';
+                        authLink.onclick = signIn;
+                    }
+                }
+                function signIn(e) {
+                    e.preventDefault();
+                    const name = prompt('Enter yourname:');
+                    if (name && name.trim() !== '') {
+                        localStorage.setItem('username', name.trim());
+                        updateUI();
+                    }
+                }
+                function signOut(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('username');
+                    updateUI();
+                }
+                updateUI();
+                
+                
+                // --- MUSIC PLAYER LOGIC ---
+                const audioPlayer = document.getElementById('audio-player');
+                const playPauseBtn = document.getElementById('play-pause-btn');
+                const rewindBtn = document.getElementById('rewind-btn');
+                const skipBtn = document.getElementById('skip-btn');
+                const playerInfoContainer = document.getElementById('player-info-container');
+                const volumeSlider = document.getElementById('volume-slider');
+                const playerCoverArt = document.getElementById('player-cover-art');
+                const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
+                playerCoverArt.src = placeholderCover; 
 
-            // --- THIS IS WHERE YOU DEFINE YOUR SECRET SONG ---
-            const secretSong = {
-                title: "hey, big guy said im an easter egg",
-                artist: "i heard, if u put /secret at the end of the link",
-                src: baseURL + "clock.mp3",
-                cover: baseURL + "handofpeace.jpg"
-            };
-            // --- END OF SECRET SONG DEFINITION ---
+                let currentSongIndex = 0;
+                let isPlaying = false;
+                
+                // --- CHECK 1: ARE THE FILES LOADED? ---
+                if (typeof playlist === 'undefined' || typeof baseURL === 'undefined') {
+                    playerTitleEl.textContent = "File Load Error";
+                    playerArtistEl.textContent = "playlist.js missing";
+                    return; // Stop the script
+                }
 
-            
-            function loadSong(songIndex) {
-                const song = (songIndex === -1) ? secretSong : playlist[songIndex];
-                
-                if (!song) {
-                    console.error(`Song at index ${songIndex} not found.`);
-                    return;
-                }
-                
-                if (!song.src || !song.cover) {
-                    console.log("Skipping empty placeholder song.");
-                    skipSong(true); // Pass 'true' to skip *without* auto-playing
-                    return;
-                }
-                
-                const songSrc = song.src.replace(/ /g, "%20");
-                const coverSrc = song.cover.replace(/ /g, "%20");
-                
-                audioPlayer.src = songSrc; 
-                
-                const songText = `${song.title} - ${song.artist}`;
-                playerInfoContainer.title = songText; 
-                playerTitleEl.textContent = song.title || "...";
-                playerArtistEl.textContent = song.artist || "...";
-                
-                if (song.cover) {
-                    playerCoverArt.src = coverSrc;
-                } else {
-                    playerCoverArt.src = placeholderCover;
-                }
-                
-                playPauseBtn.textContent = '[>]';
-                isPlaying = false;
-            }
+                const secretSong = {
+                    title: "hey, big guy said im an easter egg",
+                    artist: "i heard, if u put /secret at the end of the link",
+                    src: baseURL + "clock.mp3",
+                    cover: baseURL + "handofpeace.jpg"
+                };
 
-            function playSong() {
-                if (!audioPlayer.src) {
-                    return; 
+                function loadSong(songIndex) {
+                    const song = (songIndex === -1) ? secretSong : playlist[songIndex];
+                    if (!song) { return; }
+                    if (!song.src || !song.cover) {
+                        skipSong(true);
+                        return;
+                    }
+                    const songSrc = song.src.replace(/ /g, "%20");
+                    const coverSrc = song.cover.replace(/ /g, "%20");
+                    audioPlayer.src = songSrc; 
+                    playerInfoContainer.title = `${song.title} - ${song.artist}`; 
+                    playerTitleEl.textContent = song.title || "...";
+                    playerArtistEl.textContent = song.artist || "...";
+                    playerCoverArt.src = song.cover ? coverSrc : placeholderCover;
+                    playPauseBtn.textContent = '[>]';
+                    isPlaying = false;
                 }
-                
-                audioPlayer.volume = volumeSlider.value; 
-                const playPromise = audioPlayer.play();
-                
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        playPauseBtn.textContent = '[||]';
-                        isPlaying = true;
-                    }).catch(error => {
-                        console.error("Error playing audio:", error);
-                        // Don't show "user must interact" if they *did* interact
-                        if (error.name === "NotAllowedError") {
-                           playerTitleEl.textContent = "Click Play";
-                           playerArtistEl.textContent = "to start";
-                        }
-                        // Note: The 'error' event listener will handle skipping
-                        isPlaying = false;
-                    });
-                }
-            }
 
-            function pauseSong() {
-                audioPlayer.pause();
-                playPauseBtn.textContent = '[>]';
-                isPlaying = false;
-            }
-
-            function togglePlayPause() {
-                if (isPlaying) {
-                    pauseSong();
-                } else {
-                    playSong();
+                function playSong() {
+                    if (!audioPlayer.src) { return; }
+                    
+                    audioPlayer.volume = volumeSlider.value; 
+                    const playPromise = audioPlayer.play();
+                    
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            playPauseBtn.textContent = '[||]';
+                            isPlaying = true;
+                        }).catch(error => {
+                            // --- CHECK 2: DID PLAYBACK FAIL? ---
+                            playerTitleEl.textContent = "Play Error";
+                            playerArtistEl.textContent = error.name; // e.g., "NotAllowedError"
+                            isPlaying = false;
+                        });
+                    }
                 }
-            }
 
-            // 'skipOnly' is a new parameter. 
-            // If true, it just loads the next song without playing it.
-            function skipSong(skipOnly = false) {
-                let nextSongIndex = Math.floor(Math.random() * playlist.length);
-                if (nextSongIndex === currentSongIndex && playlist.length > 1) {
-                    nextSongIndex = (nextSongIndex + 1) % playlist.length; 
+                function pauseSong() {
+                    audioPlayer.pause();
+                    playPauseBtn.textContent = '[>]';
+                    isPlaying = false;
                 }
-                currentSongIndex = nextSongIndex;
-                loadSong(currentSongIndex);
-                
-                // Only play if loadSong() didn't skip *and* we're not in a skipOnly call
-                if (audioPlayer.src && !skipOnly) {
-                   playSong();
-                }
-            }
 
-            function rewindSong() {
-                if (currentSongIndex === -1) {
-                    skipSong();
-                } else {
-                    currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
-                    loadSong(currentSongIndex);
-                    if (audioPlayer.src) {
+                function togglePlayPause() {
+                    if (isPlaying) {
+                        pauseSong();
+                    } else {
                         playSong();
                     }
                 }
-            }
 
-            window.addEventListener('beforeunload', () => {
-                if (audioPlayer.currentTime > 0) {
-                    const musicState = {
-                        currentSongIndex: currentSongIndex,
-                        currentTime: audioPlayer.currentTime
-                    };
-                    sessionStorage.setItem('musicPlayerState', JSON.stringify(musicState));
-                }
-            });
-
-            function loadInitialState() {
-                const savedStateJSON = sessionStorage.getItem('musicPlayerState');
-                
-                if (savedStateJSON) {
-                    try {
-                        const savedState = JSON.parse(savedStateJSON);
-                        currentSongIndex = savedState.currentSongIndex; 
-                        loadSong(currentSongIndex);
-                        
-                        audioPlayer.addEventListener('loadedmetadata', () => {
-                            audioPlayer.currentTime = savedState.currentTime || 0;
-                        }, { once: true }); 
-
-                    } catch (e) {
-                        console.error("Error parsing saved music state:", e);
-                        currentSongIndex = Math.floor(Math.random() * playlist.length);
-                        loadSong(currentSongIndex); 
+                function skipSong(skipOnly = false) {
+                    let nextSongIndex = Math.floor(Math.random() * playlist.length);
+                    if (nextSongIndex === currentSongIndex && playlist.length > 1) {
+                        nextSongIndex = (nextSongIndex + 1) % playlist.length; 
                     }
-                } else {
-                    const rareSongChance = Math.floor(Math.random() * 50);
-                    if (rareSongChance === 0) {
-                        console.log("RARE SONG HIT!");
-                        currentSongIndex = -1;
-                        loadSong(currentSongIndex);
+                    currentSongIndex = nextSongIndex;
+                    loadSong(currentSongIndex);
+                    
+                    if (audioPlayer.src && !skipOnly) {
+                       playSong();
+                    }
+                }
+
+                function rewindSong() {
+                    if (currentSongIndex === -1) {
+                        skipSong();
                     } else {
-                        currentSongIndex = Math.floor(Math.random() * playlist.length);
+                        currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
                         loadSong(currentSongIndex);
+                        if (audioPlayer.src) {
+                            playSong();
+                        }
                     }
                 }
+
+                window.addEventListener('beforeunload', () => {
+                    if (audioPlayer.currentTime > 0) {
+                        sessionStorage.setItem('musicPlayerState', JSON.stringify({
+                            currentSongIndex: currentSongIndex,
+                            currentTime: audioPlayer.currentTime
+                        }));
+                    }
+                });
+
+                function loadInitialState() {
+                    const savedStateJSON = sessionStorage.getItem('musicPlayerState');
+                    if (savedStateJSON) {
+                        try {
+                            const savedState = JSON.parse(savedStateJSON);
+                            currentSongIndex = savedState.currentSongIndex; 
+                            loadSong(currentSongIndex);
+                            audioPlayer.addEventListener('loadedmetadata', () => {
+                                audioPlayer.currentTime = savedState.currentTime || 0;
+                            }, { once: true }); 
+                        } catch (e) {
+                            currentSongIndex = Math.floor(Math.random() * playlist.length);
+                            loadSong(currentSongIndex); 
+                        }
+                    } else {
+                        const rareSongChance = Math.floor(Math.random() * 50);
+                        currentSongIndex = (rareSongChance === 0) ? -1 : Math.floor(Math.random() * playlist.length);
+                        loadSong(currentSongIndex);
+                    }
+                    audioPlayer.volume = volumeSlider.value;
+                }
                 
-                audioPlayer.volume = volumeSlider.value;
+                // --- ATTACH LISTENERS ---
+                playPauseBtn.addEventListener('click', togglePlayPause);
+                skipBtn.addEventListener('click', () => skipSong(false));
+                rewindBtn.addEventListener('click', rewindSong);
+                
+                volumeSlider.addEventListener('input', (e) => {
+                    audioPlayer.volume = e.target.value; // Typo fixed
+                });
+
+                audioPlayer.addEventListener('ended', () => skipSong(false));
+                
+                audioPlayer.addEventListener('error', (e) => {
+                    // --- CHECK 3: DID THE FILE ITSELF FAIL TO LOAD (404)? ---
+                    playerTitleEl.textContent = `Load Error (404?)`;
+                    playerArtistEl.textContent = `Skipping...`;
+                    setTimeout(() => skipSong(true), 2000); 
+                });
+                
+                playerCoverArt.addEventListener('error', () => {
+                    playerCoverArt.src = placeholderCover;
+                });
+
+                loadInitialState();
+                
+            } catch (e) {
+                // --- CATCH ANY OTHER RANDOM ERROR (LIKE A TYPO) ---
+                playerTitleEl.textContent = "Code Error";
+                playerArtistEl.textContent = e.message;
             }
-            
-            playPauseBtn.addEventListener('click', togglePlayPause);
-            skipBtn.addEventListener('click', () => skipSong(false)); // Make sure to call with false
-            rewindBtn.addEventListener('click', rewindSong);
-            
-            volumeSlider.addEventListener('input', (e) => {
-                // THIS IS THE FIXED LINE
-                audioPlayer.volume = e.target.value;
-            });
-
-            // When a song ends, skip to a new random one
-            audioPlayer.addEventListener('ended', () => skipSong(false));
-            
-            audioPlayer.addEventListener('error', (e) => {
-                playerTitleEl.textContent = `Error loading track`;
-                playerArtistEl.textContent = `Skipping...`;
-                console.error("Audio player error on file:", audioPlayer.src, e);
-                // Wait 2 seconds, then skip to a new song *without* auto-playing it
-                // This stops the error loop. The user has to click play again.
-                setTimeout(() => skipSong(true), 2000); 
-            });
-            
-            playerCoverArt.addEventListener('error', () => {
-                console.error("Cover art failed to load:", playerCoverArt.src);
-                playerCoverArt.src = placeholderCover;
-            });
-
-            loadInitialState();
-            
         });
-    </script></body>
+    </script>
+</body>
 </html>
 
 
