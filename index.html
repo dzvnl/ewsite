@@ -151,12 +151,12 @@
 
     <!-- Main Menu -->
     <nav class="fixed top-0 left-0 p-6 sm:p-8 pixel-font z-10" style="padding-top: 50px;">
-        <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;"></h1>
+        <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;">MAIN MENU</h1>
         <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
-            <li><a href="/secrets" class="hover:text-red-900 active:text-red-900 transition-colors">home</a></li>
-            <li><a href="/list.html" class="hover:text-red-900 active:text-red-900 transition-colors">list</a></li>
-            <li><a href="/updates.html" class="hover:text-red-900 active:text-red-900 transition-colors">updates</a></li>
-            <li><a href="/contact.html" class="hover:text-red-900 active:text-red-900 transition-colors">contact</a></li>
+            <li><a href="/" class="hover:text-red-900 active:text-red-900 transition-colors">HOME</a></li>
+            <li><a href="/list.html" class="hover:text-red-900 active:text-red-900 transition-colors">GAMES</a></li>
+            <li><a href="/updates.html" class="hover:text-red-900 active:text-red-900 transition-colors">UPDATES</a></li>
+            <li><a href="/contact.html" class="hover:text-red-900 active:text-red-900 transition-colors">CONTACT</a></li>
             </ul>
     </nav>
 
@@ -168,7 +168,7 @@
     <!-- Welcome/Auth -->
     <div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
         <p>2.0</p>
-        <p id="welcome-message">welcome, </p>
+        <p id="welcome-message">Welcome, ?</p>
         <a href="#" id="auth-link" class="text-xs hover:text-white transition-colors" style="color: #969696;">
             (sign up / sign in)
         </a>
@@ -216,7 +216,7 @@
             const rareSplashChance = Math.floor(Math.random() * 50); 
             if (splashElement) {
                 if (rareSplashChance === 0) {
-                    splashElement.textContent = "YOUR RARE 1-in-50 LINE HERE"; 
+                    splashElement.textContent = "send music or games to add </3"; 
                 } else {
                     const splashOptions = [
                         "are you a freshman?", "2 sweet teas and...", "bbq chicken alert", 
@@ -278,16 +278,16 @@
             let isPlaying = false;
 
             // --- THIS IS WHERE YOU DEFINE YOUR SECRET SONG ---
-            // --- Fill in your secret song's details here ---
-            
-            // --- FIX: 'baseURL' must be defined here so the script doesn't crash! ---
             const baseURL = "https://6918d613edf05dd80c139242--ewsmusic.netlify.app/";
             
+            // --- FIX: Using a REAL song file for the secret song ---
+            // The old 'src' was "it could be cool", which isn't a file and caused an error.
+            // I've replaced it with the "hand of peace" song details.
             const secretSong = {
                 title: "hey, big guy said im an easter egg",
                 artist: "i heard, if u put /secret at the end of the link",
-                src: baseURL + "it could be cool",
-                cover: baseURL + "how should i know? im just a song."
+                src: baseURL + "clock.mp3",
+                cover: baseURL + "handofpeace.jpg"
             };
             // --- END OF SECRET SONG DEFINITION ---
 
@@ -300,7 +300,6 @@
             }
             
             function loadSong(songIndex) {
-                // This checks if we're trying to play the secret song
                 const song = (songIndex === -1) ? secretSong : playlist[songIndex];
                 
                 if (!song) {
@@ -308,11 +307,9 @@
                     return;
                 }
                 
-                // Check if src or cover are null (like the placeholder)
                 if (!song.src || !song.cover) {
                     console.log("Skipping empty placeholder song.");
-                    // Immediately skip to the next song
-                    skipSong(); 
+                    skipSong(true); // Pass 'true' to skip *without* auto-playing
                     return;
                 }
                 
@@ -326,7 +323,7 @@
                 playerTitleEl.textContent = song.title || "...";
                 playerArtistEl.textContent = song.artist || "...";
                 
-                if (song.cover && song.cover !== "PASTE YOUR COVER ART URL HERE") {
+                if (song.cover) {
                     playerCoverArt.src = coverSrc;
                 } else {
                     playerCoverArt.src = placeholderCover;
@@ -337,7 +334,6 @@
             }
 
             function playSong() {
-                // Don't try to play if the src is not set (e.g., on initial load)
                 if (!audioPlayer.src) {
                     return; 
                 }
@@ -350,9 +346,13 @@
                         playPauseBtn.textContent = '[||]';
                         isPlaying = true;
                     }).catch(error => {
-                        console.error("Error playing audio (user must interact first):", error);
-                        playerTitleEl.textContent = "Click Play";
-                        playerArtistEl.textContent = "to start";
+                        console.error("Error playing audio:", error);
+                        // Don't show "user must interact" if they *did* interact
+                        if (error.name === "NotAllowedError") {
+                           playerTitleEl.textContent = "Click Play";
+                           playerArtistEl.textContent = "to start";
+                        }
+                        // Note: The 'error' event listener will handle skipping
                         isPlaying = false;
                     });
                 }
@@ -372,22 +372,23 @@
                 }
             }
 
-            function skipSong() {
+            // 'skipOnly' is a new parameter. 
+            // If true, it just loads the next song without playing it.
+            function skipSong(skipOnly = false) {
                 let nextSongIndex = Math.floor(Math.random() * playlist.length);
                 if (nextSongIndex === currentSongIndex && playlist.length > 1) {
                     nextSongIndex = (nextSongIndex + 1) % playlist.length; 
                 }
                 currentSongIndex = nextSongIndex;
                 loadSong(currentSongIndex);
-                // We only play *after* loadSong has successfully loaded a song
-                // (it might skip a placeholder)
-                if (audioPlayer.src) {
+                
+                // Only play if loadSong() didn't skip *and* we're not in a skipOnly call
+                if (audioPlayer.src && !skipOnly) {
                    playSong();
                 }
             }
 
             function rewindSong() {
-                // If we are on the secret song, just go to a random song
                 if (currentSongIndex === -1) {
                     skipSong();
                 } else {
@@ -402,7 +403,7 @@
             window.addEventListener('beforeunload', () => {
                 if (audioPlayer.currentTime > 0) {
                     const musicState = {
-                        currentSongIndex: currentSongIndex, // This will save -1 if it's the secret song
+                        currentSongIndex: currentSongIndex,
                         currentTime: audioPlayer.currentTime
                     };
                     sessionStorage.setItem('musicPlayerState', JSON.stringify(musicState));
@@ -413,12 +414,9 @@
                 const savedStateJSON = sessionStorage.getItem('musicPlayerState');
                 
                 if (savedStateJSON) {
-                    // We have a saved song, load it (paused)
                     try {
                         const savedState = JSON.parse(savedStateJSON);
-                        // This will correctly load -1 if that's what was saved
                         currentSongIndex = savedState.currentSongIndex; 
-                        
                         loadSong(currentSongIndex);
                         
                         audioPlayer.addEventListener('loadedmetadata', () => {
@@ -431,27 +429,22 @@
                         loadSong(currentSongIndex); 
                     }
                 } else {
-                    // --- NEW 1-in-50 LOGIC ---
-                    const rareSongChance = Math.floor(Math.random() * 50); // 0-49
-                    
+                    const rareSongChance = Math.floor(Math.random() * 50);
                     if (rareSongChance === 0) {
-                        // 1-in-50 HIT! Play the secret song.
                         console.log("RARE SONG HIT!");
-                        currentSongIndex = -1; // Use -1 as the "secret song" index
+                        currentSongIndex = -1;
                         loadSong(currentSongIndex);
                     } else {
-                        // 49-in-50 MISS. Play a normal random song.
                         currentSongIndex = Math.floor(Math.random() * playlist.length);
                         loadSong(currentSongIndex);
                     }
-                    // --- END OF NEW LOGIC ---
                 }
                 
                 audioPlayer.volume = volumeSlider.value;
             }
             
             playPauseBtn.addEventListener('click', togglePlayPause);
-            skipBtn.addEventListener('click', skipSong);
+            skipBtn.addEventListener('click', () => skipSong(false)); // Make sure to call with false
             rewindBtn.addEventListener('click', rewindSong);
             
             volumeSlider.addEventListener('input', (e) => {
@@ -459,14 +452,15 @@
             });
 
             // When a song ends, skip to a new random one
-            // This works even if the secret song ends
-            audioPlayer.addEventListener('ended', skipSong);
+            audioPlayer.addEventListener('ended', () => skipSong(false));
             
             audioPlayer.addEventListener('error', (e) => {
                 playerTitleEl.textContent = `Error loading track`;
                 playerArtistEl.textContent = `Skipping...`;
                 console.error("Audio player error on file:", audioPlayer.src, e);
-                setTimeout(skipSong, 2000); 
+                // Wait 2 seconds, then skip to a new song *without* auto-playing it
+                // This stops the error loop. The user has to click play again.
+                setTimeout(() => skipSong(true), 2000); 
             });
             
             playerCoverArt.addEventListener('error', () => {
@@ -480,4 +474,5 @@
     </script>
 </body>
 </html>
+
 
