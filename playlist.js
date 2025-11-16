@@ -192,8 +192,8 @@ const playlist = [
     {
         title: "hi im the hand of peace, remember that menu button? go ahead for me, click it."
         artist: "the hand of peace"
-        src: "clock.mp3"
-        cover: "handofpeace.jpg"
+        src: baseURL + "clock.mp3"
+        cover: baseURL + "handofpeace.jpg"
     }
 ];
 
