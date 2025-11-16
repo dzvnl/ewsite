@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     
-    <!-- This will load your playlist.js file from the same folder -->
     <script src="playlist.js"></script>
     
     <style>
@@ -28,9 +27,11 @@
             -webkit-font-smoothing: none;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
         }
+        
+        /* --- STANDARDIZED PLAYER CSS --- */
         #music-player-widget {
             position: fixed;
-            bottom: 1.5rem;
+            bottom: 1.5rem; /* Standardized to bottom-right */
             right: 1.5rem;
             z-index: 50;
             width: 320px; 
@@ -101,7 +102,6 @@
 </head>
 <body>
 
-    <!-- Main Menu -->
     <nav class="fixed top-0 left-0 p-6 sm:p-8 pixel-font z-10" style="padding-top: 50px;">
         <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;"></h1>
         <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
@@ -112,12 +112,10 @@
             </ul>
     </nav>
 
-    <!-- Splash Text -->
     <div class="fixed top-2/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pixel-font text-yellow-400 text-base lg:text-lg text-center z-10 p-4">
         <p id="splash-text"></p>
     </div>
 
-    <!-- Welcome/Auth -->
     <div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
         <p>2.0</p>
         <p id="welcome-message">Welcome, ?</p>
@@ -125,7 +123,6 @@
     </div>
 
     <audio id="audio-player"></audio>
-    
     <div id="music-player-widget" class="pixel-font">
         <img id="player-cover-art" src="httpsa://placehold.co/64x64/000000/333333?text=...&font=vt323" alt="Album Cover">
         <div id="player-main">
@@ -193,7 +190,7 @@
                 updateUI();
                 
                 
-                // --- MUSIC PLAYER LOGIC ---
+                // --- NEW PERSISTENT MUSIC PLAYER LOGIC ---
                 const audioPlayer = document.getElementById('audio-player');
                 const playPauseBtn = document.getElementById('play-pause-btn');
                 const rewindBtn = document.getElementById('rewind-btn');
@@ -202,19 +199,16 @@
                 const volumeSlider = document.getElementById('volume-slider');
                 const playerCoverArt = document.getElementById('player-cover-art');
                 const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
-                playerCoverArt.src = placeholderCover; 
-
+                
                 let currentSongIndex = 0;
                 let isPlaying = false;
                 
-                // --- CHECK 1: IS playlist.js LOADED? ---
                 if (typeof playlist === 'undefined') {
                     playerTitleEl.textContent = "Error";
                     playerArtistEl.textContent = "playlist.js missing";
                     return; 
                 }
 
-                // --- No baseURL needed, so secretSong must also use relative path
                 const secretSong = {
                     title: "hey, big guy said im an easter egg",
                     artist: "i heard, if u put /secret at the end of the link",
@@ -225,7 +219,8 @@
                 function loadSong(songIndex) {
                     const song = (songIndex === -1) ? secretSong : playlist[songIndex];
                     if (!song || !song.src || !song.cover) {
-                        skipSong(true); // Skip placeholder
+                        console.error("Invalid song data at index:", songIndex);
+                        skipSong(true); // Skip invalid/placeholder
                         return;
                     }
                     
@@ -248,8 +243,10 @@
                             playPauseBtn.textContent = '[||]';
                             isPlaying = true;
                         }).catch(error => {
-                            playerTitleEl.textContent = "Play Error";
-                            playerArtistEl.textContent = error.name; // e.g., "NotAllowedError"
+                            // This usually happens if the user hasn't clicked the page yet
+                            console.warn("Auto-play failed:", error.name);
+                            playerTitleEl.textContent = "Click Play";
+                            playerArtistEl.textContent = "to start music";
                             isPlaying = false;
                         });
                     }
@@ -290,49 +287,10 @@
                     }
                 }
                 
-                function loadInitialState() {
-                    const rareSongChance = Math.floor(Math.random() * 50);
-                    currentSongIndex = (rareSongChance === 0) ? -1 : Math.floor(Math.random() * playlist.length);
-                    loadSong(currentSongIndex);
-                    audioPlayer.volume = volumeSlider.value;
-                }
-                
-                // --- ATTACH LISTENERS ---
-                playPauseBtn.addEventListener('click', togglePlayPause);
-                skipBtn.addEventListener('click', () => skipSong(false));
-                rewindBtn.addEventListener('click', rewindSong);
-                
-                volumeSlider.addEventListener('input', (e) => {
-                    audioPlayer.volume = e.target.value;
-                });
-
-                audioPlayer.addEventListener('ended', () => skipSong(false));
-                
-                // --- THIS IS THE NEW ERROR HANDLER ---
-                audioPlayer.addEventListener('error', (e) => {
-                    // This is a 404 error or a file format error.
-                    playerTitleEl.textContent = `Load Error (404)`;
-                    playerArtistEl.textContent = `Check file name`;
-                    // We STOP and do not skip. This shows us the error.
-                });
-                
-                playerCoverArt.addEventListener('error', () => {
-                    // If the cover art fails, show a placeholder
-                    // but don't stop the music.
-                    playerCoverArt.src = placeholderCover;
-                    playerArtistEl.textContent = `${playerArtistEl.textContent} (no art)`;
-                });
-
-                loadInitialState();
-                
-            } catch (e) {
-                // Catch any other code-breaking typo
-                playerTitleEl.textContent = "Code Error";
-                playerArtistEl.textContent = e.message;
-            }
-        });
-    </script>
-</body>
-</html>
-
-
+                // --- 1. SAVE STATE WHEN LEAVING ---
+                window.addEventListener('beforeunload', () => {
+                    if (audioPlayer.currentTime > 0) {
+                        const musicState = {
+                            currentSongIndex: currentSongIndex,
+                            currentTime: audioPlayer.currentTime,
+                            volume: audioPlayer.volume,
