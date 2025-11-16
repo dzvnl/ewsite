@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&family=MedievalSharp&family=Inter:wght@400;600;700;800&family=VT323&display=swap" rel="stylesheet">
     
-    <!-- This loads your playlist.js file -->
     <script src="playlist.js"></script>
 
     <style>
@@ -47,6 +46,7 @@
 
         .font-inter { font-family: 'Inter', sans-serif; }
 
+        /* * --- RESTORED: POSTER STYLES --- */
         .game-poster-img {
             aspect-ratio: 2 / 3;
             object-fit: cover;
@@ -54,14 +54,11 @@
             border-bottom: 2px solid #881337;
         }
         
-        .game-item {
-            display: none;
-        }
-
-        /* * --- UPDATED: MUSIC PLAYER STYLES --- 
-         * Changed 'bottom: 1.5rem' to 'top: 1.5rem'
-         * It is now in the top-right corner.
+        /* * --- REMOVED: .game-item { display: none; } ---
+         * This rule is gone so all games are visible.
         */
+
+        /* * --- UPDATED: MUSIC PLAYER STYLES --- */
         #music-player-widget {
             position: fixed;
             top: 1.5rem; /* 24px */
@@ -188,20 +185,13 @@
         </ul>
     </nav>
 
-    <!-- 
-      * REMOVED: The entire 'Welcome, Unknown Soldier' block
-      * that was here. The music player (which is 'fixed')
-      * will now occupy this space from its CSS.
-    -->
-
     <main class="flex flex-col items-center p-6 md:p-12 text-center mt-48">
 
         <section class="w-full max-w-7xl mx-auto pt-12">
             <h2 class="text-5xl text-red-600 mb-12 text-center gothic-title"></h2>
 
-            <div class="grid grid-cols-4 grid-rows-2 gap-6 font-inter text-left">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 font-inter text-left">
 
-                <!-- All your game links are here, unchanged -->
                 <a href="ai.html" class="game-item group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
                     <img src="https://i.imgur.com/gGi14mJ.png" alt="Gemini AI" class="w-full game-poster-img" onerror="this.onerror=null;this.src='https://placehold.co/400x600/1f2937/dc2626?text=AI+CHAT';">
                     <h3 class="p-4 text-lg font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
@@ -216,8 +206,6 @@
                     </h3>
                 </a>
 
-                <!-- ... (all your other game links) ... -->
-                
                 <a href="mc188.html" class="game-item group block w-full text-left bg-gray-900/70 rounded-lg border-2 border-red-900 overflow-hidden transition-all duration-200 hover:border-red-700 hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-900/30">
                     <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHmKtxX_YAuyf7aF9-QESzvRbQ4nFMW5SOpA&s" alt="Minecraft" class="w-full game-poster-img">
                     <h3 class="p-4 text-lg font-semibold text-gray-200 group-hover:text-red-600 transition-colors">
@@ -471,24 +459,10 @@
 
             </div>
             
-            <!-- 
-              * UPDATED: Removed 'mb-32'
-              * The player is no longer at the bottom, so we don't
-              * need this extra margin anymore.
-            -->
-            <div class="flex justify-center items-center space-x-8 mt-12">
-                <button id="prev-page" class="pixel-font text-4xl text-gray-400 hover:text-red-900 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"><--</button>
-                <span id="page-indicator" class="pixel-font text-2xl text-yellow-400">Page 1</span>
-                <button id="next-page" class="pixel-font text-4xl text-gray-400 hover:text-red-900 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">--></button>
-            </div>
-            
-        </section>
+            </section>
 
     </main>
 
-    <!-- 
-      --- MUSIC PLAYER WIDGET --- 
-    -->
     <audio id="audio-player"></audio>
     <div id="music-player-widget" class="pixel-font">
         <img id="player-cover-art" src="" alt="Album Cover">
@@ -505,61 +479,20 @@
             </div>
         </div>
     </div>
-    <!-- --- END OF MUSIC WIDGET --- -->
-
-
-    <!-- 
-      --- GAME OVERLAY ---
-    -->
     <div id="game-overlay" class="fixed top-0 left-0 w-full h-full bg-black z-50" style="display: none;">
-        <!-- The small red 'X' button -->
         <button id="close-game-btn" class="pixel-font fixed top-4 right-5 text-red-600 text-5xl z-[60] hover:text-white transition-colors">
             X
         </button>
-        <!-- The iframe that holds the game -->
         <iframe id="game-iframe" class="w-full h-full border-0 z-[55]" src="about:blank"></iframe>
     </div>
-    <!-- --- END OF GAME OVERLAY --- -->
-
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             
             // --- REMOVED: AUTH SCRIPT ---
-            // All the javascript for 'welcome-message' and 'auth-link'
-            // has been removed, as the HTML is also gone.
             
-            // --- PAGINATION SCRIPT ---
-            let currentPage = 1;
-            const itemsPerPage = 8;
-            const gameItems = Array.from(document.querySelectorAll('.game-item'));
-            const totalPages = Math.ceil(gameItems.length / itemsPerPage);
+            // --- REMOVED: PAGINATION SCRIPT ---
+            // All the javascript for pagination has been removed.
             
-            const prevButton = document.getElementById('prev-page');
-            const nextButton = document.getElementById('next-page');
-            const pageIndicator = document.getElementById('page-indicator');
-
-            function showPage(page) {
-                const startIndex = (page - 1) * itemsPerPage;
-                const endIndex = startIndex + itemsPerPage;
-                gameItems.forEach(item => { item.style.display = 'none'; });
-                gameItems.slice(startIndex, endIndex).forEach(item => { item.style.display = 'block'; });
-                pageIndicator.textContent = `Page ${page} / ${totalPages}`;
-                updateButtons();
-            }
-            function updateButtons() {
-                prevButton.disabled = currentPage === 1;
-                nextButton.disabled = currentPage === totalPages;
-            }
-            prevButton.addEventListener('click', () => {
-                if (currentPage > 1) { currentPage--; showPage(currentPage); window.scrollTo(0, 0); }
-            });
-            nextButton.addEventListener('click', () => {
-                if (currentPage < totalPages) { currentPage++; showPage(currentPage); window.scrollTo(0, 0); }
-            });
-            showPage(1);
-
-
             // --- MUSIC PLAYER LOGIC ---
             const audioPlayer = document.getElementById('audio-player');
             const playPauseBtn = document.getElementById('play-pause-btn');
@@ -601,7 +534,7 @@
                     const coverSrc = song.cover.replace(/ /g, "%20");
                     
                     audioPlayer.src = songSrc; 
-                    const songText = `${song.title} - ${song.artist}`;
+                    const songText = `$song.title} - ${song.artist}`;
                     playerInfoContainer.title = songText; 
                     playerTitleEl.textContent = song.title || "...";
                     playerArtistEl.textContent = song.artist || "...";
@@ -744,5 +677,3 @@
     </script>
 </body>
 </html>
-
-
