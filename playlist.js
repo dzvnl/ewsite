@@ -1,6 +1,6 @@
 
 
-const baseURL = "ewsmusic2.netlify.app/";
+const baseURL = "ewsmusic.netlify.app/";
 
 const playlist = [
     {
