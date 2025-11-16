@@ -1,4 +1,4 @@
-const baseURL = "https://6919726c83be0afea2c129c2--ewsmusic.netlify.app";
+const baseURL = "https://691979de9afbf60943be90e2--ewsmusic.netlify.app";
 
 const playlist = [
     {
