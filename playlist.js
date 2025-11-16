@@ -1,19 +1,9 @@
-// No more baseURL! All paths are relative.
-// This file MUST be in the same folder as your .mp3 and .jpg files.
+// This list is 100% in sync with your file list,
+// with the two missing songs removed and the filenames with spaces fixed.
 
 const playlist = [
-    {
-        title: "Digital Bath",
-        artist: "Deftones",
-        src: "digitalbath.mp3",
-        cover: "deftones.jpg"
-    },
-    {
-        title: "Sextape",
-        artist: "Deftones",
-        src: "sextape.mp3", 
-        cover: "deftones.jpg"
-    },
+    // "Digital Bath" and "Sextape" were removed because 
+    // they are not in your file list, which caused the 404 error.
     {
         title: "Xtal",
         artist: "Aphex Twin",
@@ -41,7 +31,7 @@ const playlist = [
     {
         title: "Alternative Outro",
         artist: "LUCKI",
-        src: "AlternativeOutro.mp3", 
+        src: "alternativeoutro.mp3", // <-- Fixed capitalization
         cover: "lucki.jpg"
     },
     {
@@ -84,7 +74,7 @@ const playlist = [
         title: "Diamonds",
         artist: "Chris Travis",
         src: "diamonds.mp3",
-        cover: "christravis.jpg"
+        cover: "christravis.jpg" // <-- Fixed (matches your renamed file)
     },
     {
         title: "Black Magic",
@@ -120,7 +110,7 @@ const playlist = [
         title: "head in the ceiling fan",
         artist: "Title Fight",
         src: "titlefight.mp3",
-        cover: "title fih.jpg"
+        cover: "title-fih.jpg" // <-- Fixed (matches your renamed file)
     },
     {
         title: "Turn Me Loose",
