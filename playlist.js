@@ -1,197 +1,198 @@
-const baseURL = "https://69197d291efc7a0baccdf7a1--ewsmusic.netlify.app";
+// No more baseURL! All paths are relative.
+// This file MUST be in the same folder as your .mp3 and .jpg files.
 
 const playlist = [
     {
         title: "Digital Bath",
         artist: "Deftones",
-        src: baseURL + "digitalbath.mp3",
-        cover: baseURL + "deftones.jpg"
+        src: "digitalbath.mp3",
+        cover: "deftones.jpg"
     },
     {
         title: "Sextape",
         artist: "Deftones",
-        src: baseURL + "sextape.mp3", 
-        cover: baseURL + "deftones.jpg"
+        src: "sextape.mp3", 
+        cover: "deftones.jpg"
     },
     {
         title: "Xtal",
         artist: "Aphex Twin",
-        src: baseURL + "xtal.mp3",
-        cover: baseURL + "aphex.jpg"
+        src: "xtal.mp3",
+        cover: "aphex.jpg"
     },
     {
         title: "I Don't Wanna Be Me",
         artist: "Type O Negative",
-        src: baseURL + "idontwannabeme.mp3",
-        cover: baseURL + "ton.jpg"
+        src: "idontwannabeme.mp3",
+        cover: "ton.jpg"
     },
     {
         title: "Life Is Killing Me",
         artist: "Type O Negative",
-        src: baseURL + "lifeiskilling.mp3",
-        cover: baseURL + "ton.jpg"
+        src: "lifeiskilling.mp3",
+        cover: "ton.jpg"
     },
     {
         title: "Exit Music (For a Film)",
         artist: "Radiohead",
-        src: baseURL + "exitmusic.mp3",
-        cover: baseURL + "radiohead.jpg"
+        src: "exitmusic.mp3",
+        cover: "radiohead.jpg"
     },
     {
         title: "Alternative Outro",
         artist: "LUCKI",
-        src: baseURL + "AlternativeOutro.mp3", 
-        cover: baseURL + "lucki.jpg"
+        src: "AlternativeOutro.mp3", 
+        cover: "lucki.jpg"
     },
     {
         title: "Bite My Lip",
         artist: "fakemink",
-        src: baseURL + "bitemylip.mp3",
-        cover: baseURL + "fakemink.jpg"
+        src: "bitemylip.mp3",
+        cover: "fakemink.jpg"
     },
     {
         title: "Ambilux",
         artist: "fakemink",
-        src: baseURL + "ambilux.mp3",
-        cover: baseURL + "fakemink3.jpg"
+        src: "ambilux.mp3",
+        cover: "fakemink3.jpg"
     },
     {
         title: "I'm Like Why",
         artist: "xaviersobased",
-        src: baseURL + "imlikewhy.mp3",
-        cover: baseURL + "xav.jpg"
+        src: "imlikewhy.mp3",
+        cover: "xav.jpg"
     },
     {
         title: "Love Hate",
         artist: "xaviersobased",
-        src: baseURL + "lovehate.mp3",
-        cover: baseURL + "xav2.jpg"
+        src: "lovehate.mp3",
+        cover: "xav2.jpg"
     },
     {
         title: "Foamposite Interlude",
         artist: "smokedope2016",
-        src: baseURL + "foamposite.mp3",
-        cover: baseURL + "smokedope2016.jpg"
+        src: "foamposite.mp3",
+        cover: "smokedope2016.jpg"
     },
     {
         title: "Abysmal Depths Are Flooded",
         artist: "Xasthur",
-        src: baseURL + "abysmaldepthsareflooded.mp3",
-        cover: baseURL + "xasthur.jpg"
+        src: "abysmaldepthsareflooded.mp3",
+        cover: "xasthur.jpg"
     },
     {
         title: "Diamonds",
         artist: "Chris Travis",
-        src: baseURL + "diamonds.mp3",
-        cover: baseURL + "christravis.jpg"
+        src: "diamonds.mp3",
+        cover: "christravis.jpg"
     },
     {
         title: "Black Magic",
         artist: "Ethel Wulf",
-        src: baseURL + "blackmagic.mp3",
-        cover: baseURL + "ethel.jpg"
+        src: "blackmagic.mp3",
+        cover: "ethel.jpg"
     },
     {
         title: "4 Raws",
         artist: "EsDeeKid",
-        src: baseURL + "4raws.mp3",
-        cover: baseURL + "esdee.jpg"
+        src: "4raws.mp3",
+        cover: "esdee.jpg"
     },
     {
         title: "Fever",
         artist: "fakemink/buckshot",
-        src: baseURL + "fever.mp3",
-        cover: baseURL + "buckshot.jpg"
+        src: "fever.mp3",
+        cover: "buckshot.jpg"
     },
     {
         title: "Stalks",
         artist: "Ghost Mountain",
-        src: baseURL + "stalks.mp3",
-        cover: baseURL + "ghostmountain.jpg"
+        src: "stalks.mp3",
+        cover: "ghostmountain.jpg"
     },
     {
         title: "MIA",
         artist: "feng",
-        src: baseURL + "mia.mp3",
-        cover: baseURL + "feng.jpg"
+        src: "mia.mp3",
+        cover: "feng.jpg"
     },
     {
         title: "head in the ceiling fan",
         artist: "Title Fight",
-        src: baseURL + "titlefight.mp3",
-        cover: baseURL + "title fih.jpg"
+        src: "titlefight.mp3",
+        cover: "title fih.jpg"
     },
     {
         title: "Turn Me Loose",
         artist: "limpbizkit/eminem",
-        src: baseURL + "turnmeloose.mp3",
-        cover: baseURL + "limp.jpg"
+        src: "turnmeloose.mp3",
+        cover: "limp.jpg"
     },
     {
         title: "black beetles",
         artist: "esdeekid",
-        src: baseURL + "bbr.mp3",
-        cover: baseURL + "esdee2.jpg" // Assuming a cover exists with this name
+        src: "bbr.mp3",
+        cover: "esdee2.jpg"
     },
     {
         title: "apathy",
         artist: "esdeekid",
-        src: baseURL + "apathy.mp3",
-        cover: baseURL + "esdee3.jpg" // Assuming a cover exists with this name
+        src: "apathy.mp3",
+        cover: "esdee3.jpg"
     },
     {
         title: "bring it back",
         artist: "chris travis",
-        src: baseURL + "bib.mp3",
-        cover: baseURL + "chris2.jpg" // Assuming a cover exists with this name
+        src: "bib.mp3",
+        cover: "chris2.jpg"
     },
     {
         title: "die til you live",
         artist: "fakemink",
-        src: baseURL + "dtyl.mp3",
-        cover: baseURL + "fakemink5.jpg" // Assuming a cover exists with this name
+        src: "dtyl.mp3",
+        cover: "fakemink5.jpg"
     },
     {
         title: "worthit",
         artist: "xaviersobased",
-        src: baseURL + "worthit.mp3",
-        cover: baseURL + "worthit.jpg" // Assuming a cover exists with this name
+        src: "worthit.mp3",
+        cover: "worthit.jpg"
     },
     {
         title: "in da party",
         artist: "smokedope2016",
-        src: baseURL + "indaparty.mp3",
-        cover: baseURL + "smokedope4.jpg" // Assuming a cover exists with this name
+        src: "indaparty.mp3",
+        cover: "smokedope4.jpg"
     },
     {
         title: "say it aint dro",
         artist: "smokedope2016",
-        src: baseURL + "dro.mp3",
-        cover: baseURL + "smokedope3.jpg" // Assuming a cover exists with this name
+        src: "dro.mp3",
+        cover: "smokedope3.jpg"
     },
     {
         title: "blunts on my mind",
         artist: "ethel wulf",
-        src: baseURL + "bluntsomm.mp3",
-        cover: baseURL + "ethel2.jpg" // Assuming a cover exists with this name
+        src: "bluntsomm.mp3",
+        cover: "ethel2.jpg"
     },
     {
         title: "luper",
         artist: "earl sweatshirt",
-        src: baseURL + "luper.mp3",
-        cover: baseURL + "earl.jpg" // Assuming a cover exists with this name
+        src: "luper.mp3",
+        cover: "earl.jpg"
     },
     {
         title: "frat",
         artist: "smokedope2016",
-        src: baseURL + "frat.mp3",
-        cover: baseURL + "smokedope2.jpg" // Assuming a cover exists with this name
+        src: "frat.mp3",
+        cover: "smokedope2.jpg"
     },
     {
         title: "hi im the hand of peace, remember that menu button? go ahead for me, click it.",
         artist: "the hand of peace",
-        src: baseURL + "clock.mp3",
-        cover: baseURL + "handofpeace.jpg"
+        src: "clock.mp3",
+        cover: "handofpeace.jpg"
     }
 ];
 
