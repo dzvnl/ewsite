@@ -190,7 +190,7 @@ const playlist = [
         cover: baseURL + "smokedope2.jpg" // Assuming a cover exists with this name
     },
     {
-        title: "hi im the hand of peace, remember that "menu" button? go ahead, click it."
+        title: "hi im the hand of peace, remember that menu button? go ahead for me, click it."
         artist: "the hand of peace"
         src: "clock.mp3"
         cover: "handofpeace.jpg"
