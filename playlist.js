@@ -128,6 +128,72 @@ const playlist = [
         artist: "limpbizkit/eminem",
         src: baseURL + "turnmeloose.mp3",
         cover: baseURL + "limp.jpg"
+    },
+    {
+        title: "black beetles",
+        artist: "esdeekid",
+        src: baseURL + "bbr.mp3",
+        cover: baseURL + "esdee2.jpg" // Assuming a cover exists with this name
+    },
+    {
+        title: "apathy",
+        artist: "esdeekid",
+        src: baseURL + "apathy.mp3",
+        cover: baseURL + "esdee3.jpg" // Assuming a cover exists with this name
+    },
+    {
+        title: "bring it back",
+        artist: "chris travis",
+        src: baseURL + "bib.mp3",
+        cover: baseURL + "chris2.jpg" // Assuming a cover exists with this name
+    },
+    {
+        title: "die til you live",
+        artist: "fakemink",
+        src: baseURL + "dtyl.mp3",
+        cover: baseURL + "fakemink5.jpg" // Assuming a cover exists with this name
+    },
+    {
+        title: "worthit",
+        artist: "xaviersobased",
+        src: baseURL + "worthit.mp3",
+        cover: baseURL + "worthit.jpg" // Assuming a cover exists with this name
+    },
+    {
+        title: "in da party",
+        artist: "smokedope2016",
+        src: baseURL + "indaparty.mp3",
+        cover: baseURL + "smokedope4.jpg" // Assuming a cover exists with this name
+    },
+    {
+        title: "say it aint dro",
+        artist: "smokedope2016",
+        src: baseURL + "dro.mp3",
+        cover: baseURL + "smokedope3.jpg" // Assuming a cover exists with this name
+    },
+    {
+        title: "blunts on my mind",
+        artist: "ethel wulf",
+        src: baseURL + "bluntsomm.mp3",
+        cover: baseURL + "ethel2.jpg" // Assuming a cover exists with this name
+    },
+    {
+        title: "luper",
+        artist: "earl sweatshirt",
+        src: baseURL + "luper.mp3",
+        cover: baseURL + "earl.jpg" // Assuming a cover exists with this name
+    },
+    {
+        title: "frat",
+        artist: "smokedope2016",
+        src: baseURL + "frat.mp3",
+        cover: baseURL + "smokedope2.jpg" // Assuming a cover exists with this name
+    },
+    {
+        title: "hi im the hand of peace, remember that "menu" button? go ahead, click it."
+        artist: "the hand of peace"
+        src: "clock.mp3"
+        cover: "handofpeace.jpg"
     }
 ];
 
