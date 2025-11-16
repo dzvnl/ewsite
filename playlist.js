@@ -1,6 +1,6 @@
 
 
-const baseURL = "69195563c4ab62a6c68f1bad--superb-alfajores-b4475b.netlify.app/";
+const baseURL = "ewsmusic2.netlify.app/";
 
 const playlist = [
     {
