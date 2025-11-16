@@ -151,12 +151,12 @@
 
     <!-- Main Menu -->
     <nav class="fixed top-0 left-0 p-6 sm:p-8 pixel-font z-10" style="padding-top: 50px;">
-        <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;"></h1>
+        <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;">MAIN MENU</h1>
         <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
-            <li><a href="/secrets" class="hover:text-red-900 active:text-red-900 transition-colors">home</a></li>
-            <li><a href="/list.html" class="hover:text-red-900 active:text-red-900 transition-colors">list</a></li>
-            <li><a href="/updates.html" class="hover:text-red-900 active:text-red-900 transition-colors">updates</a></li>
-            <li><a href="/contact.html" class="hover:text-red-900 active:text-red-900 transition-colors">contact</a></li>
+            <li><a href="/" class="hover:text-red-900 active:text-red-900 transition-colors">HOME</a></li>
+            <li><a href="/list.html" class="hover:text-red-900 active:text-red-900 transition-colors">GAMES</a></li>
+            <li><a href="/updates.html" class="hover:text-red-900 active:text-red-900 transition-colors">UPDATES</a></li>
+            <li><a href="/contact.html" class="hover:text-red-900 active:text-red-900 transition-colors">CONTACT</a></li>
             </ul>
     </nav>
 
@@ -216,7 +216,7 @@
             const rareSplashChance = Math.floor(Math.random() * 50); 
             if (splashElement) {
                 if (rareSplashChance === 0) {
-                    splashElement.textContent = "send music or games to add </3"; 
+                    splashElement.textContent = "YOUR RARE 1-in-50 LINE HERE"; 
                 } else {
                     const splashOptions = [
                         "are you a freshman?", "2 sweet teas and...", "bbq chicken alert", 
@@ -263,6 +263,10 @@
             // --- MUSIC PLAYER LOGIC ---
             
             const audioPlayer = document.getElementById('audio-player');
+            // --- FIX: This line is new ---
+            // This tells the browser to request cross-origin permissions
+            audioPlayer.crossOrigin = "anonymous"; 
+            
             const playPauseBtn = document.getElementById('play-pause-btn');
             const rewindBtn = document.getElementById('rewind-btn');
             const skipBtn = document.getElementById('skip-btn');
@@ -280,9 +284,6 @@
             // --- THIS IS WHERE YOU DEFINE YOUR SECRET SONG ---
             const baseURL = "https://6918d613edf05dd80c139242--ewsmusic.netlify.app/";
             
-            // --- FIX: Using a REAL song file for the secret song ---
-            // The old 'src' was "it could be cool", which isn't a file and caused an error.
-            // I've replaced it with the "hand of peace" song details.
             const secretSong = {
                 title: "hey, big guy said im an easter egg",
                 artist: "i heard, if u put /secret at the end of the link",
