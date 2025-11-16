@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     
-    <!-- This loads your playlist.js file -->
+    <!-- This will load your playlist.js file *from the same server* -->
     <script src="playlist.js"></script>
     
     <style>
@@ -263,9 +263,6 @@
             // --- MUSIC PLAYER LOGIC ---
             
             const audioPlayer = document.getElementById('audio-player');
-            // --- FIX: This line is new ---
-            // This tells the browser to request cross-origin permissions
-            audioPlayer.crossOrigin = "anonymous"; 
             
             const playPauseBtn = document.getElementById('play-pause-btn');
             const rewindBtn = document.getElementById('rewind-btn');
@@ -280,25 +277,27 @@
 
             let currentSongIndex = 0;
             let isPlaying = false;
+            
+            // This script waits until *after* playlist.js has loaded
+            // so `baseURL` and `playlist` *should* be defined.
+            
+            // We MUST check if playlist.js actually loaded.
+            if (typeof playlist === 'undefined' || typeof baseURL === 'undefined') {
+                console.error("CRITICAL ERROR: 'playlist' or 'baseURL' is not defined. Check if playlist.js is uploaded and loading correctly.");
+                playerTitleEl.textContent = "Playlist error";
+                playerArtistEl.textContent = "Upload playlist.js";
+                return; // Stop the script
+            }
 
             // --- THIS IS WHERE YOU DEFINE YOUR SECRET SONG ---
-            const baseURL = "https://6918d613edf05dd80c139242--ewsmusic.netlify.app/";
-            
             const secretSong = {
                 title: "hey, big guy said im an easter egg",
-                artist: "i heard, hit home?",
+                artist: "i heard, if u put /secret at the end of the link",
                 src: baseURL + "clock.mp3",
                 cover: baseURL + "handofpeace.jpg"
             };
             // --- END OF SECRET SONG DEFINITION ---
 
-
-            if (typeof playlist === 'undefined' || playlist.length === 0) {
-                console.error("CRITICAL ERROR: 'playlist' is not defined. Check if playlist.js is loading correctly.");
-                playerTitleEl.textContent = "Playlist error";
-                playerArtistEl.textContent = "Check playlist.js";
-                return; 
-            }
             
             function loadSong(songIndex) {
                 const song = (songIndex === -1) ? secretSong : playlist[songIndex];
@@ -449,6 +448,7 @@
             rewindBtn.addEventListener('click', rewindSong);
             
             volumeSlider.addEventListener('input', (e) => {
+                // THIS IS THE FIXED LINE
                 audioPlayer.volume = e.target.value;
             });
 
@@ -472,8 +472,7 @@
             loadInitialState();
             
         });
-    </script>
-</body>
+    </script></body>
 </html>
 
 
