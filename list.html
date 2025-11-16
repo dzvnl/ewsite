@@ -46,7 +46,6 @@
 
         .font-inter { font-family: 'Inter', sans-serif; }
 
-        /* * --- RESTORED: POSTER STYLES --- */
         .game-poster-img {
             aspect-ratio: 2 / 3;
             object-fit: cover;
@@ -54,31 +53,25 @@
             border-bottom: 2px solid #881337;
         }
         
-        /* * --- REMOVED: .game-item { display: none; } ---
-         * This rule is gone so all games are visible.
-        */
-
-        /* * --- UPDATED: MUSIC PLAYER STYLES --- */
+        /* --- NEW STANDARDIZED PLAYER CSS (replaces your old one) --- */
         #music-player-widget {
             position: fixed;
-            top: 1.5rem; /* 24px */
-            right: 1.5rem; /* 24px */
+            bottom: 1.5rem; /* Standardized to bottom-right */
+            right: 1.5rem;
             z-index: 50;
             width: 320px; 
-            max-width: 90vw; /* Ensure it doesn't overflow on tiny screens */
+            max-width: 90vw;
             height: auto;
             background-color: rgba(0, 0, 0, 0.8);
             border: none;
-            padding: 0.75rem; /* 12px */
+            padding: 0.75rem;
             display: flex;
             align-items: center;
             transition: all 0.3s ease;
         }
-        
         #music-player-widget:hover {
             background-color: rgba(0, 0, 0, 0.95);
         }
-        
         #player-cover-art {
             width: 64px;
             height: 64px;
@@ -88,47 +81,42 @@
             background-color: #111;
             image-rendering: pixelated;
         }
-
         #player-main {
             flex-grow: 1; 
             overflow: hidden; 
             min-width: 0; 
         }
-
         #player-title {
             color: #ffffff;
-            font-size: 1.125rem; /* 18px */
+            font-size: 1.125rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         #player-artist {
-            font-size: 0.875rem; /* 14px */
+            font-size: 0.875rem;
             color: #969696;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             margin-bottom: 4px;
         }
-        
         .player-controls-row {
             display: flex;
             align-items: center;
-            gap: 0.25rem; /* 4px */
+            gap: 0.25rem;
         }
-        
         .player-controls-row button {
-            color: #facc15; /* yellow-400 */
-            font-size: 1.25rem; /* 20px */
+            color: #facc15;
+            font-size: 1.25rem;
             flex-shrink: 0;
             padding: 0 0.25rem;
             transition: color 0.2s ease;
         }
         #play-pause-btn {
-            font-size: 1.5rem; /* 24px */
+            font-size: 1.5rem;
             line-height: 1;
         }
-        
         #volume-slider {
             -webkit-appearance: none;
             width: 100%; 
@@ -137,7 +125,6 @@
             background: transparent;
             margin-left: 0.5rem; 
         }
-        
         #volume-slider::-webkit-slider-runnable-track {
             width: 100%;
             height: 4px;
@@ -152,7 +139,6 @@
             border: 1px solid #969696;
             cursor: pointer;
         }
-
         #volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 16px;
@@ -465,7 +451,7 @@
 
     <audio id="audio-player"></audio>
     <div id="music-player-widget" class="pixel-font">
-        <img id="player-cover-art" src="" alt="Album Cover">
+        <img id="player-cover-art" src="httpsa://placehold.co/64x64/000000/333333?text=...&font=vt323" alt="Album Cover">
         <div id="player-main">
             <div id="player-info-container" title="...">
                 <div id="player-title">...</div>
@@ -479,86 +465,77 @@
             </div>
         </div>
     </div>
+    
     <div id="game-overlay" class="fixed top-0 left-0 w-full h-full bg-black z-50" style="display: none;">
         <button id="close-game-btn" class="pixel-font fixed top-4 right-5 text-red-600 text-5xl z-[60] hover:text-white transition-colors">
             X
         </button>
         <iframe id="game-iframe" class="w-full h-full border-0 z-[55]" src="about:blank"></iframe>
     </div>
+    
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            
-            // --- REMOVED: AUTH SCRIPT ---
-            
-            // --- REMOVED: PAGINATION SCRIPT ---
-            // All the javascript for pagination has been removed.
-            
-            // --- MUSIC PLAYER LOGIC ---
-            const audioPlayer = document.getElementById('audio-player');
-            const playPauseBtn = document.getElementById('play-pause-btn');
-            const rewindBtn = document.getElementById('rewind-btn');
-            const skipBtn = document.getElementById('skip-btn');
-            const playerInfoContainer = document.getElementById('player-info-container');
             const playerTitleEl = document.getElementById('player-title');
             const playerArtistEl = document.getElementById('player-artist');
-            const volumeSlider = document.getElementById('volume-slider');
-            const playerCoverArt = document.getElementById('player-cover-art');
-            const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
-            playerCoverArt.src = placeholderCover; 
 
-            let currentSongIndex = 0;
-            let isPlaying = false;
-
-            // --- THIS IS WHERE YOU DEFINE YOUR SECRET SONG ---
-            const secretSong = {
-                title: "SECRET SONG TITLE",
-                artist: "SECRET ARTIST",
-                src: "REPLACE_WITH_URL/SECRET_SONG_FILENAME.mp3",
-                cover: "REPLACE_WITH_URL/SECRET_COVER_FILENAME.jpg"
-            };
-            // --- END OF SECRET SONG DEFINITION ---
-
-            // Check if playlist.js loaded
-            if (typeof playlist === 'undefined' || playlist.length === 0) {
-                console.error("CRITICAL ERROR: 'playlist' is not defined. Check if playlist.js is loading correctly.");
-                playerTitleEl.textContent = "Playlist error";
-                playerArtistEl.textContent = "Check playlist.js";
-            } else {
+            try {
+                // --- NEW PERSISTENT MUSIC PLAYER LOGIC (replaces your old one) ---
+                const audioPlayer = document.getElementById('audio-player');
+                const playPauseBtn = document.getElementById('play-pause-btn');
+                const rewindBtn = document.getElementById('rewind-btn');
+                const skipBtn = document.getElementById('skip-btn');
+                const playerInfoContainer = document.getElementById('player-info-container');
+                const volumeSlider = document.getElementById('volume-slider');
+                const playerCoverArt = document.getElementById('player-cover-art');
+                const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
                 
+                let currentSongIndex = 0;
+                let isPlaying = false;
+                
+                if (typeof playlist === 'undefined') {
+                    playerTitleEl.textContent = "Error";
+                    playerArtistEl.textContent = "playlist.js missing";
+                    return; 
+                }
+
+                // NOTE: Using the secret song from page 1 for consistency
+                const secretSong = {
+                    title: "hey, big guy said im an easter egg",
+                    artist: "i heard, if u put /secret at the end of the link",
+                    src: "clock.mp3",
+                    cover: "handofpeace.jpg"
+                };
+
                 function loadSong(songIndex) {
                     const song = (songIndex === -1) ? secretSong : playlist[songIndex];
-                    if (!song) { console.error(`Song at index ${songIndex} not found.`); return; }
-                    
-                    // This fix encodes spaces (like in 'sextape 4.mp3')
-                    const songSrc = song.src.replace(/ /g, "%20");
-                    const coverSrc = song.cover.replace(/ /g, "%20");
-                    
-                    audioPlayer.src = songSrc; 
-                    const songText = `$song.title} - ${song.artist}`;
-                    playerInfoContainer.title = songText; 
-                    playerTitleEl.textContent = song.title || "...";
-                    playerArtistEl.textContent = song.artist || "...";
-                    
-                    if (song.cover && song.cover.startsWith("http")) {
-                        playerCoverArt.src = coverSrc;
-                    } else {
-                        playerCoverArt.src = placeholderCover;
+                    if (!song || !song.src || !song.cover) {
+                        console.error("Invalid song data at index:", songIndex);
+                        skipSong(true);
+                        return;
                     }
+                    
+                    audioPlayer.src = song.src; 
+                    playerInfoContainer.title = `${song.title} - ${song.artist}`; 
+                    playerTitleEl.textContent = song.title;
+                    playerArtistEl.textContent = song.artist;
+                    playerCoverArt.src = song.cover;
                     playPauseBtn.textContent = '[>]';
                     isPlaying = false;
                 }
 
                 function playSong() {
+                    if (!audioPlayer.src) { return; }
                     audioPlayer.volume = volumeSlider.value; 
+                    
                     const playPromise = audioPlayer.play();
                     if (playPromise !== undefined) {
                         playPromise.then(() => {
                             playPauseBtn.textContent = '[||]';
                             isPlaying = true;
                         }).catch(error => {
-                            console.error("Error playing audio (user must interact first):", error);
+                            console.warn("Auto-play failed:", error.name);
                             playerTitleEl.textContent = "Click Play";
-                            playerArtistEl.textContent = "to start";
+                            playerArtistEl.textContent = "to start music";
                             isPlaying = false;
                         });
                     }
@@ -571,87 +548,119 @@
                 }
 
                 function togglePlayPause() {
-                    if (isPlaying) { pauseSong(); } else { playSong(); }
+                    if (isPlaying) {
+                        pauseSong();
+                    } else {
+                        playSong();
+                    }
                 }
 
-                function skipSong() {
+                function skipSong(skipOnly = false) {
                     let nextSongIndex = Math.floor(Math.random() * playlist.length);
                     if (nextSongIndex === currentSongIndex && playlist.length > 1) {
                         nextSongIndex = (nextSongIndex + 1) % playlist.length; 
                     }
                     currentSongIndex = nextSongIndex;
                     loadSong(currentSongIndex);
-                    playSong();
-                }
-
-                function rewindSong() {
-                    if (currentSongIndex === -1) { skipSong(); } 
-                    else {
-                        currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
-                        loadSong(currentSongIndex);
-                        playSong();
+                    
+                    if (audioPlayer.src && !skipOnly) {
+                       playSong();
                     }
                 }
 
+                function rewindSong() {
+                    currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
+                    loadSong(currentSongIndex);
+                    if (audioPlayer.src) {
+                        playSong();
+                    }
+                }
+                
+                // --- 1. SAVE STATE WHEN LEAVING ---
                 window.addEventListener('beforeunload', () => {
                     if (audioPlayer.currentTime > 0) {
                         const musicState = {
                             currentSongIndex: currentSongIndex,
-                            currentTime: audioPlayer.currentTime
+                            currentTime: audioPlayer.currentTime,
+                            volume: audioPlayer.volume,
+                            isPlaying: isPlaying
                         };
                         sessionStorage.setItem('musicPlayerState', JSON.stringify(musicState));
+                    } else {
+                        sessionStorage.removeItem('musicPlayerState');
                     }
                 });
-
+                
+                // --- 2. LOAD STATE ON NEW PAGE ---
                 function loadInitialState() {
                     const savedStateJSON = sessionStorage.getItem('musicPlayerState');
+                    let savedState = null;
+                    
                     if (savedStateJSON) {
                         try {
-                            const savedState = JSON.parse(savedStateJSON);
-                            currentSongIndex = savedState.currentSongIndex; 
-                            loadSong(currentSongIndex);
-                            audioPlayer.addEventListener('loadedmetadata', () => {
-                                audioPlayer.currentTime = savedState.currentTime || 0;
-                            }, { once: true }); 
+                            savedState = JSON.parse(savedStateJSON);
                         } catch (e) {
-                            currentSongIndex = Math.floor(Math.random() * playlist.length);
-                            loadSong(currentSongIndex); 
-                        }
-                    } else {
-                        const rareSongChance = Math.floor(Math.random() * 50);
-                        if (rareSongChance === 0 && secretSong.src !== "REPLACE_WITH_URL/SECRET_SONG_FILENAME.mp3") {
-                            console.log("RARE SONG HIT!");
-                            currentSongIndex = -1;
-                            loadSong(currentSongIndex);
-                        } else {
-                            currentSongIndex = Math.floor(Math.random() * playlist.length);
-                            loadSong(currentSongIndex);
+                            console.error("Error parsing saved music state:", e);
+                            sessionStorage.removeItem('musicPlayerState'); // Clear bad data
                         }
                     }
-                    audioPlayer.volume = volumeSlider.value;
+
+                    if (savedState) {
+                        // We have a saved state!
+                        currentSongIndex = savedState.currentSongIndex;
+                        loadSong(currentSongIndex);
+                        volumeSlider.value = savedState.volume || 1;
+                        audioPlayer.volume = savedState.volume || 1;
+                        
+                        audioPlayer.addEventListener('loadedmetadata', () => {
+                            audioPlayer.currentTime = savedState.currentTime || 0;
+                            if (savedState.isPlaying) {
+                                playSong(); // Try to resume playing
+                            }
+                        }, { once: true }); 
+                        
+                    } else {
+                        // No saved state, load a random song (or secret)
+                        const rareSongChance = Math.floor(Math.random() * 50);
+                        currentSongIndex = (rareSongChance === 0) ? -1 : Math.floor(Math.random() * playlist.length);
+                        loadSong(currentSongIndex);
+                        audioPlayer.volume = volumeSlider.value;
+                    }
                 }
                 
+                // --- ATTACH LISTENERS ---
                 playPauseBtn.addEventListener('click', togglePlayPause);
-                skipBtn.addEventListener('click', skipSong);
+                skipBtn.addEventListener('click', () => skipSong(false));
                 rewindBtn.addEventListener('click', rewindSong);
-                volumeSlider.addEventListener('input', (e) => { audioPlayer.volume = e.target.value; });
-                audioPlayer.addEventListener('ended', skipSong);
+                
+                volumeSlider.addEventListener('input', (e) => {
+                    audioPlayer.volume = e.target.value;
+                });
+
+                audioPlayer.addEventListener('ended', () => skipSong(false));
+                
                 audioPlayer.addEventListener('error', (e) => {
-                    playerTitleEl.textContent = `Error loading track`;
-                    playerArtistEl.textContent = `Skipping...`;
-                    console.error("Audio player error on file:", audioPlayer.src, e);
-                    setTimeout(skipSong, 2000); 
+                    playerTitleEl.textContent = `Load Error (404)`;
+                    playerArtistEl.textContent = `Check file name`;
+                    console.error("Audio player error:", e);
                 });
+                
                 playerCoverArt.addEventListener('error', () => {
-                    console.error("Cover art failed to load:", playerCoverArt.src);
                     playerCoverArt.src = placeholderCover;
+                    playerArtistEl.textContent = `${playerArtistEl.textContent} (no art)`;
                 });
+
+                // --- KICK IT OFF ---
                 loadInitialState();
+                
+            } catch (e) {
+                // Catch any other code-breaking typo
+                console.error("Global script error:", e);
+                playerTitleEl.textContent = "Code Error";
+                playerArtistEl.textContent = e.message;
             }
-            // --- END OF MUSIC PLAYER LOGIC ---
-
-
-            // --- GAME OVERLAY/IFRAME LOGIC ---
+            
+            // --- GAME OVERLAY/IFRAME LOGIC (Unchanged) ---
             const gameOverlay = document.getElementById('game-overlay');
             const gameIframe = document.getElementById('game-iframe');
             const closeGameBtn = document.getElementById('close-game-btn');
@@ -672,7 +681,6 @@
                 gameIframe.src = 'about:blank'; 
             });
             // --- END OF GAME OVERLAY LOGIC ---
-            
         });
     </script>
 </body>
