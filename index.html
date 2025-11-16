@@ -151,12 +151,12 @@
 
     <!-- Main Menu -->
     <nav class="fixed top-0 left-0 p-6 sm:p-8 pixel-font z-10" style="padding-top: 50px;">
-        <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;">MAIN MENU</h1>
+        <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;"></h1>
         <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
-            <li><a href="/" class="hover:text-red-900 active:text-red-900 transition-colors">HOME</a></li>
-            <li><a href="/list.html" class="hover:text-red-900 active:text-red-900 transition-colors">GAMES</a></li>
-            <li><a href="/updates.html" class="hover:text-red-900 active:text-red-900 transition-colors">UPDATES</a></li>
-            <li><a href="/contact.html" class="hover:text-red-900 active:text-red-900 transition-colors">CONTACT</a></li>
+            <li><a href="/secrets" class="hover:text-red-900 active:text-red-900 transition-colors">home</a></li>
+            <li><a href="/list.html" class="hover:text-red-900 active:text-red-900 transition-colors">list</a></li>
+            <li><a href="/updates.html" class="hover:text-red-900 active:text-red-900 transition-colors">updates</a></li>
+            <li><a href="/contact.html" class="hover:text-red-900 active:text-red-900 transition-colors">contact</a></li>
             </ul>
     </nav>
 
@@ -168,7 +168,7 @@
     <!-- Welcome/Auth -->
     <div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
         <p>2.0</p>
-        <p id="welcome-message">Welcome, ?</p>
+        <p id="welcome-message">welcome, </p>
         <a href="#" id="auth-link" class="text-xs hover:text-white transition-colors" style="color: #969696;">
             (sign up / sign in)
         </a>
@@ -279,6 +279,10 @@
 
             // --- THIS IS WHERE YOU DEFINE YOUR SECRET SONG ---
             // --- Fill in your secret song's details here ---
+            
+            // --- FIX: 'baseURL' must be defined here so the script doesn't crash! ---
+            const baseURL = "https://6918d613edf05dd80c139242--ewsmusic.netlify.app/";
+            
             const secretSong = {
                 title: "hey, big guy said im an easter egg",
                 artist: "i heard, if u put /secret at the end of the link",
@@ -304,6 +308,14 @@
                     return;
                 }
                 
+                // Check if src or cover are null (like the placeholder)
+                if (!song.src || !song.cover) {
+                    console.log("Skipping empty placeholder song.");
+                    // Immediately skip to the next song
+                    skipSong(); 
+                    return;
+                }
+                
                 const songSrc = song.src.replace(/ /g, "%20");
                 const coverSrc = song.cover.replace(/ /g, "%20");
                 
@@ -325,6 +337,11 @@
             }
 
             function playSong() {
+                // Don't try to play if the src is not set (e.g., on initial load)
+                if (!audioPlayer.src) {
+                    return; 
+                }
+                
                 audioPlayer.volume = volumeSlider.value; 
                 const playPromise = audioPlayer.play();
                 
@@ -362,7 +379,11 @@
                 }
                 currentSongIndex = nextSongIndex;
                 loadSong(currentSongIndex);
-                playSong();
+                // We only play *after* loadSong has successfully loaded a song
+                // (it might skip a placeholder)
+                if (audioPlayer.src) {
+                   playSong();
+                }
             }
 
             function rewindSong() {
@@ -372,7 +393,9 @@
                 } else {
                     currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
                     loadSong(currentSongIndex);
-                    playSong();
+                    if (audioPlayer.src) {
+                        playSong();
+                    }
                 }
             }
 
@@ -457,5 +480,4 @@
     </script>
 </body>
 </html>
-
 
