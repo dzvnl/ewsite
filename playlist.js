@@ -1,5 +1,3 @@
-
-
 const baseURL = "https://6918d613edf05dd80c139242--ewsmusic.netlify.app/";
 
 const playlist = [
@@ -190,9 +188,9 @@ const playlist = [
         cover: baseURL + "smokedope2.jpg" // Assuming a cover exists with this name
     },
     {
-        title: "hi im the hand of peace, remember that menu button? go ahead for me, click it."
-        artist: "the hand of peace"
-        src: baseURL + "clock.mp3"
+        title: "hi im the hand of peace, remember that menu button? go ahead for me, click it.",
+        artist: "the hand of peace",
+        src: baseURL + "clock.mp3",
         cover: baseURL + "handofpeace.jpg"
     }
 ];
