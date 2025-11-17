@@ -15,7 +15,8 @@
             font-family: 'VT323', monospace;
             color: #e5e5e5;
             background-color: #000000; 
-            background-image: url('IMG_4928.jpeg'); /* This file MUST be in the same folder */
+            /* This is now a fallback, JS will override it */
+            background-image: url('IMG_4928.jpeg'); 
             background-size: cover;
             background-repeat: no-repeat;
             background-attachment: fixed;
@@ -146,6 +147,22 @@
             const playerArtistEl = document.getElementById('player-artist');
             
             try {
+                // --- NEW RANDOM BACKGROUND LOGIC ---
+                const backgroundOptions = [
+                    'IMG_4928.jpeg', // Your original image
+                    'placeholder_image_1.jpg', // <-- Add your image file names here
+                    'placeholder_image_2.png', // <-- Add another one
+                    'another_background.gif'   // <-- And another
+                    // Add as many file paths as you want to this list
+                ];
+                
+                // Pick a random image from the list
+                const randomBg = backgroundOptions[Math.floor(Math.random() * backgroundOptions.length)];
+                
+                // Apply it to the body, wrapping it in url()
+                document.body.style.backgroundImage = `url('${randomBg}')`;
+                
+                
                 // --- Splash Text & Auth Logic ---
                 const splashElement = document.getElementById('splash-text');
                 if (splashElement) {
