@@ -146,7 +146,7 @@ const playlist = [
         title: "worthit",
         artist: "xaviersobased",
         src: baseURL + "worthit.mp3",
-        cover: baseURL + "worthit.jpg"
+        cover: baseURL + "81853ABB-FB87-4A20-9303-9624B777245B.jpeg"
     },
     {
         title: "in da party",
