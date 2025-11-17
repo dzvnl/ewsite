@@ -147,22 +147,30 @@
             const playerArtistEl = document.getElementById('player-artist');
             
             try {
-                // --- NEW RANDOM BACKGROUND LOGIC ---
-                const backgroundOptions = [
-                    'IMG_4928.jpeg', // Your original image
-                    'IMG_4946.jpeg', // <-- Add your image file names here
-                    'IMG_4944.jpeg', // <-- Add another one
-                    'IMG_4943.jpeg',   // <-- And another
-                    'IMG_4945.jpeg',
-                    '81853ABB-FB87-4A20-9303-9624B777245B.jpeg'
-                    // Add as many file paths as you want to this list
+                // --- NEW 1/100 BACKGROUND LOGIC ---
+                const specialBg = '81853ABB-FB87-4A20-9303-9624B777245B.jpeg';
+                const normalBackgrounds = [
+                    'IMG_4928.jpeg',
+                    'IMG_4946.jpeg',
+                    'IMG_4944.jpeg',
+                    'IMG_4943.jpeg',
+                    'IMG_4945.jpeg'
+                    // Add your other normal images here
                 ];
+
+                // Generate a random number between 0 and 99
+                const chance = Math.floor(Math.random() * 100); 
+                let chosenBg;
+
+                if (chance === 0) { // This gives a 1 in 100 chance (for the number 0)
+                    chosenBg = specialBg;
+                } else {
+                    // This is the 99 in 100 case: pick from the normal list
+                    chosenBg = normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
+                }
                 
-                // Pick a random image from the list
-                const randomBg = backgroundOptions[Math.floor(Math.random() * backgroundOptions.length)];
-                
-                // Apply it to the body, wrapping it in url()
-                document.body.style.backgroundImage = `url('${randomBg}')`;
+                // Apply the chosen image to the body
+                document.body.style.backgroundImage = `url('${chosenBg}')`;
                 
                 
                 // --- Splash Text & Auth Logic ---
