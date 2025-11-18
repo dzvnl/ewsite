@@ -1,6 +1,3 @@
-// This list now uses your main Netlify URL as a base.
-// This file MUST be deployed along with netlify.toml
-
 const baseURL = "https://ewsmusic.netlify.app/"; // Your main site URL
 
 const playlist = [
@@ -189,6 +186,27 @@ const playlist = [
         artist: "fakemink"
         src: baseURL + "blowme.mp3
         cover: baseURL + "fakeminkk.jpg"
+    },
+    {
+        title: "minerva"
+        artist: "deftones"
+        src: baseURL + "minerva.mp3"
+        cover: baseURL + "deftones.jpg"
+    },
+    {
+        title: "hold on"
+        artist: "limpbizkit"
+        src: baseURL + "holdon.mp3"
+        src: baseURL + "limpbizkit.jpg"
+    },
+    {
+        title: "my way"
+        artist "limpbizkit"
+        src: baseURL + "myway.mp3"
+        src: baseurl + "limpbizkit.jpg
+    }
+        
+        
 ];
 
 
