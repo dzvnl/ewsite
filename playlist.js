@@ -184,7 +184,7 @@ const playlist = [
     {
         title: "blow me"
         artist: "fakemink"
-        src: baseURL + "blowme.mp3
+        src: baseURL + "blowme.mp3"
         cover: baseURL + "fakeminkk.jpg"
     },
     {
@@ -203,7 +203,7 @@ const playlist = [
         title: "my way"
         artist "limpbizkit"
         src: baseURL + "myway.mp3"
-        src: baseurl + "limpbizkit.jpg
+        src: baseurl + "limpbizkit.jpg"
     }
         
         
