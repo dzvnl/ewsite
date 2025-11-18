@@ -204,9 +204,7 @@ const playlist = [
         artist "limpbizkit"
         src: baseURL + "myway.mp3"
         src: baseurl + "limpbizkit.jpg"
-    }
-        
-        
+    {
 ];
 
 
