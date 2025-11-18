@@ -1,4 +1,4 @@
-const baseURL = "https://ewsmusic.netlify.app/"; // Your main site URL
+const baseURL = "https://ewsmusic.netlify.app/"; 
 
 const playlist = [
     {
@@ -182,29 +182,27 @@ const playlist = [
         cover: baseURL + "handofpeace.jpg"
     },
     {
-        title: "blow me"
-        artist: "fakemink"
-        src: baseURL + "blowme.mp3"
+        title: "blow me",
+        artist: "fakemink",
+        src: baseURL + "blowme.mp3",
         cover: baseURL + "fakeminkk.jpg"
     },
     {
-        title: "minerva"
-        artist: "deftones"
-        src: baseURL + "minerva.mp3"
+        title: "minerva",
+        artist: "deftones",
+        src: baseURL + "minerva.mp3",
         cover: baseURL + "deftones.jpg"
     },
     {
-        title: "hold on"
-        artist: "limpbizkit"
-        src: baseURL + "holdon.mp3"
-        src: baseURL + "limpbizkit.jpg"
+        title: "hold on",
+        artist: "limpbizkit",
+        src: baseURL + "holdon.mp3",
+        cover: baseURL + "limpbizkit.jpg"
     },
     {
-        title: "my way"
-        artist "limpbizkit"
-        src: baseURL + "myway.mp3"
-        src: baseurl + "limpbizkit.jpg"
-    {
+        title: "my way",
+        artist: "limpbizkit",
+        src: baseURL + "myway.mp3",
+        cover: baseURL + "limpbizkit.jpg"
+    }
 ];
-
-
