@@ -183,7 +183,12 @@ const playlist = [
         artist: "the hand of peace",
         src: baseURL + "clock.mp3",
         cover: baseURL + "handofpeace.jpg"
-    }
+    },
+    {
+        title: "blow me"
+        artist: "fakemink"
+        src: baseURL + "blowme.mp3
+        cover: baseURL + "fakeminkk.jpg"
 ];
 
 
