@@ -3,43 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
     <title>Account</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="account-container">
-        <!-- Header -->
-        <header>
-            <h1>Welcome, <span id="username">User</span></h1>
-        </header>
+<body class="bg-gray-100">
+    <!-- Header Section -->
+    <header class="bg-white shadow-md p-4 flex justify-between items-center">
+        <h1 class="text-xl font-bold">Account Page</h1>
+        <div class="flex items-center">
+            <input type="text" placeholder="Search user..." class="border border-gray-300 rounded-lg p-2 mr-4"/>
+            <span class="relative">
+                <i class="fas fa-bell text-gray-600"></i>
+                <span class="absolute top-0 right-0 inline-flex items-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">3</span>
+            </span>
+        </div>
+    </header>
 
-        <!-- Profile Section -->
-        <section class="profile-section">
-            <div class="profile-picture">
-                <!-- Placeholder Profile Picture -->
-                <img src="placeholder-profile.png" alt="Profile Picture" id="profile-pic"/>
+    <!-- Main Content Section -->
+    <main class="max-w-4xl mx-auto my-10 bg-white p-8 rounded-lg shadow-md">
+        <div class="flex items-center mb-8">
+            <!-- Profile picture placeholder -->
+            <div class="w-24 h-24 bg-gray-300 rounded-full flex justify-center items-center text-gray-500">
+                <span>User</span>
             </div>
-            <div class="profile-actions">
-                <button id="edit-profile">Edit Profile</button>
-                <button id="edit-picture">Edit Picture</button>
-                <button id="change-password">Change Password</button>
+
+            <div class="ml-6">
+                <!-- Dynamic username display -->
+                <h2 id="username-display" class="text-2xl font-medium">@username_placeholder</h2>
+                <button class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 transition">Edit Profile</button>
             </div>
+        </div>
+        
+        <!-- Mention functionality section -->
+        <section>
+            <h3 class="text-lg font-medium mb-4">Mentions</h3>
+            <p class="text-gray-500">You have been mentioned by others. Check the notifications for details!</p>
         </section>
+    </main>
 
-        <!-- Search Bar -->
-        <section class="search-section">
-            <input type="text" id="search-bar" placeholder="Search...">
-        </section>
-
-        <!-- Mention Users Section -->
-        <section class="mention-section">
-            <button id="mention-users">
-                @Mention Users
-                <span id="notification-badge" class="badge">0</span>
-            </button>
-        </section>
-    </div>
-
-    <script src="account.js"></script>
 </body>
 </html>
