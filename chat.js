@@ -370,3 +370,23 @@ document.addEventListener('mouseup', () => {
     isDragging = false;
     header.style.cursor = 'grab';
 });
+
+// This makes the function available to your HTML link
+window.openChat = function() {
+    const windowEl = document.getElementById('chat-window');
+    const msgInput = document.getElementById('chat-input');
+    
+    if (windowEl) {
+        windowEl.style.display = 'flex'; // Shows the window
+        
+        // Auto-focus the input so you can start typing immediately
+        if (msgInput) msgInput.focus();
+        
+        // Scroll to the latest messages
+        const chatBody = document.getElementById('chat-body');
+        if (chatBody) chatBody.scrollTop = chatBody.scrollHeight;
+    } else {
+        console.error("Chat window element not found!");
+    }
+};
+
