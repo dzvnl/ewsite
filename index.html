@@ -99,13 +99,15 @@
             flex-direction: column;
             gap: 6px;
         }
-        .chat-msg { word-wrap: break-word; line-height: 1.2; position: relative; }
+        .chat-msg { word-wrap: break-word; line-height: 1.2; position: relative; padding: 2px 4px; }
         .chat-msg .username { color: #facc15; font-weight: bold; margin-right: 4px; }
         .msg-actions { opacity: 0; transition: opacity 0.2s; margin-left: 8px; display: inline-block; }
+        .chat-msg:hover { background: rgba(255,255,255,0.05); }
         .chat-msg:hover .msg-actions { opacity: 1; }
         .action-btn { font-size: 0.8rem; cursor: pointer; margin: 0 3px; color: #777; }
         .action-btn:hover { color: #fff; }
-        .delete-btn:hover { color: #ef4444; }
+        .delete-btn { color: #ef4444 !important; font-weight: bold; }
+
         #chat-input-area { padding: 8px; border-top: 1px solid #444; background: #111; }
         #chat-input { width: 100%; background: #222; border: 1px solid #444; color: #fff; padding: 4px 8px; outline: none; }
         #chat-input:disabled { background: #1a1a1a; color: #555; }
@@ -178,6 +180,8 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const messagesRef = database.ref('messages');
+        
+        // ADMINS - MUST MATCH EXACTLY
         const ADMINS = ['-nl', 'admin', 'root']; 
 
         // --- 2. MUSIC PLAYLIST ---
@@ -188,7 +192,6 @@
             { title: "Exit Music", artist: "Radiohead", src: baseURL + "exitmusic.mp3", cover: baseURL + "radiohead.jpg" },
             { title: "head in the ceiling fan", artist: "Title Fight", src: baseURL + "titlefight.mp3", cover: baseURL + "title-fih.jpg" },
             { title: "worthit", artist: "xaviersobased", src: baseURL + "worthit.mp3", cover: baseURL + "81853ABB-FB87-4A20-9303-9624B777245B.jpeg" }
-            // Add more as needed...
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -207,24 +210,29 @@
                     authLink.onclick = () => { localStorage.removeItem('username'); location.reload(); };
                     chatInput.disabled = false;
                     chatInput.placeholder = `Message as ${username}...`;
+                    
+                    if(ADMINS.includes(username)) {
+                        console.log("Admin privileges active for: " + username);
+                    }
                 } else {
                     welcomeMessage.textContent = 'Welcome, ?';
                     authLink.textContent = '(sign up / sign in)';
                     authLink.onclick = () => { 
                         const name = prompt('Enter username:'); 
-                        if(name) { localStorage.setItem('username', name); location.reload(); }
+                        if(name) { localStorage.setItem('username', name.trim()); location.reload(); }
                     };
                 }
             }
 
-            // --- 4. CHAT LOGIC (FIREBASE) ---
-            document.getElementById('chat-header').onclick = () => {
+            // --- 4. CHAT LOGIC ---
+            document.getElementById('chat-header').onclick = (e) => {
+                // Prevent toggle if clicking buttons inside header if any
                 document.getElementById('chat-widget').classList.toggle('minimized');
                 document.getElementById('chat-toggle').textContent = 
                     document.getElementById('chat-widget').classList.contains('minimized') ? '[+]' : '[-]';
             };
 
-            // Listen for data
+            // REALTIME LISTENER
             messagesRef.limitToLast(40).on('value', (snapshot) => {
                 const currentUser = localStorage.getItem('username');
                 const isAdmin = ADMINS.includes(currentUser);
@@ -250,16 +258,23 @@
                     chatMessages.appendChild(div);
                 });
                 chatMessages.scrollTop = chatMessages.scrollHeight;
-
-                // Bind dynamic buttons
-                document.querySelectorAll('.reply-btn').forEach(b => b.onclick = (e) => {
-                    chatInput.value = `@${e.target.dataset.user} ` + chatInput.value;
-                    chatInput.focus();
-                });
-                document.querySelectorAll('.delete-btn').forEach(b => b.onclick = (e) => {
-                    if(confirm("Delete message?")) messagesRef.child(e.target.dataset.key).remove();
-                });
             });
+
+            // CLICK HANDLER FOR REPLIES AND DELETES
+            chatMessages.onclick = (e) => {
+                const target = e.target;
+                if (target.classList.contains('reply-btn')) {
+                    const user = target.getAttribute('data-user');
+                    chatInput.value = `@${user} ` + chatInput.value;
+                    chatInput.focus();
+                }
+                if (target.classList.contains('delete-btn')) {
+                    const key = target.getAttribute('data-key');
+                    if(confirm("Delete this message for everyone?")) {
+                        messagesRef.child(key).remove();
+                    }
+                }
+            };
 
             // Send
             chatInput.onkeypress = (e) => {
@@ -274,11 +289,12 @@
             };
 
             function escapeHtml(t) {
+                if(!t) return "";
                 return t.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]));
             }
 
             // --- 5. BACKGROUNDS & SPLASH ---
-            const splashOptions = ["updates soon.. -nl", "considering a chat board", "no super seniors", "trick or treat..", "are you even an ew student?"];
+            const splashOptions = ["updates soon.. -nl", "considering a chat board", "no super seniors", "are you even an ew student?"];
             splashElement.textContent = splashOptions[Math.floor(Math.random() * splashOptions.length)];
             
             const bgs = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg'];
