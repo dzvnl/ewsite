@@ -3,43 +3,763 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>User Account - EWsite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Navigation */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .nav-links a.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
+
+        /* Search Bar */
+        .search-container {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 25px;
+            padding: 8px 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-container input {
+            border: none;
+            background: transparent;
+            padding: 8px 10px;
+            width: 200px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-container button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 30px;
+        }
+
+        /* Left Sidebar - Profile Picture */
+        .profile-sidebar {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .profile-picture-box {
+            width: 100%;
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .profile-picture-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-picture-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+        }
+
+        .sidebar-info {
+            text-align: center;
+        }
+
+        .sidebar-info h3 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-info p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        /* Center - Profile Details */
+        .profile-main {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .profile-header h1 {
+            color: #333;
+            font-size: 28px;
+        }
+
+        .edit-profile-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .edit-profile-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .profile-section {
+            margin-bottom: 30px;
+        }
+
+        .profile-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .profile-field {
+            margin-bottom: 15px;
+        }
+
+        .profile-field label {
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .profile-field p {
+            color: #333;
+            font-size: 16px;
+        }
+
+        /* Right Sidebar - Notifications */
+        .notifications-sidebar {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .notifications-sidebar h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .notification-item {
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .notification-item:hover {
+            background: #f0f0f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .notification-item.unread {
+            background: #f0f4ff;
+            border-left-color: #667eea;
+        }
+
+        .notification-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .mention-icon {
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .notification-username {
+            color: #333;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .notification-action {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .notification-content {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .notification-time {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .notification-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+        }
+
+        /* Modal for Edit Profile */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .search-container input {
+                width: 150px;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-    <!-- Header Section -->
-    <header class="bg-white shadow-md p-4 flex justify-between items-center">
-        <h1 class="text-xl font-bold">Account Page</h1>
-        <div class="flex items-center">
-            <input type="text" placeholder="Search user..." class="border border-gray-300 rounded-lg p-2 mr-4"/>
-            <span class="relative">
-                <i class="fas fa-bell text-gray-600"></i>
-                <span class="absolute top-0 right-0 inline-flex items-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">3</span>
-            </span>
-        </div>
-    </header>
-
-    <!-- Main Content Section -->
-    <main class="max-w-4xl mx-auto my-10 bg-white p-8 rounded-lg shadow-md">
-        <div class="flex items-center mb-8">
-            <!-- Profile picture placeholder -->
-            <div class="w-24 h-24 bg-gray-300 rounded-full flex justify-center items-center text-gray-500">
-                <span>User</span>
-            </div>
-
-            <div class="ml-6">
-                <!-- Dynamic username display -->
-                <h2 id="username-display" class="text-2xl font-medium">@username_placeholder</h2>
-                <button class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 transition">Edit Profile</button>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">EWsite</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="account.html" class="active">Account</a></li>
+                <li><a href="#">Messages</a></li>
+                <li><a href="#">Settings</a></li>
+            </ul>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search users...">
+                <button onclick="performSearch()">🔍</button>
             </div>
         </div>
-        
-        <!-- Mention functionality section -->
-        <section>
-            <h3 class="text-lg font-medium mb-4">Mentions</h3>
-            <p class="text-gray-500">You have been mentioned by others. Check the notifications for details!</p>
-        </section>
-    </main>
 
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Sidebar - Profile Picture -->
+            <div class="profile-sidebar">
+                <div class="profile-picture-box">
+                    <div class="profile-picture-placeholder">👤</div>
+                </div>
+                <div class="sidebar-info">
+                    <h3>dzvnl</h3>
+                    <p>@dzvnl</p>
+                    <div class="stat-item">
+                        <div class="stat-label">Followers</div>
+                        <div class="stat-value">1,234</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Following</div>
+                        <div class="stat-value">567</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Posts</div>
+                        <div class="stat-value">89</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center - Profile Details -->
+            <div class="profile-main">
+                <div class="profile-header">
+                    <h1>Profile Information</h1>
+                    <button class="edit-profile-btn" onclick="openEditModal()">✏️ Edit Profile</button>
+                </div>
+
+                <div class="profile-section">
+                    <h3>Basic Information</h3>
+                    <div class="profile-field">
+                        <label>Full Name</label>
+                        <p id="fullName">David Zvonko</p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Username</label>
+                        <p>@dzvnl</p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Email</label>
+                        <p id="email">dzvnl@ewsite.com</p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Location</label>
+                        <p id="location">San Francisco, CA</p>
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h3>About</h3>
+                    <div class="profile-field">
+                        <label>Bio</label>
+                        <p id="bio">Web developer, technology enthusiast, and coffee lover. Building amazing things on the internet.</p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Website</label>
+                        <p><a href="#" style="color: #667eea;">https://dzvnl.dev</a></p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Member Since</label>
+                        <p>January 15, 2022</p>
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h3>Contact & Social</h3>
+                    <div class="profile-field">
+                        <label>Phone</label>
+                        <p id="phone">+1 (555) 123-4567</p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Twitter</label>
+                        <p><a href="#" style="color: #667eea;">@dzvnl</a></p>
+                    </div>
+                    <div class="profile-field">
+                        <label>GitHub</label>
+                        <p><a href="#" style="color: #667eea;">github.com/dzvnl</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar - Notifications -->
+            <div class="notifications-sidebar">
+                <h3>@ Mentions</h3>
+                <div id="notificationsContainer">
+                    <div class="notification-item unread">
+                        <div class="notification-header">
+                            <span class="mention-icon">@</span>
+                            <span class="notification-username">sarah_dev</span>
+                            <span class="notification-action">mentioned you</span>
+                        </div>
+                        <div class="notification-content">
+                            "Great work on the new feature, @dzvnl! Really impressed with the implementation."
+                        </div>
+                        <div class="notification-time">2 hours ago</div>
+                        <span class="notification-badge">Unread</span>
+                    </div>
+
+                    <div class="notification-item unread">
+                        <div class="notification-header">
+                            <span class="mention-icon">@</span>
+                            <span class="notification-username">alex_code</span>
+                            <span class="notification-action">mentioned you</span>
+                        </div>
+                        <div class="notification-content">
+                            "Hey @dzvnl, can you review the pull request I just submitted?"
+                        </div>
+                        <div class="notification-time">5 hours ago</div>
+                        <span class="notification-badge">Unread</span>
+                    </div>
+
+                    <div class="notification-item">
+                        <div class="notification-header">
+                            <span class="mention-icon">@</span>
+                            <span class="notification-username">designer_jane</span>
+                            <span class="notification-action">mentioned you</span>
+                        </div>
+                        <div class="notification-content">
+                            "@dzvnl let's schedule a meeting to discuss the UI updates."
+                        </div>
+                        <div class="notification-time">1 day ago</div>
+                    </div>
+
+                    <div class="notification-item">
+                        <div class="notification-header">
+                            <span class="mention-icon">@</span>
+                            <span class="notification-username">tech_team</span>
+                            <span class="notification-action">mentioned you</span>
+                        </div>
+                        <div class="notification-content">
+                            "@dzvnl your insights on the architecture would be valuable here."
+                        </div>
+                        <div class="notification-time">2 days ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Profile</h2>
+                <button class="close-btn" onclick="closeEditModal()">×</button>
+            </div>
+            <form id="editForm">
+                <div class="form-group">
+                    <label for="editFullName">Full Name</label>
+                    <input type="text" id="editFullName" value="David Zvonko">
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Email</label>
+                    <input type="email" id="editEmail" value="dzvnl@ewsite.com">
+                </div>
+                <div class="form-group">
+                    <label for="editLocation">Location</label>
+                    <input type="text" id="editLocation" value="San Francisco, CA">
+                </div>
+                <div class="form-group">
+                    <label for="editBio">Bio</label>
+                    <textarea id="editBio">Web developer, technology enthusiast, and coffee lover. Building amazing things on the internet.</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editPhone">Phone</label>
+                    <input type="tel" id="editPhone" value="+1 (555) 123-4567">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Edit Profile Modal Functions
+        function openEditModal() {
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Update profile information
+            document.getElementById('fullName').textContent = document.getElementById('editFullName').value;
+            document.getElementById('email').textContent = document.getElementById('editEmail').value;
+            document.getElementById('location').textContent = document.getElementById('editLocation').value;
+            document.getElementById('bio').textContent = document.getElementById('editBio').value;
+            document.getElementById('phone').textContent = document.getElementById('editPhone').value;
+            
+            closeEditModal();
+            showSuccessMessage();
+        });
+
+        // Search functionality
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            if (searchTerm) {
+                console.log('Searching for: ' + searchTerm);
+                // In a real application, this would search users
+                alert('Searching for users matching: ' + searchTerm);
+            }
+        }
+
+        // Allow Enter key to trigger search
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // Show success message
+        function showSuccessMessage() {
+            const message = document.createElement('div');
+            message.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 5px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                z-index: 2000;
+                animation: slideIn 0.3s ease;
+            `;
+            message.textContent = '✓ Profile updated successfully!';
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                message.remove();
+            }, 3000);
+        }
+
+        // Mark notifications as read on click
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', function() {
+                this.classList.remove('unread');
+            });
+        });
+    </script>
 </body>
 </html>
