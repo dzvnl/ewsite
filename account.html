@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Account - EWsite</title>
+    <title>Account - retro web</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,754 +13,709 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'VT323', monospace;
+            background-color: #0a0a0a;
+            color: #00ff00;
+            line-height: 1.6;
             min-height: 100vh;
-            padding: 20px;
+            position: relative;
         }
 
-        .container {
+        /* Scanline effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            z-index: 9998;
+        }
+
+        /* Notification Badge */
+        .notification-badge {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: #ff0000;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            border: 2px solid #ff6600;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.7);
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.2s;
+        }
+
+        .notification-badge:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.9);
+        }
+
+        .notification-badge.empty {
+            display: none;
+        }
+
+        /* Notification dropdown */
+        .notifications-dropdown {
+            position: fixed;
+            top: 70px;
+            left: 20px;
+            background-color: #1a1a1a;
+            border: 2px solid #00ff00;
+            padding: 15px;
+            max-width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 999;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        .notifications-dropdown.active {
+            display: block;
+        }
+
+        .notification-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #0a0a0a;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-size: 12px;
+        }
+
+        .notification-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .notification-item .user {
+            color: #ffff00;
+            font-weight: bold;
+        }
+
+        /* Header */
+        header {
+            background-color: #1a1a1a;
+            border-bottom: 3px solid #00ff00;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-content {
             max-width: 1200px;
             margin: 0 auto;
-        }
-
-        /* Header Navigation */
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .logo {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
-            color: #667eea;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 25px;
-            list-style: none;
-        }
-
-        .nav-links a {
+            color: #00ff00;
             text-decoration: none;
-            color: #333;
-            font-weight: 500;
-            transition: color 0.3s ease;
+            transition: all 0.3s;
         }
 
-        .nav-links a:hover {
-            color: #667eea;
-        }
-
-        .nav-links a.active {
-            color: #667eea;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 5px;
+        .logo:hover {
+            color: #ffff00;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
         }
 
         /* Search Bar */
         .search-container {
-            display: flex;
-            align-items: center;
-            background: white;
-            border-radius: 25px;
-            padding: 8px 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            max-width: 400px;
+            margin: 0 30px;
         }
 
-        .search-container input {
-            border: none;
-            background: transparent;
-            padding: 8px 10px;
-            width: 200px;
+        .search-input {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: #0a0a0a;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            font-family: 'VT323', monospace;
             font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .search-input::placeholder {
+            color: #00aa00;
+        }
+
+        .search-input:focus {
             outline: none;
+            border-color: #ffff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
         }
 
-        .search-container button {
-            background: none;
-            border: none;
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #1a1a1a;
+            border: 2px solid #00ff00;
+            border-top: none;
+            display: none;
+            z-index: 500;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .search-results.active {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #00aa00;
             cursor: pointer;
-            color: #667eea;
-            font-size: 18px;
+            transition: background-color 0.2s;
         }
 
-        /* Main Content */
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 2fr 1fr;
-            gap: 30px;
+        .search-result-item:hover {
+            background-color: #0a0a0a;
+            color: #ffff00;
         }
 
-        /* Left Sidebar - Profile Picture */
-        .profile-sidebar {
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            height: fit-content;
-        }
-
-        .profile-picture-box {
-            width: 100%;
-            aspect-ratio: 1;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-
-        .profile-picture-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .profile-picture-placeholder {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            color: white;
-        }
-
-        .sidebar-info {
-            text-align: center;
-        }
-
-        .sidebar-info h3 {
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .sidebar-info p {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
-
-        .stat-item {
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .stat-item:last-child {
+        .search-result-item:last-child {
             border-bottom: none;
         }
 
-        .stat-label {
-            color: #666;
-            font-size: 12px;
-            text-transform: uppercase;
-        }
-
-        .stat-value {
-            font-size: 18px;
+        .search-result-user {
             font-weight: bold;
-            color: #667eea;
+            color: #ffff00;
         }
 
-        /* Center - Profile Details */
-        .profile-main {
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* Profile Section */
+        .profile-section {
+            background-color: #1a1a1a;
+            border: 3px solid #00ff00;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
         }
 
         .profile-header {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .profile-header h1 {
-            color: #333;
-            font-size: 28px;
-        }
-
-        .edit-profile-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .edit-profile-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-
-        .profile-section {
+            gap: 40px;
+            align-items: flex-start;
             margin-bottom: 30px;
         }
 
-        .profile-section h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 18px;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }
-
-        .profile-field {
-            margin-bottom: 15px;
-        }
-
-        .profile-field label {
-            color: #666;
-            font-size: 12px;
-            text-transform: uppercase;
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        .profile-field p {
-            color: #333;
-            font-size: 16px;
-        }
-
-        /* Right Sidebar - Notifications */
-        .notifications-sidebar {
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            height: fit-content;
-        }
-
-        .notifications-sidebar h3 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 18px;
-        }
-
-        .notification-item {
-            padding: 15px;
-            background: #f9f9f9;
-            border-left: 4px solid #667eea;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            transition: all 0.3s ease;
-        }
-
-        .notification-item:hover {
-            background: #f0f0f0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .notification-item.unread {
-            background: #f0f4ff;
-            border-left-color: #667eea;
-        }
-
-        .notification-header {
+        .profile-picture-box {
+            width: 200px;
+            height: 200px;
+            background-color: #0a0a0a;
+            border: 3px solid #00ff00;
             display: flex;
             align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .mention-icon {
-            color: #667eea;
-            font-weight: bold;
-            margin-right: 8px;
-            font-size: 16px;
-        }
-
-        .notification-username {
-            color: #333;
-            font-weight: 600;
-            margin-right: 5px;
-        }
-
-        .notification-action {
-            color: #666;
+            justify-content: center;
+            flex-shrink: 0;
             font-size: 14px;
+            color: #00aa00;
+            position: relative;
+            overflow: hidden;
         }
 
-        .notification-content {
-            color: #666;
-            font-size: 13px;
-            margin-bottom: 8px;
+        .profile-picture-box.has-image {
+            background-size: cover;
+            background-position: center;
         }
 
-        .notification-time {
-            color: #999;
-            font-size: 12px;
-        }
-
-        .notification-badge {
-            display: inline-block;
-            background: #667eea;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-top: 8px;
-        }
-
-        .empty-state {
+        .profile-picture-placeholder {
             text-align: center;
-            padding: 20px;
-            color: #999;
         }
 
-        /* Modal for Edit Profile */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.3s ease;
+        .profile-info {
+            flex: 1;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .username-display {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ffff00;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
         }
 
-        .modal-content {
-            background-color: white;
-            margin: 10% auto;
-            padding: 30px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-            animation: slideDown 0.3s ease;
-        }
-
-        @keyframes slideDown {
-            from {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 15px;
-        }
-
-        .modal-header h2 {
-            color: #333;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 28px;
-            color: #999;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .close-btn:hover {
-            color: #333;
-        }
-
-        .form-group {
+        .user-handle {
+            font-size: 18px;
+            color: #00ff00;
             margin-bottom: 20px;
         }
 
-        .form-group label {
-            display: block;
-            color: #333;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+        .user-bio {
             font-size: 14px;
-            font-family: inherit;
-            transition: border-color 0.3s ease;
+            color: #00ff00;
+            margin-bottom: 20px;
+            max-width: 500px;
+            line-height: 1.8;
         }
 
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .modal-footer {
+        .user-stats {
             display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 25px;
+            gap: 30px;
+            margin-bottom: 20px;
         }
 
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffff00;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #00aa00;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* Buttons */
         .btn {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 5px;
-            font-weight: 600;
+            padding: 12px 30px;
+            background-color: #1a1a1a;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            font-family: 'VT323', monospace;
+            font-size: 14px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #00ff00;
+            color: #0a0a0a;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+            transform: translateY(-2px);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            border-color: #ffff00;
+            color: #ffff00;
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            background-color: #ffff00;
+            color: #0a0a0a;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
         }
 
-        .btn-secondary {
-            background: #f0f0f0;
-            color: #333;
+        /* Content Sections */
+        .content-section {
+            background-color: #1a1a1a;
+            border: 3px solid #00ff00;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
         }
 
-        .btn-secondary:hover {
-            background: #e0e0e0;
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffff00;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed #00ff00;
         }
 
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
+        /* Settings/Account Info */
+        .settings-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-size: 14px;
+            color: #00ff00;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .form-input {
+            padding: 10px 15px;
+            background-color: #0a0a0a;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            font-family: 'VT323', monospace;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #ffff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+
+        .form-textarea {
+            padding: 10px 15px;
+            background-color: #0a0a0a;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            font-family: 'VT323', monospace;
+            font-size: 14px;
+            min-height: 100px;
+            resize: vertical;
+            transition: all 0.3s;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #ffff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+
+        /* Footer */
+        footer {
+            background-color: #1a1a1a;
+            border-top: 3px solid #00ff00;
+            padding: 20px;
+            text-align: center;
+            color: #00aa00;
+            font-size: 12px;
+            margin-top: 60px;
+        }
+
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .header {
+            .header-content {
                 flex-direction: column;
-                gap: 15px;
+                gap: 20px;
             }
 
-            .nav-links {
-                flex-direction: column;
-                gap: 10px;
+            .search-container {
+                max-width: 100%;
+                margin: 0;
             }
 
-            .search-container input {
+            .profile-header {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .profile-picture-box {
                 width: 150px;
+                height: 150px;
+            }
+
+            .username-display {
+                font-size: 24px;
+            }
+
+            .user-stats {
+                flex-wrap: wrap;
+            }
+
+            .profile-actions {
+                flex-wrap: wrap;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="logo">EWsite</div>
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="account.html" class="active">Account</a></li>
-                <li><a href="#">Messages</a></li>
-                <li><a href="#">Settings</a></li>
-            </ul>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">&lt;retro web&gt;</a>
             <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Search users...">
-                <button onclick="performSearch()">🔍</button>
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="userSearch" 
+                    placeholder="search users..."
+                >
+                <div class="search-results" id="searchResults"></div>
             </div>
         </div>
+    </header>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Left Sidebar - Profile Picture -->
-            <div class="profile-sidebar">
-                <div class="profile-picture-box">
-                    <div class="profile-picture-placeholder">👤</div>
-                </div>
-                <div class="sidebar-info">
-                    <h3>dzvnl</h3>
-                    <p>@dzvnl</p>
-                    <div class="stat-item">
-                        <div class="stat-label">Followers</div>
-                        <div class="stat-value">1,234</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Following</div>
-                        <div class="stat-value">567</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Posts</div>
-                        <div class="stat-value">89</div>
-                    </div>
-                </div>
-            </div>
+    <!-- Notification Badge -->
+    <div class="notification-badge" id="notificationBadge">0</div>
+    <div class="notifications-dropdown" id="notificationsDropdown"></div>
 
-            <!-- Center - Profile Details -->
-            <div class="profile-main">
-                <div class="profile-header">
-                    <h1>Profile Information</h1>
-                    <button class="edit-profile-btn" onclick="openEditModal()">✏️ Edit Profile</button>
-                </div>
-
-                <div class="profile-section">
-                    <h3>Basic Information</h3>
-                    <div class="profile-field">
-                        <label>Full Name</label>
-                        <p id="fullName">David Zvonko</p>
-                    </div>
-                    <div class="profile-field">
-                        <label>Username</label>
-                        <p>@dzvnl</p>
-                    </div>
-                    <div class="profile-field">
-                        <label>Email</label>
-                        <p id="email">dzvnl@ewsite.com</p>
-                    </div>
-                    <div class="profile-field">
-                        <label>Location</label>
-                        <p id="location">San Francisco, CA</p>
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Profile Section -->
+        <div class="profile-section">
+            <div class="profile-header">
+                <!-- Profile Picture Box -->
+                <div class="profile-picture-box" id="profilePicture">
+                    <div class="profile-picture-placeholder">
+                        [profile pic]
                     </div>
                 </div>
 
-                <div class="profile-section">
-                    <h3>About</h3>
-                    <div class="profile-field">
-                        <label>Bio</label>
-                        <p id="bio">Web developer, technology enthusiast, and coffee lover. Building amazing things on the internet.</p>
-                    </div>
-                    <div class="profile-field">
-                        <label>Website</label>
-                        <p><a href="#" style="color: #667eea;">https://dzvnl.dev</a></p>
-                    </div>
-                    <div class="profile-field">
-                        <label>Member Since</label>
-                        <p>January 15, 2022</p>
-                    </div>
-                </div>
-
-                <div class="profile-section">
-                    <h3>Contact & Social</h3>
-                    <div class="profile-field">
-                        <label>Phone</label>
-                        <p id="phone">+1 (555) 123-4567</p>
-                    </div>
-                    <div class="profile-field">
-                        <label>Twitter</label>
-                        <p><a href="#" style="color: #667eea;">@dzvnl</a></p>
-                    </div>
-                    <div class="profile-field">
-                        <label>GitHub</label>
-                        <p><a href="#" style="color: #667eea;">github.com/dzvnl</a></p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Sidebar - Notifications -->
-            <div class="notifications-sidebar">
-                <h3>@ Mentions</h3>
-                <div id="notificationsContainer">
-                    <div class="notification-item unread">
-                        <div class="notification-header">
-                            <span class="mention-icon">@</span>
-                            <span class="notification-username">sarah_dev</span>
-                            <span class="notification-action">mentioned you</span>
+                <!-- Profile Info -->
+                <div class="profile-info">
+                    <div class="username-display" id="usernameDisplay">@your_username</div>
+                    <div class="user-handle" id="userHandle">User Profile</div>
+                    <div class="user-bio" id="userBio">Welcome to your account page. Edit your profile to customize your presence on retro web.</div>
+                    
+                    <div class="user-stats">
+                        <div class="stat">
+                            <div class="stat-value" id="postCount">0</div>
+                            <div class="stat-label">POSTS</div>
                         </div>
-                        <div class="notification-content">
-                            "Great work on the new feature, @dzvnl! Really impressed with the implementation."
+                        <div class="stat">
+                            <div class="stat-value" id="followerCount">0</div>
+                            <div class="stat-label">FOLLOWERS</div>
                         </div>
-                        <div class="notification-time">2 hours ago</div>
-                        <span class="notification-badge">Unread</span>
+                        <div class="stat">
+                            <div class="stat-value" id="followingCount">0</div>
+                            <div class="stat-label">FOLLOWING</div>
+                        </div>
                     </div>
 
-                    <div class="notification-item unread">
-                        <div class="notification-header">
-                            <span class="mention-icon">@</span>
-                            <span class="notification-username">alex_code</span>
-                            <span class="notification-action">mentioned you</span>
-                        </div>
-                        <div class="notification-content">
-                            "Hey @dzvnl, can you review the pull request I just submitted?"
-                        </div>
-                        <div class="notification-time">5 hours ago</div>
-                        <span class="notification-badge">Unread</span>
-                    </div>
-
-                    <div class="notification-item">
-                        <div class="notification-header">
-                            <span class="mention-icon">@</span>
-                            <span class="notification-username">designer_jane</span>
-                            <span class="notification-action">mentioned you</span>
-                        </div>
-                        <div class="notification-content">
-                            "@dzvnl let's schedule a meeting to discuss the UI updates."
-                        </div>
-                        <div class="notification-time">1 day ago</div>
-                    </div>
-
-                    <div class="notification-item">
-                        <div class="notification-header">
-                            <span class="mention-icon">@</span>
-                            <span class="notification-username">tech_team</span>
-                            <span class="notification-action">mentioned you</span>
-                        </div>
-                        <div class="notification-content">
-                            "@dzvnl your insights on the architecture would be valuable here."
-                        </div>
-                        <div class="notification-time">2 days ago</div>
+                    <div class="profile-actions">
+                        <button class="btn btn-primary" id="editButton">EDIT PROFILE</button>
+                        <button class="btn">SETTINGS</button>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Edit Profile Modal -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Edit Profile</h2>
-                <button class="close-btn" onclick="closeEditModal()">×</button>
-            </div>
-            <form id="editForm">
+        <!-- Edit Profile Section (Hidden by default) -->
+        <div class="content-section" id="editSection" style="display: none;">
+            <div class="section-title">EDIT PROFILE</div>
+            <form class="settings-form" id="editForm">
                 <div class="form-group">
-                    <label for="editFullName">Full Name</label>
-                    <input type="text" id="editFullName" value="David Zvonko">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-input" id="usernameInput" placeholder="Enter username">
                 </div>
                 <div class="form-group">
-                    <label for="editEmail">Email</label>
-                    <input type="email" id="editEmail" value="dzvnl@ewsite.com">
+                    <label class="form-label">Bio</label>
+                    <textarea class="form-textarea" id="bioInput" placeholder="Tell us about yourself..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="editLocation">Location</label>
-                    <input type="text" id="editLocation" value="San Francisco, CA">
+                    <label class="form-label">Profile Picture URL</label>
+                    <input type="text" class="form-input" id="picUrlInput" placeholder="Enter image URL">
                 </div>
                 <div class="form-group">
-                    <label for="editBio">Bio</label>
-                    <textarea id="editBio">Web developer, technology enthusiast, and coffee lover. Building amazing things on the internet.</textarea>
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="emailInput" placeholder="Enter email">
                 </div>
-                <div class="form-group">
-                    <label for="editPhone">Phone</label>
-                    <input type="tel" id="editPhone" value="+1 (555) 123-4567">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                <div class="profile-actions">
+                    <button type="submit" class="btn btn-primary">SAVE CHANGES</button>
+                    <button type="button" class="btn" id="cancelEditButton">CANCEL</button>
                 </div>
             </form>
         </div>
+
+        <!-- Recent Activity Section -->
+        <div class="content-section">
+            <div class="section-title">YOUR RECENT ACTIVITY</div>
+            <div id="activityFeed" style="color: #00aa00; font-size: 14px;">
+                <p>[No recent activity yet. Start posting to populate your feed!]</p>
+            </div>
+        </div>
     </div>
 
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 retro web. Stay vintage. | <a href="index.html" style="color: #00ff00; text-decoration: none;">home</a> | <a href="account.html" style="color: #00ff00; text-decoration: none;">account</a></p>
+    </footer>
+
     <script>
-        // Edit Profile Modal Functions
-        function openEditModal() {
-            document.getElementById('editModal').style.display = 'block';
-        }
+        // Profile data storage
+        let profileData = {
+            username: '@dzvnl',
+            bio: 'Welcome to retro web. Keeping it vintage since 2025.',
+            profilePicUrl: '',
+            email: 'user@example.com',
+            posts: 0,
+            followers: 0,
+            following: 0
+        };
 
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
-        }
+        // Notifications
+        let mentions = [];
 
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('editModal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
+        // Load profile data from localStorage
+        function loadProfileData() {
+            const saved = localStorage.getItem('profileData');
+            if (saved) {
+                profileData = JSON.parse(saved);
             }
+            updateProfileDisplay();
         }
 
-        // Handle form submission
+        // Update profile display
+        function updateProfileDisplay() {
+            document.getElementById('usernameDisplay').textContent = profileData.username;
+            document.getElementById('userHandle').textContent = profileData.username;
+            document.getElementById('userBio').textContent = profileData.bio || 'No bio set yet.';
+            document.getElementById('postCount').textContent = profileData.posts;
+            document.getElementById('followerCount').textContent = profileData.followers;
+            document.getElementById('followingCount').textContent = profileData.following;
+
+            // Update profile picture
+            const picBox = document.getElementById('profilePicture');
+            if (profileData.profilePicUrl) {
+                picBox.style.backgroundImage = `url('${profileData.profilePicUrl}')`;
+                picBox.classList.add('has-image');
+                picBox.innerHTML = '';
+            }
+
+            // Update form inputs
+            document.getElementById('usernameInput').value = profileData.username;
+            document.getElementById('bioInput').value = profileData.bio;
+            document.getElementById('picUrlInput').value = profileData.profilePicUrl;
+            document.getElementById('emailInput').value = profileData.email;
+        }
+
+        // Edit profile button
+        document.getElementById('editButton').addEventListener('click', function() {
+            document.getElementById('editSection').style.display = 'block';
+            document.querySelector('.profile-section').style.display = 'none';
+            window.scrollTo(0, 0);
+        });
+
+        // Cancel edit button
+        document.getElementById('cancelEditButton').addEventListener('click', function() {
+            document.getElementById('editSection').style.display = 'none';
+            document.querySelector('.profile-section').style.display = 'block';
+        });
+
+        // Edit form submit
         document.getElementById('editForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // Update profile information
-            document.getElementById('fullName').textContent = document.getElementById('editFullName').value;
-            document.getElementById('email').textContent = document.getElementById('editEmail').value;
-            document.getElementById('location').textContent = document.getElementById('editLocation').value;
-            document.getElementById('bio').textContent = document.getElementById('editBio').value;
-            document.getElementById('phone').textContent = document.getElementById('editPhone').value;
-            
-            closeEditModal();
-            showSuccessMessage();
+            profileData.username = document.getElementById('usernameInput').value || profileData.username;
+            profileData.bio = document.getElementById('bioInput').value;
+            profileData.profilePicUrl = document.getElementById('picUrlInput').value;
+            profileData.email = document.getElementById('emailInput').value;
+
+            localStorage.setItem('profileData', JSON.stringify(profileData));
+            updateProfileDisplay();
+
+            document.getElementById('editSection').style.display = 'none';
+            document.querySelector('.profile-section').style.display = 'block';
         });
 
         // Search functionality
-        function performSearch() {
-            const searchTerm = document.getElementById('searchInput').value.trim();
-            if (searchTerm) {
-                console.log('Searching for: ' + searchTerm);
-                // In a real application, this would search users
-                alert('Searching for users matching: ' + searchTerm);
-            }
-        }
+        document.getElementById('userSearch').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            const resultsContainer = document.getElementById('searchResults');
 
-        // Allow Enter key to trigger search
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                performSearch();
+            if (query.length < 2) {
+                resultsContainer.classList.remove('active');
+                return;
+            }
+
+            // Mock user data - in a real app, this would come from a server
+            const mockUsers = [
+                { username: '@dzvnl', handle: 'dzvnl' },
+                { username: '@retro_dev', handle: 'retro_dev' },
+                { username: '@pixel_art', handle: 'pixel_art' },
+                { username: '@vintage_web', handle: 'vintage_web' },
+                { username: '@neon_nights', handle: 'neon_nights' }
+            ];
+
+            const filtered = mockUsers.filter(user => 
+                user.username.toLowerCase().includes(query) || 
+                user.handle.toLowerCase().includes(query)
+            );
+
+            if (filtered.length > 0) {
+                resultsContainer.innerHTML = filtered.map(user => 
+                    `<div class="search-result-item" onclick="visitProfile('${user.handle}')">
+                        <span class="search-result-user">${user.username}</span>
+                    </div>`
+                ).join('');
+                resultsContainer.classList.add('active');
+            } else {
+                resultsContainer.classList.remove('active');
             }
         });
 
-        // Show success message
-        function showSuccessMessage() {
-            const message = document.createElement('div');
-            message.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 15px 25px;
-                border-radius: 5px;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-                z-index: 2000;
-                animation: slideIn 0.3s ease;
-            `;
-            message.textContent = '✓ Profile updated successfully!';
-            document.body.appendChild(message);
-            
-            setTimeout(() => {
-                message.remove();
-            }, 3000);
+        // Visit profile (mock function)
+        function visitProfile(handle) {
+            alert(`Visiting @${handle}'s profile...`);
+            document.getElementById('searchResults').classList.remove('active');
+            document.getElementById('userSearch').value = '';
         }
 
-        // Mark notifications as read on click
-        document.querySelectorAll('.notification-item').forEach(item => {
-            item.addEventListener('click', function() {
-                this.classList.remove('unread');
+        // Notification badge functionality
+        document.getElementById('notificationBadge').addEventListener('click', function() {
+            const dropdown = document.getElementById('notificationsDropdown');
+            dropdown.classList.toggle('active');
+        });
+
+        // Mock mention notification
+        function addMention(username) {
+            mentions.push({
+                username: username,
+                timestamp: new Date()
             });
-        });
+            updateNotifications();
+        }
+
+        // Update notifications display
+        function updateNotifications() {
+            const badge = document.getElementById('notificationBadge');
+            const dropdown = document.getElementById('notificationsDropdown');
+
+            if (mentions.length > 0) {
+                badge.textContent = mentions.length;
+                badge.classList.remove('empty');
+                dropdown.innerHTML = mentions.map(mention => 
+                    `<div class="notification-item">
+                        <span class="user">@${mention.username}</span> mentioned you
+                    </div>`
+                ).join('');
+            } else {
+                badge.classList.add('empty');
+                dropdown.innerHTML = '<div class="notification-item">No new mentions</div>';
+            }
+        }
+
+        // Initialize
+        loadProfileData();
+        updateNotifications();
+
+        // Demo: Add a sample mention (remove in production)
+        // addMention('retro_dev');
     </script>
 </body>
 </html>
