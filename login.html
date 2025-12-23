@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>authentication // gate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'VT323', monospace;
+            color: #e5e5e5;
+            background-color: #000000;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
+        }
+        .pixel-border {
+            border: 2px solid #4a4a4a;
+            box-shadow: 4px 4px 0px #1a1a1a;
+        }
+        .pixel-input {
+            background: #111;
+            border: 1px solid #444;
+            color: #facc15;
+            outline: none;
+        }
+        .pixel-input:focus { border-color: #facc15; }
+        .pixel-btn {
+            background: #222;
+            border: 1px solid #444;
+            color: #ccc;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .pixel-btn:hover { background: #333; color: #facc15; }
+        .pixel-btn:active { transform: translate(1px, 1px); }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen">
+
+    <div class="w-full max-w-sm p-1">
+        <div class="bg-stone-800 text-yellow-500 px-2 py-1 flex justify-between items-center border-t-2 border-l-2 border-r-2 border-stone-600">
+            <span>user_auth.exe</span>
+            <div class="flex gap-2">
+                <span class="cursor-pointer hover:text-white">_</span>
+                <span class="cursor-pointer hover:text-white">X</span>
+            </div>
+        </div>
+
+        <div class="bg-black/90 p-6 pixel-border backdrop-blur-sm">
+            
+            <div class="flex gap-4 mb-6 border-b border-gray-700 pb-2">
+                <button id="tab-login" class="text-xl text-yellow-400 border-b-2 border-yellow-400 px-2">LOGIN</button>
+                <button id="tab-signup" class="text-xl text-gray-500 hover:text-gray-300 px-2">SIGNUP</button>
+            </div>
+
+            <form id="auth-form" class="space-y-4">
+                <div>
+                    <label class="block text-gray-400 mb-1">> username_</label>
+                    <input type="text" id="username" class="w-full p-2 pixel-input text-lg" required autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-1">> password_</label>
+                    <input type="password" id="password" class="w-full p-2 pixel-input text-lg" required>
+                </div>
+                
+                <div id="error-msg" class="text-red-500 text-center h-6"></div>
+
+                <button type="submit" class="w-full py-2 text-xl pixel-btn">
+                    [ ENTER SYSTEM ]
+                </button>
+            </form>
+            
+            <div class="mt-4 text-center text-gray-600 text-sm">
+                <a href="index.html" class="hover:text-red-500 hover:underline"><< return to guest view</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Shared Background Logic ---
+        const specialBg = '81853ABB-FB87-4A20-9303-9624B777245B.jpeg';
+        const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg', 'IMG_5264.jpeg', 'IMG_4945.jpeg'];
+        const chance = Math.floor(Math.random() * 100);
+        let chosenBg = (chance === 0) ? specialBg : normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
+        document.body.style.backgroundImage = `url('${chosenBg}')`;
+
+        // --- Auth Logic ---
+        const form = document.getElementById('auth-form');
+        const usernameInput = document.getElementById('username');
+        const errorMsg = document.getElementById('error-msg');
+
+        // Check if already logged in
+        if (localStorage.getItem('username')) {
+            window.location.href = 'index.html';
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = usernameInput.value.trim();
+            
+            if (user.length < 3) {
+                errorMsg.textContent = "Error: Username too short";
+                return;
+            }
+
+            // Simulate API delay
+            errorMsg.style.color = "#facc15";
+            errorMsg.textContent = "Authenticating...";
+            
+            setTimeout(() => {
+                localStorage.setItem('username', user);
+                window.location.href = 'index.html';
+            }, 800);
+        });
+
+        // Tab Switching (Visual Only for this demo)
+        document.getElementById('tab-signup').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('tab-login').classList.replace('text-yellow-400', 'text-gray-500');
+            document.getElementById('tab-login').classList.remove('border-b-2', 'border-yellow-400');
+            
+            e.target.classList.replace('text-gray-500', 'text-yellow-400');
+            e.target.classList.add('border-b-2', 'border-yellow-400');
+        });
+
+        document.getElementById('tab-login').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('tab-signup').classList.replace('text-yellow-400', 'text-gray-500');
+            document.getElementById('tab-signup').classList.remove('border-b-2', 'border-yellow-400');
+            
+            e.target.classList.replace('text-gray-500', 'text-yellow-400');
+            e.target.classList.add('border-b-2', 'border-yellow-400');
+        });
+    </script>
+</body>
+</html>
