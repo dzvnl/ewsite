@@ -111,7 +111,7 @@ document.head.appendChild(style);
 
 // --- DOM ELEMENTS CREATION ---
 const btn = document.createElement('div');
-btn.id = 'chat-widget-btn';
+btn.id = 'chat-widget-btn'; display: none;
 btn.innerHTML = '>> CHAT ONLINE';
 
 const windowEl = document.createElement('div');
