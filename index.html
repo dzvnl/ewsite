@@ -13,7 +13,7 @@
             font-family: 'VT323', monospace;
             color: #e5e5e5;
             background-color: #000000; 
-            /* Fallback */
+            /* Ensure you have this image or the background will be black */
             background-image: url('IMG_4928.jpeg'); 
             background-size: cover;
             background-repeat: no-repeat;
@@ -36,10 +36,11 @@
             width: 320px; 
             height: auto;
             background-color: rgba(0, 0, 0, 0.8);
-            border: none;
+            border: 1px solid #333;
             padding: 0.75rem;
             display: flex;
             align-items: center;
+            border-radius: 4px;
         }
         #player-cover-art {
             width: 64px;
@@ -72,8 +73,13 @@
             font-size: 1.25rem;
             flex-shrink: 0;
             padding: 0 0.25rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: 'VT323', monospace;
         }
-        #play-pause-btn { font-size: 1.5rem; line-height: 1; }
+        .player-controls-row button:hover { color: #fff; }
+        
         #volume-slider {
             -webkit-appearance: none;
             width: 100%; 
@@ -94,37 +100,80 @@
             height: 16px;
             background: #facc15; 
             border: 1px solid #000;
-            border-radius: 50%;
+            border-radius: 0; /* Pixel style */
             margin-top: -7px; 
+            cursor: pointer;
         }
+
+        /* Helper classes */
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
     <nav class="fixed left-0 top-1/2 -translate-y-1/2 p-6 sm:p-8 pixel-font z-10">
-        <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;"></h1>
+        <h1 id="splash-text" class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;">welcome.</h1>
+        
         <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
-            <li><a href="/secrets" class="hover:text-red-900">home</a></li>
-            <li><a href="/list" class="hover:text-red-900">list</a></li>
-            <li><a href="/updates" class="hover:text-red-900">updates</a></li>
-            <li><a href="/chat" class="hover:text-red-900">chat</a></li>
-            <li><a href="https://yodelling-amberly-ewsite-0c6ae866.koyeb.app/" class="hover:tect-red-90 active:text-red-900 trasition-colors">proxy</li>
-
+            <li><a href="/secrets" class="hover:text-red-900 transition-colors">home</a></li>
+            <li><a href="/list" class="hover:text-red-900 transition-colors">list</a></li>
+            <li><a href="/updates" class="hover:text-red-900 transition-colors">updates</a></li>
+            <li><a href="/chat" class="hover:text-red-900 transition-colors">chat</a></li>
             <li><a href="https://yodelling-amberly-ewsite-0c6ae866.koyeb.app/" class="hover:text-red-900 active:text-red-900 transition-colors">proxy</a></li>
         </ul>
+
+        <div class="mt-4 text-xl">
+            <span id="welcome-message">Welcome, ?</span>
+            <a href="#" id="auth-link" class="block text-sm text-yellow-500 hover:text-yellow-300 mt-1">(sign up / sign in)</a>
+        </div>
     </nav>
 
-@@ -203,184 +202,184 @@
+    <div id="music-player-widget">
+        <img id="player-cover-art" src="https://placehold.co/64x64/000000/333333?text=Art&font=vt323" alt="Cover">
+        <div id="player-main" id="player-info-container">
+            <div id="player-title">Select Song</div>
+            <div id="player-artist">...</div>
+            <div class="player-controls-row">
+                <button id="rewind-btn">[<<]</button>
+                <button id="play-pause-btn">[>]</button>
+                <button id="skip-btn">[>>]</button>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5">
+            </div>
+        </div>
+        <audio id="audio-player"></audio>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                // --- DEFINING MISSING VARIABLES ---
+                const splashElement = document.getElementById('splash-text');
+                const playerTitleEl = document.getElementById('player-title');
+                const playerArtistEl = document.getElementById('player-artist');
+                
+                // IMPORTANT: You need to define your playlist here
+                const playlist = [
+                    { title: "Song One", artist: "Artist A", src: "song1.mp3", cover: "cover1.jpg" },
+                    { title: "Song Two", artist: "Artist B", src: "song2.mp3", cover: "cover2.jpg" },
+                    // Add more songs here
+                ];
+
+                // --- SPLASH TEXT LOGIC ---
+                if (splashElement) {
+                    const splashOptions = [
                         "considering a page", "long live futtbucker", "six seven", "oh brother..",
                         "are you even an ew student?", "i bet ur failing", "get the bawlls!!",
                         "six one", "add jiggletip on clash", "new stuff soon",
-                        "WE yes WE are brainless and failing", "updates soon.. -nl" "no super seniors", "merry christmas",
+                        // Fixed missing comma below
+                        "WE yes WE are brainless and failing", "updates soon.. -nl", "no super seniors", "merry christmas"
                     ];
                     splashElement.textContent = splashOptions[Math.floor(Math.random() * splashOptions.length)];
                 }
 
+                // --- AUTH LOGIC ---
                 const welcomeMessage = document.getElementById('welcome-message');
                 const authLink = document.getElementById('auth-link');
+                
                 function updateUI() {
                     let username = localStorage.getItem('username');
                     if (username) {
@@ -139,7 +188,7 @@
                 }
                 function signIn(e) {
                     e.preventDefault();
-                    const name = prompt('Enter yourname:');
+                    const name = prompt('Enter your name:');
                     if (name && name.trim() !== '') {
                         localStorage.setItem('username', name.trim());
                         updateUI();
@@ -157,7 +206,7 @@
                 const playPauseBtn = document.getElementById('play-pause-btn');
                 const rewindBtn = document.getElementById('rewind-btn');
                 const skipBtn = document.getElementById('skip-btn');
-                const playerInfoContainer = document.getElementById('player-info-container');
+                const playerInfoContainer = document.getElementById('player-main'); // Fixed ID reference
                 const volumeSlider = document.getElementById('volume-slider');
                 const playerCoverArt = document.getElementById('player-cover-art');
                 const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
@@ -173,10 +222,16 @@
                 };
 
                 function loadSong(songIndex) {
+                    // Check if playlist exists and has items
+                    if (!playlist || playlist.length === 0) {
+                        playerTitleEl.textContent = "No Songs";
+                        return;
+                    }
+
                     const song = (songIndex === -1) ? secretSong : playlist[songIndex];
-                    if (!song || !song.src || !song.cover) {
+                    
+                    if (!song) {
                         console.error("Invalid song data at index:", songIndex);
-                        skipSong(true); 
                         return;
                     }
 
@@ -184,7 +239,9 @@
                     playerInfoContainer.title = `${song.title} - ${song.artist}`; 
                     playerTitleEl.textContent = song.title;
                     playerArtistEl.textContent = song.artist;
-                    playerCoverArt.src = song.cover;
+                    playerCoverArt.src = song.cover || placeholderCover;
+                    
+                    // Reset play state visually until loaded
                     playPauseBtn.textContent = '[>]';
                     isPlaying = false;
                 }
@@ -201,7 +258,6 @@
                         }).catch(error => {
                             console.warn("Auto-play failed:", error.name);
                             playerTitleEl.textContent = "Click Play";
-                            playerArtistEl.textContent = "to start music";
                             isPlaying = false;
                         });
                     }
@@ -218,7 +274,9 @@
                 }
 
                 function skipSong(skipOnly = false) {
+                    if (!playlist.length) return;
                     let nextSongIndex = Math.floor(Math.random() * playlist.length);
+                    // Avoid playing same song twice if playlist is > 1
                     if (nextSongIndex === currentSongIndex && playlist.length > 1) {
                         nextSongIndex = (nextSongIndex + 1) % playlist.length; 
                     }
@@ -228,6 +286,7 @@
                 }
 
                 function rewindSong() {
+                    if (!playlist.length) return;
                     currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
                     loadSong(currentSongIndex);
                     if (audioPlayer.src) { playSong(); }
@@ -256,17 +315,18 @@
                         catch (e) { sessionStorage.removeItem('musicPlayerState'); }
                     }
 
-                    if (savedState) {
+                    if (savedState && playlist.length > 0) {
                         currentSongIndex = savedState.currentSongIndex;
                         loadSong(currentSongIndex);
                         volumeSlider.value = savedState.volume || 1;
                         audioPlayer.volume = savedState.volume || 1;
                         audioPlayer.addEventListener('loadedmetadata', () => {
                             audioPlayer.currentTime = savedState.currentTime || 0;
+                            // Auto-resume might be blocked by browsers, but we try
                             if (savedState.isPlaying) { playSong(); }
                         }, { once: true }); 
 
-                    } else {
+                    } else if (playlist.length > 0) {
                         const rareSongChance = Math.floor(Math.random() * 50);
                         currentSongIndex = (rareSongChance === 0) ? -1 : Math.floor(Math.random() * playlist.length);
                         loadSong(currentSongIndex);
@@ -274,26 +334,32 @@
                     }
                 }
 
+                // Event Listeners
                 playPauseBtn.addEventListener('click', togglePlayPause);
                 skipBtn.addEventListener('click', () => skipSong(false));
                 rewindBtn.addEventListener('click', rewindSong);
                 volumeSlider.addEventListener('input', (e) => { audioPlayer.volume = e.target.value; });
                 audioPlayer.addEventListener('ended', () => skipSong(false));
+                
                 audioPlayer.addEventListener('error', (e) => {
-                    playerTitleEl.textContent = `Load Error (404)`;
-                    playerArtistEl.textContent = `Check file name`;
+                    playerTitleEl.textContent = `Load Error`;
+                    playerArtistEl.textContent = `Check file`;
+                    console.log("Audio Error:", e);
                 });
                 playerCoverArt.addEventListener('error', () => {
                     playerCoverArt.src = placeholderCover;
-                    playerArtistEl.textContent = `${playerArtistEl.textContent} (no art)`;
                 });
 
+                // Initialize
                 loadInitialState();
 
             } catch (e) {
                 console.error("Global script error:", e);
-                playerTitleEl.textContent = "Code Error";
-                playerArtistEl.textContent = e.message;
+                // Fallback for safety if playerTitleEl exists
+                const fallbackTitle = document.getElementById('player-title');
+                const fallbackArtist = document.getElementById('player-artist');
+                if(fallbackTitle) fallbackTitle.textContent = "Code Error";
+                if(fallbackArtist) fallbackArtist.textContent = e.message;
             }
         });
     </script>
