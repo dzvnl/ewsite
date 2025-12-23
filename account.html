@@ -3,32 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
     <title>Account</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-
-<style>
-    html, body { height: 100%; scroll-behavior: smooth; }
-    body {
-        font-family: 'VT323', monospace;
-        color: #e5e5e5;
-        background-color: #000000; 
-        background-image: url('IMG_4928.jpeg'); 
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-position: center;
-    }
-    .pixel-font {
-        font-family: 'VT323', monospace;
-        font-smooth: never;
-        -webkit-font-smoothing: none;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
-    }
-    .notification { position: fixed; top: 1rem; left: 1rem; }
-</style>
 </head>
 <body>
-<!-- Notification Area -->
-<span class="notification">
-    <div class="relative">🔔 <span class="absolute -top-2 -right-2 text-xs text-white px2-pdd">e.g `px->jump\```
+    <div class="account-container">
+        <!-- Header -->
+        <header>
+            <h1>Welcome, <span id="username">User</span></h1>
+        </header>
+
+        <!-- Profile Section -->
+        <section class="profile-section">
+            <div class="profile-picture">
+                <!-- Placeholder Profile Picture -->
+                <img src="placeholder-profile.png" alt="Profile Picture" id="profile-pic"/>
+            </div>
+            <div class="profile-actions">
+                <button id="edit-profile">Edit Profile</button>
+                <button id="edit-picture">Edit Picture</button>
+                <button id="change-password">Change Password</button>
+            </div>
+        </section>
+
+        <!-- Search Bar -->
+        <section class="search-section">
+            <input type="text" id="search-bar" placeholder="Search...">
+        </section>
+
+        <!-- Mention Users Section -->
+        <section class="mention-section">
+            <button id="mention-users">
+                @Mention Users
+                <span id="notification-badge" class="badge">0</span>
+            </button>
+        </section>
+    </div>
+
+    <script src="account.js"></script>
+</body>
+</html>
