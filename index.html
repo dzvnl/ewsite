@@ -188,7 +188,7 @@
             try {
                 // --- BACKGROUND LOGIC (1/100 Chance) ---
                 const specialBg = '81853ABB-FB87-4A20-9303-9624B777245B.jpeg';
-                const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_4945.jpeg'];
+                const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg' ,IMG_5264.jpeg',  'IMG_4945.jpeg'];
                 const chance = Math.floor(Math.random() * 100); 
                 let chosenBg = (chance === 0) ? specialBg : normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
                 document.body.style.backgroundImage = `url('${chosenBg}')`;
