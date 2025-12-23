@@ -13,8 +13,8 @@
             font-family: 'VT323', monospace;
             color: #e5e5e5;
             background-color: #000000; 
-            /* Fallback */
-            background-image: url('IMG_4928jpeg'); 
+            /* FIXED: Added the dot before 'jpeg' below */
+            background-image: url('IMG_4928.jpeg'); 
             background-size: cover;
             background-repeat: no-repeat;
             background-attachment: fixed;
@@ -40,6 +40,7 @@
             padding: 0.75rem;
             display: flex;
             align-items: center;
+            border-radius: 4px; /* Optional: adds slight rounding */
         }
         #player-cover-art {
             width: 64px;
@@ -72,7 +73,11 @@
             font-size: 1.25rem;
             flex-shrink: 0;
             padding: 0 0.25rem;
+            background: none;
+            border: none;
+            cursor: pointer;
         }
+        .player-controls-row button:hover { color: #fff; }
         #play-pause-btn { font-size: 1.5rem; line-height: 1; }
         #volume-slider {
             -webkit-appearance: none;
@@ -96,6 +101,7 @@
             border: 1px solid #000;
             border-radius: 50%;
             margin-top: -7px; 
+            cursor: pointer;
         }
     </style>
 </head>
@@ -130,9 +136,9 @@
                 <div id="player-artist">Loading...</div>
             </div>
             <div class="player-controls-row">
-                <button id="rewind-btn" title="Previous">[<<]</button>
-                <button id="play-pause-btn" title="Play/Pause">[>]</button>
-                <button id="skip-btn" title="Next (Shuffle)">[>>]</button>
+                <button id="rewind-btn" title="Previous">[&lt;&lt;]</button>
+                <button id="play-pause-btn" title="Play/Pause">[&gt;]</button>
+                <button id="skip-btn" title="Next (Shuffle)">[&gt;&gt;]</button>
                 <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" title="Volume">
             </div>
         </div>
@@ -177,7 +183,6 @@
             { title: "hold on", artist: "limpbizkit", src: baseURL + "holdon.mp3", cover: baseURL + "limpbizkit.jpg" },
             { title: "my way", artist: "limpbizkit", src: baseURL + "myway.mp3", cover: baseURL + "limpbizkit.jpg" },
             { title: "new update soon", artist: "-nl", src: baseURL + "xtal.mp3", cover: baseURL + "aphextwin.jpg" }
-
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -187,7 +192,8 @@
             try {
                 // --- BACKGROUND LOGIC (1/100 Chance) ---
                 const specialBg = '81853ABB-FB87-4A20-9303-9624B777245B.jpeg';
-                const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg' ,IMG_5264.jpeg',  'IMG_4945.jpeg'];
+                // FIXED: Added missing quote before IMG_5264.jpeg
+                const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg', 'IMG_5264.jpeg',  'IMG_4945.jpeg'];
                 const chance = Math.floor(Math.random() * 100); 
                 let chosenBg = (chance === 0) ? specialBg : normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
                 document.body.style.backgroundImage = `url('${chosenBg}')`;
@@ -302,6 +308,7 @@
 
                 function skipSong(skipOnly = false) {
                     let nextSongIndex = Math.floor(Math.random() * playlist.length);
+                    // Avoid repeating the same song unless playlist is size 1
                     if (nextSongIndex === currentSongIndex && playlist.length > 1) {
                         nextSongIndex = (nextSongIndex + 1) % playlist.length; 
                     }
@@ -368,7 +375,7 @@
                 });
                 playerCoverArt.addEventListener('error', () => {
                     playerCoverArt.src = placeholderCover;
-                    playerArtistEl.textContent = `${playerArtistEl.textContent} (no art)`;
+                    // Removed appending "(no art)" repeatedly to prevent layout breaking
                 });
 
                 loadInitialState();
