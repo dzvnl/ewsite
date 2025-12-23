@@ -20,21 +20,29 @@
         }
         .pixel-font {
             font-family: 'VT323', monospace;
+            font-smooth: never;
+            -webkit-font-smoothing: none;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
         }
         
         /* --- PLAYER CSS --- */
         #music-player-widget {
             position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 50;
-            width: 320px; background-color: rgba(0, 0, 0, 0.8);
-            padding: 0.75rem; display: flex; align-items: center;
+            width: 320px; height: auto; background-color: rgba(0, 0, 0, 0.8);
+            border: none; padding: 0.75rem; display: flex; align-items: center;
         }
-        #player-cover-art { width: 64px; height: 64px; margin-right: 0.75rem; border: 2px dotted #969696; image-rendering: pixelated; }
-        #player-main { flex-grow: 1; overflow: hidden; }
-        .player-controls-row button { color: #facc15; font-size: 1.25rem; cursor: pointer; background: none; border: none; }
-        #volume-slider { -webkit-appearance: none; width: 100%; background: transparent; }
-        #volume-slider::-webkit-slider-runnable-track { height: 4px; background: #333; border: 1px solid #969696; }
-        #volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: #facc15; margin-top: -6px; border-radius: 50%; }
+        #player-cover-art {
+            width: 64px; height: 64px; flex-shrink: 0; margin-right: 0.75rem; 
+            border: 2px dotted #969696; background-color: #111; image-rendering: pixelated;
+        }
+        #player-main { flex-grow: 1; overflow: hidden; min-width: 0; }
+        #player-title { color: #ffffff; font-size: 1.125rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #player-artist { font-size: 0.875rem; color: #969696; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+        .player-controls-row { display: flex; align-items: center; gap: 0.25rem; }
+        .player-controls-row button { color: #facc15; font-size: 1.25rem; flex-shrink: 0; padding: 0 0.25rem; cursor: pointer; background: none; border: none;}
+        #volume-slider { -webkit-appearance: none; width: 100%; flex-grow: 1; height: 16px; background: transparent; margin-left: 0.5rem; }
+        #volume-slider::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #333; border: 1px solid #969696; }
+        #volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #facc15; border: 1px solid #000; border-radius: 50%; margin-top: -7px; }
 
         /* --- CHAT WIDGET CSS --- */
         #chat-widget {
@@ -62,8 +70,8 @@
         <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
             <li><a href="/secrets" class="hover:text-red-900">home</a></li>
             <li><a href="/list" class="hover:text-red-900">list</a></li>
-            <li><a href="#" onclick="document.getElementById('chat-widget').classList.remove('closed')" class="hover:text-red-900">chat</a></li>
-            <li><a href="https://yodelling-amberly-ewsite-0c6ae866.koyeb.app/" class="hover:text-red-900">proxy</a></li>
+            <li><a href="#" onclick="document.getElementById('chat-widget').classList.remove('closed'); return false;" class="hover:text-red-900">chat</a></li>
+            <li><a href="https://yodelling-amberly-ewsite-0c6ae866.koyeb.app/" class="hover:text-red-900 transition-colors">proxy</a></li>
         </ul>
     </nav>
 
@@ -79,10 +87,12 @@
 
     <audio id="audio-player"></audio>
     <div id="music-player-widget" class="pixel-font">
-        <img id="player-cover-art" src="" alt="Art">
+        <img id="player-cover-art" src="https://placehold.co/64x64/000000/333333?text=...&font=vt323" alt="Album Cover">
         <div id="player-main">
-            <div id="player-title" class="truncate">...</div>
-            <div id="player-artist" class="text-gray-400 text-xs truncate">Loading...</div>
+            <div id="player-info-container" title="...">
+                <div id="player-title">...</div>
+                <div id="player-artist">Loading...</div>
+            </div>
             <div class="player-controls-row">
                 <button id="rewind-btn">[<<]</button>
                 <button id="play-pause-btn">[>]</button>
@@ -107,12 +117,71 @@
     </div>
 
     <div id="staff-panel" class="pixel-font">
-        <h2 style="color:#ff4444">STAFF CONSOLE</h2>
-        <input type="text" id="announce-input" placeholder="Announcement..." style="width:100%; background:#111; color:#fff; border:1px solid #333; margin:10px 0;">
-        <button id="send-announcement-btn" style="width:100%; background:#400; color:#fff; margin-bottom:5px;">POST</button>
-        <button id="clear-chat-btn" style="width:100%; border:1px solid #f44; color:#f44;">CLEAR CHAT</button>
-        <button onclick="document.getElementById('staff-panel').style.display='none'" style="width:100%; margin-top:10px; color:#666;">CLOSE</button>
+        <h2 style="color:#ff4444">STAFF_CONSOLE</h2>
+        <input type="text" id="announce-input" placeholder="Announcement..." style="width:100%; background:#111; color:#fff; border:1px solid #333; margin:10px 0; padding:5px;">
+        <button id="send-announcement-btn" style="width:100%; background:#400; color:#fff; margin-bottom:5px; padding:5px;">POST ANNOUNCEMENT</button>
+        <button id="clear-chat-btn" style="width:100%; border:1px solid #f44; color:#f44; padding:5px; background:none;">CLEAR ALL</button>
+        <button onclick="document.getElementById('staff-panel').style.display='none'" style="width:100%; margin-top:10px; color:#666; background:none; border:none;">CLOSE</button>
     </div>
+
+    <script>
+        const baseURL = "https://ewsmusic1.netlify.app/"; 
+        const playlist = [
+            { title: "Xtal", artist: "Aphex Twin", src: baseURL + "xtal.mp3", cover: baseURL + "aphex.jpg" },
+            { title: "I Don't Wanna Be Me", artist: "Type O Negative", src: baseURL + "idontwannabeme.mp3", cover: baseURL + "ton.jpg" },
+            { title: "Life Is Killing Me", artist: "Type O Negative", src: baseURL + "lifeiskilling.mp3", cover: baseURL + "ton.jpg" },
+            { title: "Exit Music", artist: "Radiohead", src: baseURL + "exitmusic.mp3", cover: baseURL + "radiohead.jpg" },
+            { title: "head in the ceiling fan", artist: "Title Fight", src: baseURL + "titlefight.mp3", cover: baseURL + "title-fih.jpg" },
+            { title: "hit the home", artist: "the hand of peace", src: baseURL + "clock.mp3", cover: baseURL + "handofpeace.jpg" }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const playerTitleEl = document.getElementById('player-title');
+            const playerArtistEl = document.getElementById('player-artist');
+            
+            // Background Fix
+            const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg', 'IMG_5264.jpeg', 'IMG_4945.jpeg'];
+            document.body.style.backgroundImage = `url('${normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)]}')`;
+
+            // Splash Text
+            const splashElement = document.getElementById('splash-text');
+            const splashOptions = ["blacked out like an lv sandal", "bbq chicken alert", "long live futtbucker", "updates soon.. -nl"];
+            splashElement.textContent = splashOptions[Math.floor(Math.random() * splashOptions.length)];
+
+            // Auth Logic
+            const welcomeMessage = document.getElementById('welcome-message');
+            const authLink = document.getElementById('auth-link');
+            function updateUI() {
+                let user = localStorage.getItem('username');
+                welcomeMessage.textContent = user ? `Welcome, ${user}` : 'Welcome, ?';
+                authLink.textContent = user ? '(sign out)' : '(sign up / sign in)';
+            }
+            authLink.onclick = (e) => {
+                e.preventDefault();
+                if(localStorage.getItem('username')) { localStorage.removeItem('username'); }
+                else { let n = prompt('Enter name:'); if(n) localStorage.setItem('username', n.trim()); }
+                updateUI();
+            };
+            updateUI();
+
+            // Music Logic
+            const audio = document.getElementById('audio-player');
+            const playBtn = document.getElementById('play-pause-btn');
+            const vol = document.getElementById('volume-slider');
+            const cover = document.getElementById('player-cover-art');
+            let index = Math.floor(Math.random() * playlist.length);
+
+            function load(i) {
+                const s = playlist[i];
+                audio.src = s.src; playerTitleEl.textContent = s.title; playerArtistEl.textContent = s.artist; cover.src = s.cover;
+            }
+            playBtn.onclick = () => { audio.paused ? audio.play() : audio.pause(); playBtn.textContent = audio.paused ? '[>]' : '[||]'; };
+            document.getElementById('skip-btn').onclick = () => { index = (index + 1) % playlist.length; load(index); audio.play(); };
+            document.getElementById('rewind-btn').onclick = () => { index = (index - 1 + playlist.length) % playlist.length; load(index); audio.play(); };
+            vol.oninput = (e) => audio.volume = e.target.value;
+            load(index);
+        });
+    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
@@ -133,7 +202,6 @@
         const chatRef = ref(db, 'chat_messages');
         const admins = ['-nl', 'fb67', 'root'];
 
-        // Sending Message
         document.getElementById('chat-input').onkeydown = (e) => {
             if(e.key === 'Enter' && e.target.value.trim()) {
                 const user = localStorage.getItem('username') || "Guest";
@@ -142,26 +210,23 @@
             }
         };
 
-        // Listen for Messages
         onChildAdded(chatRef, (snap) => {
             const data = snap.val();
             const isAdmin = admins.includes(data.user);
             const row = document.createElement('div');
             row.className = 'msg-row';
-            row.id = snap.key;
-            
+            row.id = `msg-${snap.key}`;
             let html = `<span class="msg-user ${isAdmin ? 'admin' : ''}">${data.user}:</span> <span class="msg-text">${data.text}</span>`;
             if(admins.includes(localStorage.getItem('username'))) {
-                html += `<span class="action-link" onclick="window.delMsg('${snap.key}')">[del]</span>`;
+                html += `<span class="action-link" style="color:red" onclick="window.delMsg('${snap.key}')">[del]</span>`;
             }
             row.innerHTML = html;
             document.getElementById('chat-messages').appendChild(row);
             document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
         });
 
-        onChildRemoved(chatRef, (snap) => document.getElementById(snap.key)?.remove());
+        onChildRemoved(chatRef, (snap) => document.getElementById(`msg-${snap.key}`)?.remove());
 
-        // Admin Actions
         window.delMsg = (id) => remove(ref(db, `chat_messages/${id}`));
         document.getElementById('clear-chat-btn').onclick = () => { if(confirm("Clear chat?")) remove(chatRef); };
         document.getElementById('send-announcement-btn').onclick = () => {
@@ -170,77 +235,17 @@
             document.getElementById('announce-input').value = "";
         };
 
-        // Staff Menu Trigger
-        document.getElementById('welcome-message').onclick = () => {
-            if(admins.includes(localStorage.getItem('username'))) document.getElementById('staff-panel').style.display = 'block';
-        };
-
-        // Dragging Logic
         const widget = document.getElementById('chat-widget');
-        const header = document.querySelector('#chat-header');
+        const header = document.getElementById('chat-header');
         let drag = false, offset = [0,0];
         header.onmousedown = (e) => { drag = true; offset = [widget.offsetLeft - e.clientX, widget.offsetTop - e.clientY]; };
         document.onmousemove = (e) => { if(drag) { widget.style.left = (e.clientX + offset[0]) + 'px'; widget.style.top = (e.clientY + offset[1]) + 'px'; } };
         document.onmouseup = () => drag = false;
+
+        document.getElementById('welcome-message').onclick = () => {
+            if(admins.includes(localStorage.getItem('username'))) document.getElementById('staff-panel').style.display = 'block';
+        };
     </script>
 
-    <script>
-        const baseURL = "https://ewsmusic1.netlify.app/"; 
-        const playlist = [
-            { title: "Xtal", artist: "Aphex Twin", src: baseURL + "xtal.mp3", cover: baseURL + "aphex.jpg" },
-            { title: "I Don't Wanna Be Me", artist: "Type O Negative", src: baseURL + "idontwannabeme.mp3", cover: baseURL + "ton.jpg" },
-            { title: "head in the ceiling fan", artist: "Title Fight", src: baseURL + "titlefight.mp3", cover: baseURL + "title-fih.jpg" },
-            { title: "hit the home", artist: "the hand of peace", src: baseURL + "clock.mp3", cover: baseURL + "handofpeace.jpg" }
-        ];
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Fix Background List
-            const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg', 'IMG_5264.jpeg', 'IMG_4945.jpeg'];
-            document.body.style.backgroundImage = `url('${normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)]}')`;
-
-            const splashOptions = ["considering a page", "long live futtbucker", "six seven", "oh brother..", "new updates soon"];
-            document.getElementById('splash-text').textContent = splashOptions[Math.floor(Math.random() * splashOptions.length)];
-
-            // Music Player
-            const audio = document.getElementById('audio-player');
-            const playBtn = document.getElementById('play-pause-btn');
-            const title = document.getElementById('player-title');
-            const artist = document.getElementById('player-artist');
-            const cover = document.getElementById('player-cover-art');
-            let index = Math.floor(Math.random() * playlist.length);
-
-            function load(i) {
-                const s = playlist[i];
-                audio.src = s.src; title.textContent = s.title; artist.textContent = s.artist; cover.src = s.cover;
-            }
-
-            playBtn.onclick = () => {
-                if(audio.paused) { audio.play(); playBtn.textContent = "[||]"; }
-                else { audio.pause(); playBtn.textContent = "[>]"; }
-            };
-
-            document.getElementById('skip-btn').onclick = () => { index = (index + 1) % playlist.length; load(index); audio.play(); };
-            document.getElementById('rewind-btn').onclick = () => { index = (index - 1 + playlist.length) % playlist.length; load(index); audio.play(); };
-            document.getElementById('volume-slider').oninput = (e) => audio.volume = e.target.value;
-
-            load(index);
-
-            // Auth UI
-            const welcome = document.getElementById('welcome-message');
-            const auth = document.getElementById('auth-link');
-            function upUI() {
-                let user = localStorage.getItem('username');
-                welcome.textContent = user ? `Welcome, ${user}` : "Welcome, ?";
-                auth.textContent = user ? "(sign out)" : "(sign up / sign in)";
-            }
-            auth.onclick = (e) => {
-                e.preventDefault();
-                if(localStorage.getItem('username')) localStorage.removeItem('username');
-                else { let n = prompt("Name:"); if(n) localStorage.setItem('username', n); }
-                upUI();
-            };
-            upUI();
-        });
-    </script>
 </body>
 </html>
