@@ -1,2 +1,229 @@
-get out! im changing!
-creep.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>canvas // chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <style>
+        body {
+            font-family: 'VT323', monospace;
+            color: #e5e5e5;
+            background-color: #000;
+            background-image: url('IMG_4928.jpeg'); 
+            background-size: cover;
+            background-attachment: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- UI ELEMENTS --- */
+        .home-btn {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            color: #7f1d1d; /* Dark Red */
+            font-size: 1.25rem;
+            text-decoration: none;
+            z-index: 100;
+        }
+        .home-btn:hover { color: #ef4444; }
+
+        #chat-container {
+            max-width: 800px;
+            width: 95%;
+            margin: 4rem auto 2rem;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #333;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        #chat-header {
+            padding: 1rem;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            background: #111;
+        }
+
+        #chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        /* --- MESSAGE STYLING --- */
+        .chat-msg { border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; }
+        .username { color: #facc15; font-weight: bold; margin-right: 8px; }
+        .admin-badge { color: #ef4444; font-size: 0.8rem; vertical-align: super; }
+        .msg-actions { opacity: 0; margin-left: 10px; }
+        .chat-msg:hover .msg-actions { opacity: 1; }
+        .action-btn { cursor: pointer; color: #666; font-size: 0.9rem; margin: 0 4px; }
+        .delete-btn { color: #ef4444 !important; }
+
+        #input-area { padding: 1rem; background: #111; border-top: 1px solid #333; }
+        #chat-input {
+            width: 100%;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 10px;
+            outline: none;
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+        }
+
+        /* --- MINI PLAYER --- */
+        #mini-player {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #333;
+            padding: 8px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="home-btn">home</a>
+
+    <div class="fixed top-4 right-4 text-right">
+        <p id="welcome-msg" class="text-yellow-400">Welcome, ?</p>
+        <button id="auth-btn" class="text-xs text-gray-500 hover:text-white">(sign in)</button>
+    </div>
+
+    <div id="chat-container">
+        <div id="chat-header">
+            <span class="text-yellow-400">// GLOBAL_CHANNEL_01</span>
+            <span id="status-dot" class="text-green-600">● LIVE</span>
+        </div>
+        
+        <div id="chat-messages">
+            <div class="text-gray-600 italic">Connecting to neural link...</div>
+        </div>
+
+        <div id="input-area">
+            <input type="text" id="chat-input" placeholder="Initialize identity to broadcast..." disabled autocomplete="off">
+        </div>
+    </div>
+
+    <audio id="audio-player"></audio>
+
+    <script>
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
+            authDomain: "ewsitechat.firebaseapp.com",
+            databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
+            projectId: "ewsitechat",
+            storageBucket: "ewsitechat.firebasestorage.app",
+            messagingSenderId: "282495574514",
+            appId: "1:282495574514:web:e2781da630d93fc1ce8b6b",
+            measurementId: "G-GTN3TL1P2K"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const messagesRef = db.ref('messages');
+        const ADMINS = ['-nl', 'admin', 'root'];
+
+        // --- AUTH LOGIC ---
+        const authBtn = document.getElementById('auth-btn');
+        const welcomeMsg = document.getElementById('welcome-msg');
+        const chatInput = document.getElementById('chat-input');
+
+        function updateAuthUI() {
+            const user = localStorage.getItem('username');
+            if (user) {
+                welcomeMsg.textContent = `User: ${user}`;
+                authBtn.textContent = '(disconnect)';
+                chatInput.disabled = false;
+                chatInput.placeholder = `Broadcast as ${user}...`;
+            } else {
+                welcomeMsg.textContent = `User: anonymous`;
+                authBtn.textContent = '(identify)';
+                chatInput.disabled = true;
+                chatInput.placeholder = `Initialize identity to broadcast...`;
+            }
+        }
+
+        authBtn.onclick = () => {
+            if (localStorage.getItem('username')) {
+                localStorage.removeItem('username');
+            } else {
+                const name = prompt("Enter Identifier:");
+                if (name) localStorage.setItem('username', name.trim());
+            }
+            updateAuthUI();
+        };
+
+        // --- CHAT LOGIC ---
+        const chatBox = document.getElementById('chat-messages');
+
+        messagesRef.limitToLast(50).on('value', (snap) => {
+            const currentUser = localStorage.getItem('username');
+            const isAdmin = ADMINS.includes(currentUser);
+            chatBox.innerHTML = '';
+
+            snap.forEach((child) => {
+                const data = child.val();
+                const key = child.key;
+                const isMsgAdmin = ADMINS.includes(data.user);
+                
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'chat-msg';
+                msgDiv.innerHTML = `
+                    <span class="username">${isMsgAdmin ? '<span class="admin-badge">*</span>' : ''}${data.user}:</span>
+                    <span class="text">${escapeHtml(data.text)}</span>
+                    <span class="msg-actions">
+                        <span class="action-btn" onclick="reply('${data.user}')">[reply]</span>
+                        ${isAdmin ? `<span class="action-btn delete-btn" onclick="deleteMsg('${key}')">[delete]</span>` : ''}
+                    </span>
+                `;
+                chatBox.appendChild(msgDiv);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        chatInput.onkeypress = (e) => {
+            if (e.key === 'Enter' && chatInput.value.trim()) {
+                messagesRef.push({
+                    user: localStorage.getItem('username'),
+                    text: chatInput.value.trim(),
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+                chatInput.value = '';
+            }
+        };
+
+        function reply(user) {
+            chatInput.value = `@${user} ` + chatInput.value;
+            chatInput.focus();
+        }
+
+        function deleteMsg(key) {
+            if (confirm("Delete entry from database?")) messagesRef.child(key).remove();
+        }
+
+        function escapeHtml(t) {
+            return t.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]));
+        }
+
+        updateAuthUI();
+    </script>
+</body>
+</html>
