@@ -6,15 +6,15 @@
     <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-
+    
     <style>
         html, body { height: 100%; scroll-behavior: smooth; }
         body {
             font-family: 'VT323', monospace;
             color: #e5e5e5;
             background-color: #000000; 
-            /* Ensure you have this image or the background will be black */
-            background-image: url('IMG_4928.jpeg'); 
+            /* Fallback */
+            background-image: url('IMG_4928jpeg'); 
             background-size: cover;
             background-repeat: no-repeat;
             background-attachment: fixed;
@@ -26,7 +26,7 @@
             -webkit-font-smoothing: none;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
         }
-
+        
         /* --- PLAYER CSS --- */
         #music-player-widget {
             position: fixed;
@@ -36,11 +36,10 @@
             width: 320px; 
             height: auto;
             background-color: rgba(0, 0, 0, 0.8);
-            border: 1px solid #333;
+            border: none;
             padding: 0.75rem;
             display: flex;
             align-items: center;
-            border-radius: 4px;
         }
         #player-cover-art {
             width: 64px;
@@ -73,13 +72,8 @@
             font-size: 1.25rem;
             flex-shrink: 0;
             padding: 0 0.25rem;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-family: 'VT323', monospace;
         }
-        .player-controls-row button:hover { color: #fff; }
-        
+        #play-pause-btn { font-size: 1.5rem; line-height: 1; }
         #volume-slider {
             -webkit-appearance: none;
             width: 100%; 
@@ -100,80 +94,121 @@
             height: 16px;
             background: #facc15; 
             border: 1px solid #000;
-            border-radius: 0; /* Pixel style */
+            border-radius: 50%;
             margin-top: -7px; 
-            cursor: pointer;
         }
-
-        /* Helper classes */
-        .hidden { display: none; }
     </style>
 </head>
 <body>
 
     <nav class="fixed left-0 top-1/2 -translate-y-1/2 p-6 sm:p-8 pixel-font z-10">
-        <h1 id="splash-text" class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;">welcome.</h1>
-        
+        <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;"></h1>
         <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
-            <li><a href="/secrets" class="hover:text-red-900 transition-colors">home</a></li>
-            <li><a href="/list" class="hover:text-red-900 transition-colors">list</a></li>
-            <li><a href="/updates" class="hover:text-red-900 transition-colors">updates</a></li>
-            <li><a href="/chat" class="hover:text-red-900 transition-colors">chat</a></li>
+            <li><a href="/secrets" class="hover:text-red-900">home</a></li>
+            <li><a href="/list" class="hover:text-red-900">list</a></li>
+            <li><a href="/updates" class="hover:text-red-900">updates</a></li>
+            <li><a href="/chat" class="hover:text-red-900">chat</a></li>
             <li><a href="https://yodelling-amberly-ewsite-0c6ae866.koyeb.app/" class="hover:text-red-900 active:text-red-900 transition-colors">proxy</a></li>
         </ul>
-
-        <div class="mt-4 text-xl">
-            <span id="welcome-message">Welcome, ?</span>
-            <a href="#" id="auth-link" class="block text-sm text-yellow-500 hover:text-yellow-300 mt-1">(sign up / sign in)</a>
-        </div>
     </nav>
 
-    <div id="music-player-widget">
-        <img id="player-cover-art" src="https://placehold.co/64x64/000000/333333?text=Art&font=vt323" alt="Cover">
-        <div id="player-main" id="player-info-container">
-            <div id="player-title">Select Song</div>
-            <div id="player-artist">...</div>
+    <div class="fixed top-2/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pixel-font text-yellow-400 text-lg lg:text-xl text-center z-10 p-4">
+        <p id="splash-text"></p>
+    </div>
+
+    <div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
+        <p>2.0</p>
+        <p id="welcome-message">Welcome, ?</p>
+        <a href="#" id="auth-link" class="text-xs" style="color: #969696;">(sign up / sign in)</a>
+    </div>
+
+    <audio id="audio-player"></audio>
+    <div id="music-player-widget" class="pixel-font">
+        <img id="player-cover-art" src="https://placehold.co/64x64/000000/333333?text=...&font=vt323" alt="Album Cover">
+        <div id="player-main">
+            <div id="player-info-container" title="...">
+                <div id="player-title">...</div>
+                <div id="player-artist">Loading...</div>
+            </div>
             <div class="player-controls-row">
-                <button id="rewind-btn">[<<]</button>
-                <button id="play-pause-btn">[>]</button>
-                <button id="skip-btn">[>>]</button>
-                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5">
+                <button id="rewind-btn" title="Previous">[<<]</button>
+                <button id="play-pause-btn" title="Play/Pause">[>]</button>
+                <button id="skip-btn" title="Next (Shuffle)">[>>]</button>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" title="Volume">
             </div>
         </div>
-        <audio id="audio-player"></audio>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            try {
-                // --- DEFINING MISSING VARIABLES ---
-                const splashElement = document.getElementById('splash-text');
-                const playerTitleEl = document.getElementById('player-title');
-                const playerArtistEl = document.getElementById('player-artist');
-                
-                // IMPORTANT: You need to define your playlist here
-                const playlist = [
-                    { title: "Song One", artist: "Artist A", src: "song1.mp3", cover: "cover1.jpg" },
-                    { title: "Song Two", artist: "Artist B", src: "song2.mp3", cover: "cover2.jpg" },
-                    // Add more songs here
-                ];
 
-                // --- SPLASH TEXT LOGIC ---
+        const baseURL = "https://ewsmusic1.netlify.app/"; 
+        const playlist = [
+            { title: "Xtal", artist: "Aphex Twin", src: baseURL + "xtal.mp3", cover: baseURL + "aphex.jpg" },
+            { title: "I Don't Wanna Be Me", artist: "Type O Negative", src: baseURL + "idontwannabeme.mp3", cover: baseURL + "ton.jpg" },
+            { title: "Life Is Killing Me", artist: "Type O Negative", src: baseURL + "lifeiskilling.mp3", cover: baseURL + "ton.jpg" },
+            { title: "Exit Music (For a Film)", artist: "Radiohead", src: baseURL + "exitmusic.mp3", cover: baseURL + "radiohead.jpg" },
+            { title: "Alternative Outro", artist: "LUCKI", src: baseURL + "alternativeoutro.mp3", cover: baseURL + "lucki.jpg" },
+            { title: "Bite My Lip", artist: "fakemink", src: baseURL + "bitemylip.mp3", cover: baseURL + "fakemink.jpg" },
+            { title: "Ambilux", artist: "fakemink", src: baseURL + "ambilux.mp3", cover: baseURL + "fakemink3.jpg" },
+            { title: "I'm Like Why", artist: "xaviersobased", src: baseURL + "imlikewhy.mp3", cover: baseURL + "xav.jpg" },
+            { title: "Love Hate", artist: "xaviersobased", src: baseURL + "lovehate.mp3", cover: baseURL + "xav2.jpg" },
+            { title: "Foamposite Interlude", artist: "smokedope2016", src: baseURL + "foamposite.mp3", cover: baseURL + "smokedope2016.jpg" },
+            { title: "Abysmal Depths Are Flooded", artist: "Xasthur", src: baseURL + "abysmaldepthsareflooded.mp3", cover: baseURL + "xasthur.jpg" },
+            { title: "Diamonds", artist: "Chris Travis", src: baseURL + "diamonds.mp3", cover: baseURL + "christravis.jpg" },
+            { title: "Black Magic", artist: "Ethel Wulf", src: baseURL + "blackmagic.mp3", cover: baseURL + "ethel.jpg" },
+            { title: "4 Raws", artist: "EsDeeKid", src: baseURL + "4raws.mp3", cover: baseURL + "esdee.jpg" },
+            { title: "Fever", artist: "fakemink/buckshot", src: baseURL + "fever.mp3", cover: baseURL + "buckshot.jpg" },
+            { title: "Stalks", artist: "Ghost Mountain", src: baseURL + "stalks.mp3", cover: baseURL + "ghostmountain.jpg" },
+            { title: "MIA", artist: "feng", src: baseURL + "mia.mp3", cover: baseURL + "feng.jpg" },
+            { title: "head in the ceiling fan", artist: "Title Fight", src: baseURL + "titlefight.mp3", cover: baseURL + "title-fih.jpg" },
+            { title: "Turn Me Loose", artist: "limpbizkit/eminem", src: baseURL + "turnmeloose.mp3", cover: baseURL + "limp.jpg" },
+            { title: "black beetles", artist: "esdeekid", src: baseURL + "bbr.mp3", cover: baseURL + "esdee2.jpg" },
+            { title: "apathy", artist: "esdeekid", src: baseURL + "apathy.mp3", cover: baseURL + "esdee3.jpg" },
+            { title: "bring it back", artist: "chris travis", src: baseURL + "bib.mp3", cover: baseURL + "chris2.jpg" },
+            { title: "die til you live", artist: "fakemink", src: baseURL + "dtyl.mp3", cover: baseURL + "fakemink5.jpg" },
+            { title: "worthit", artist: "xaviersobased", src: baseURL + "worthit.mp3", cover: baseURL + "81853ABB-FB87-4A20-9303-9624B777245B.jpeg" },
+            { title: "in da party", artist: "smokedope2016", src: baseURL + "indaparty.mp3", cover: baseURL + "smokedope4.jpg" },
+            { title: "say it aint dro", artist: "smokedope2016", src: baseURL + "dro.mp3", cover: baseURL + "smokedope3.jpg" },
+            { title: "blunts on my mind", artist: "ethel wulf", src: baseURL + "bluntsomm.mp3", cover: baseURL + "ethel2.jpg" },
+            { title: "luper", artist: "earl sweatshirt", src: baseURL + "luper.mp3", cover: baseURL + "earl.jpg" },
+            { title: "frat", artist: "smokedope2016", src: baseURL + "frat.mp3", cover: baseURL + "smokedope2.jpg" },
+            { title: "hit the home", artist: "the hand of peace", src: baseURL + "clock.mp3", cover: baseURL + "handofpeace.jpg" },
+            { title: "blow me", artist: "fakemink", src: baseURL + "blowme.mp3", cover: baseURL + "fakeminkk.jpg" },
+            { title: "minerva", artist: "deftones", src: baseURL + "minerva.mp3", cover: baseURL + "deftones.jpg" },
+            { title: "hold on", artist: "limpbizkit", src: baseURL + "holdon.mp3", cover: baseURL + "limpbizkit.jpg" },
+            { title: "my way", artist: "limpbizkit", src: baseURL + "myway.mp3", cover: baseURL + "limpbizkit.jpg" },
+            { title: "new update soon", artist: "-nl", src: baseURL + "xtal.mp3", cover: baseURL + "aphextwin.jpg" }
+
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const playerTitleEl = document.getElementById('player-title');
+            const playerArtistEl = document.getElementById('player-artist');
+            
+            try {
+                // --- BACKGROUND LOGIC (1/100 Chance) ---
+                const specialBg = '81853ABB-FB87-4A20-9303-9624B777245B.jpeg';
+                const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg' ,IMG_5264.jpeg',  'IMG_4945.jpeg'];
+                const chance = Math.floor(Math.random() * 100); 
+                let chosenBg = (chance === 0) ? specialBg : normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
+                document.body.style.backgroundImage = `url('${chosenBg}')`;
+                
+                // --- SPLASH TEXT & AUTH ---
+                const splashElement = document.getElementById('splash-text');
                 if (splashElement) {
                     const splashOptions = [
+                        "blacked out like an lv sandal", "son", "bbq chicken alert", 
+                        "trick or treat.. smell my.. donuts..", "100 perkaholic or pounded by a margwa",
                         "considering a page", "long live futtbucker", "six seven", "oh brother..",
                         "are you even an ew student?", "i bet ur failing", "get the bawlls!!",
                         "six one", "add jiggletip on clash", "new stuff soon",
-                        // Fixed missing comma below
-                        "WE yes WE are brainless and failing", "updates soon.. -nl", "no super seniors", "merry christmas"
+                        "WE yes WE are brainless and failing", "updates soon.. -nl", "no super seniors", "considering a chat board"
                     ];
                     splashElement.textContent = splashOptions[Math.floor(Math.random() * splashOptions.length)];
                 }
-
-                // --- AUTH LOGIC ---
+                
                 const welcomeMessage = document.getElementById('welcome-message');
                 const authLink = document.getElementById('auth-link');
-                
                 function updateUI() {
                     let username = localStorage.getItem('username');
                     if (username) {
@@ -188,7 +223,7 @@
                 }
                 function signIn(e) {
                     e.preventDefault();
-                    const name = prompt('Enter your name:');
+                    const name = prompt('Enter yourname:');
                     if (name && name.trim() !== '') {
                         localStorage.setItem('username', name.trim());
                         updateUI();
@@ -200,17 +235,17 @@
                     updateUI();
                 }
                 updateUI();
-
+                
                 // --- MUSIC PLAYER LOGIC ---
                 const audioPlayer = document.getElementById('audio-player');
                 const playPauseBtn = document.getElementById('play-pause-btn');
                 const rewindBtn = document.getElementById('rewind-btn');
                 const skipBtn = document.getElementById('skip-btn');
-                const playerInfoContainer = document.getElementById('player-main'); // Fixed ID reference
+                const playerInfoContainer = document.getElementById('player-info-container');
                 const volumeSlider = document.getElementById('volume-slider');
                 const playerCoverArt = document.getElementById('player-cover-art');
                 const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
-
+                
                 let currentSongIndex = 0;
                 let isPlaying = false;
 
@@ -222,26 +257,18 @@
                 };
 
                 function loadSong(songIndex) {
-                    // Check if playlist exists and has items
-                    if (!playlist || playlist.length === 0) {
-                        playerTitleEl.textContent = "No Songs";
-                        return;
-                    }
-
                     const song = (songIndex === -1) ? secretSong : playlist[songIndex];
-                    
-                    if (!song) {
+                    if (!song || !song.src || !song.cover) {
                         console.error("Invalid song data at index:", songIndex);
+                        skipSong(true); 
                         return;
                     }
-
+                    
                     audioPlayer.src = song.src; 
                     playerInfoContainer.title = `${song.title} - ${song.artist}`; 
                     playerTitleEl.textContent = song.title;
                     playerArtistEl.textContent = song.artist;
-                    playerCoverArt.src = song.cover || placeholderCover;
-                    
-                    // Reset play state visually until loaded
+                    playerCoverArt.src = song.cover;
                     playPauseBtn.textContent = '[>]';
                     isPlaying = false;
                 }
@@ -249,7 +276,7 @@
                 function playSong() {
                     if (!audioPlayer.src) { return; }
                     audioPlayer.volume = volumeSlider.value; 
-
+                    
                     const playPromise = audioPlayer.play();
                     if (playPromise !== undefined) {
                         playPromise.then(() => {
@@ -258,6 +285,7 @@
                         }).catch(error => {
                             console.warn("Auto-play failed:", error.name);
                             playerTitleEl.textContent = "Click Play";
+                            playerArtistEl.textContent = "to start music";
                             isPlaying = false;
                         });
                     }
@@ -274,9 +302,7 @@
                 }
 
                 function skipSong(skipOnly = false) {
-                    if (!playlist.length) return;
                     let nextSongIndex = Math.floor(Math.random() * playlist.length);
-                    // Avoid playing same song twice if playlist is > 1
                     if (nextSongIndex === currentSongIndex && playlist.length > 1) {
                         nextSongIndex = (nextSongIndex + 1) % playlist.length; 
                     }
@@ -286,12 +312,11 @@
                 }
 
                 function rewindSong() {
-                    if (!playlist.length) return;
                     currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
                     loadSong(currentSongIndex);
                     if (audioPlayer.src) { playSong(); }
                 }
-
+                
                 // --- STORAGE SAVE/LOAD ---
                 window.addEventListener('beforeunload', () => {
                     if (audioPlayer.currentTime > 0) {
@@ -306,7 +331,7 @@
                         sessionStorage.removeItem('musicPlayerState');
                     }
                 });
-
+                
                 function loadInitialState() {
                     const savedStateJSON = sessionStorage.getItem('musicPlayerState');
                     let savedState = null;
@@ -315,51 +340,44 @@
                         catch (e) { sessionStorage.removeItem('musicPlayerState'); }
                     }
 
-                    if (savedState && playlist.length > 0) {
+                    if (savedState) {
                         currentSongIndex = savedState.currentSongIndex;
                         loadSong(currentSongIndex);
                         volumeSlider.value = savedState.volume || 1;
                         audioPlayer.volume = savedState.volume || 1;
                         audioPlayer.addEventListener('loadedmetadata', () => {
                             audioPlayer.currentTime = savedState.currentTime || 0;
-                            // Auto-resume might be blocked by browsers, but we try
                             if (savedState.isPlaying) { playSong(); }
                         }, { once: true }); 
-
-                    } else if (playlist.length > 0) {
+                        
+                    } else {
                         const rareSongChance = Math.floor(Math.random() * 50);
                         currentSongIndex = (rareSongChance === 0) ? -1 : Math.floor(Math.random() * playlist.length);
                         loadSong(currentSongIndex);
                         audioPlayer.volume = volumeSlider.value;
                     }
                 }
-
-                // Event Listeners
+                
                 playPauseBtn.addEventListener('click', togglePlayPause);
                 skipBtn.addEventListener('click', () => skipSong(false));
                 rewindBtn.addEventListener('click', rewindSong);
                 volumeSlider.addEventListener('input', (e) => { audioPlayer.volume = e.target.value; });
                 audioPlayer.addEventListener('ended', () => skipSong(false));
-                
                 audioPlayer.addEventListener('error', (e) => {
-                    playerTitleEl.textContent = `Load Error`;
-                    playerArtistEl.textContent = `Check file`;
-                    console.log("Audio Error:", e);
+                    playerTitleEl.textContent = `Load Error (404)`;
+                    playerArtistEl.textContent = `Check file name`;
                 });
                 playerCoverArt.addEventListener('error', () => {
                     playerCoverArt.src = placeholderCover;
+                    playerArtistEl.textContent = `${playerArtistEl.textContent} (no art)`;
                 });
 
-                // Initialize
                 loadInitialState();
-
+                
             } catch (e) {
                 console.error("Global script error:", e);
-                // Fallback for safety if playerTitleEl exists
-                const fallbackTitle = document.getElementById('player-title');
-                const fallbackArtist = document.getElementById('player-artist');
-                if(fallbackTitle) fallbackTitle.textContent = "Code Error";
-                if(fallbackArtist) fallbackArtist.textContent = e.message;
+                playerTitleEl.textContent = "Code Error";
+                playerArtistEl.textContent = e.message;
             }
         });
     </script>
