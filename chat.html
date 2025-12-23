@@ -1,384 +1,372 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    
-    <style>
-        html, body { height: 100%; scroll-behavior: smooth; }
-        body {
-            font-family: 'VT323', monospace;
-            color: #e5e5e5;
-            background-color: #000000; 
-            /* Fallback */
-            background-image: url('IMG_4928jpeg'); 
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            background-position: center;
-        }
-        .pixel-font {
-            font-family: 'VT323', monospace;
-            font-smooth: never;
-            -webkit-font-smoothing: none;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
-        }
-        
-        /* --- PLAYER CSS --- */
-        #music-player-widget {
-            position: fixed;
-            bottom: 1.5rem; 
-            right: 1.5rem;
-            z-index: 50;
-            width: 320px; 
-            height: auto;
-            background-color: rgba(0, 0, 0, 0.8);
-            border: none;
-            padding: 0.75rem;
-            display: flex;
-            align-items: center;
-        }
-        #player-cover-art {
-            width: 64px;
-            height: 64px;
-            flex-shrink: 0; 
-            margin-right: 0.75rem; 
-            border: 2px dotted #969696; 
-            background-color: #111;
-            image-rendering: pixelated;
-        }
-        #player-main { flex-grow: 1; overflow: hidden; min-width: 0; }
-        #player-title {
-            color: #ffffff;
-            font-size: 1.125rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        #player-artist {
-            font-size: 0.875rem;
-            color: #969696;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-bottom: 4px;
-        }
-        .player-controls-row { display: flex; align-items: center; gap: 0.25rem; }
-        .player-controls-row button {
-            color: #facc15;
-            font-size: 1.25rem;
-            flex-shrink: 0;
-            padding: 0 0.25rem;
-        }
-        #play-pause-btn { font-size: 1.5rem; line-height: 1; }
-        #volume-slider {
-            -webkit-appearance: none;
-            width: 100%; 
-            flex-grow: 1;
-            height: 16px; 
-            background: transparent;
-            margin-left: 0.5rem; 
-        }
-        #volume-slider::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            background: #333;
-            border: 1px solid #969696;
-        }
-        #volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            background: #facc15; 
-            border: 1px solid #000;
-            border-radius: 50%;
-            margin-top: -7px; 
-        }
-    </style>
-</head>
-<body>
+/* * CHAT WIDGET 2.1 (FIREBASE REALTIME EDITION)
+ * Connected to: ewsitechat
+ */
 
-    <nav class="fixed left-0 top-1/2 -translate-y-1/2 p-6 sm:p-8 pixel-font z-10">
-        <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;"></h1>
-        <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
-            <li><a href="/secrets" class="hover:text-red-900">home</a></li>
-            <li><a href="/list" class="hover:text-red-900">list</a></li>
-            <li><a href="/settings" class="hover:text-red-900">settings</a></li>
-            <li><a href="https://yodelling-amberly-ewsite-0c6ae866.koyeb.app/" class="hover:text-red-900 active:text-red-900 transition-colors">proxy</a></li>
-        </ul>
-    </nav>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, remove, set, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
-    <div class="fixed top-2/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pixel-font text-yellow-400 text-lg lg:text-xl text-center z-10 p-4">
-        <p id="splash-text"></p>
-    </div>
+// --- FIREBASE CONFIGURATION ---
+const firebaseConfig = {
+    apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
+    authDomain: "ewsitechat.firebaseapp.com",
+    databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
+    projectId: "ewsitechat",
+    storageBucket: "ewsitechat.firebasestorage.app",
+    messagingSenderId: "282495574514",
+    appId: "1:282495574514:web:e2781da630d93fc1ce8b6b",
+    measurementId: "G-GTN3TL1P2K"
+};
 
-    <div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
-        <p>2.0</p>
-        <p id="welcome-message">Welcome, ?</p>
-        <a href="#" id="auth-link" class="text-xs" style="color: #969696;">(sign up / sign in)</a>
-    </div>
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-    <audio id="audio-player"></audio>
-    <div id="music-player-widget" class="pixel-font">
-        <img id="player-cover-art" src="https://placehold.co/64x64/000000/333333?text=...&font=vt323" alt="Album Cover">
-        <div id="player-main">
-            <div id="player-info-container" title="...">
-                <div id="player-title">...</div>
-                <div id="player-artist">Loading...</div>
-            </div>
-            <div class="player-controls-row">
-                <button id="rewind-btn" title="Previous">[<<]</button>
-                <button id="play-pause-btn" title="Play/Pause">[>]</button>
-                <button id="skip-btn" title="Next (Shuffle)">[>>]</button>
-                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" title="Volume">
-            </div>
+// --- CONFIGURATION & STATE ---
+const ADMINS = ['root', 'fb67'];
+let messages = []; // Will be synced with DB
+let mutedUsers = []; // Will be synced with DB
+let replyingTo = null; 
+let isFullscreen = false;
+let isMinimized = true;
+
+// Get current user from your site's Login logic
+const currentUser = localStorage.getItem('username') || 'Guest-' + Math.floor(Math.random()*1000);
+const isAdmin = ADMINS.includes(currentUser);
+
+// --- DOM STYLES (CSS) ---
+const style = document.createElement('style');
+style.textContent = `
+    #chat-widget-btn {
+        position: fixed; bottom: 20px; left: 20px; z-index: 9999;
+        background: #000; border: 1px solid #facc15; color: #facc15;
+        padding: 8px 12px; font-family: 'VT323', monospace; font-size: 1.25rem;
+        cursor: pointer; box-shadow: 2px 2px 0px #969696;
+    }
+    #chat-window {
+        position: fixed; top: 20%; left: 20%; width: 350px; height: 400px;
+        background: rgba(0, 0, 0, 0.95); border: 2px solid #969696;
+        z-index: 10000; display: none; flex-direction: column;
+        resize: both; overflow: hidden; min-width: 250px; min-height: 200px;
+        box-shadow: 4px 4px 10px rgba(0,0,0,0.5);
+    }
+    #chat-window.fullscreen {
+        top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important;
+        resize: none;
+    }
+    #chat-header {
+        background: #1a1a1a; padding: 4px 8px; cursor: grab;
+        display: flex; justify-content: space-between; align-items: center;
+        border-bottom: 1px solid #969696; color: #e5e5e5; user-select: none;
+        font-family: 'VT323', monospace;
+    }
+    #chat-header:active { cursor: grabbing; }
+    .window-controls button {
+        background: none; border: none; color: #facc15; font-family: 'VT323';
+        font-size: 1.2rem; cursor: pointer; margin-left: 5px;
+    }
+    .window-controls button:hover { color: #fff; }
+    #chat-body {
+        flex-grow: 1; overflow-y: auto; padding: 10px;
+        font-family: 'VT323', monospace; font-size: 1.1rem;
+        display: flex; flex-direction: column; gap: 8px;
+    }
+    .msg { word-wrap: break-word; line-height: 1.2; position: relative; }
+    .msg:hover .admin-controls { display: inline-block; }
+    .msg-meta { font-size: 0.8rem; color: #666; margin-right: 4px; }
+    .msg-user { color: #facc15; cursor: pointer; }
+    .msg-user.admin { color: #ef4444; font-weight: bold; }
+    .msg-text { color: #d4d4d4; }
+    .msg-reply-context {
+        border-left: 2px solid #555; padding-left: 5px; margin-bottom: 2px;
+        font-size: 0.8rem; color: #888; font-style: italic; display: block;
+    }
+    .admin-action {
+        color: #ef4444; cursor: pointer; font-size: 0.8rem; margin-left: 5px; 
+        font-weight: bold; text-decoration: none;
+    }
+    .admin-action:hover { text-decoration: underline; color: #ff0000; }
+    #chat-footer {
+        padding: 8px; border-top: 1px dotted #555; background: #000;
+    }
+    #reply-indicator {
+        font-size: 0.9rem; color: #facc15; margin-bottom: 4px; display: none;
+        justify-content: space-between; align-items: center; font-family: 'VT323', monospace;
+    }
+    .chat-input-row { display: flex; gap: 5px; }
+    #chat-input {
+        flex-grow: 1; background: #111; border: 1px solid #555; color: #fff;
+        font-family: 'VT323'; font-size: 1.1rem; padding: 4px;
+    }
+    #chat-send {
+        background: #facc15; border: 1px solid #facc15; color: #000;
+        font-family: 'VT323'; cursor: pointer; padding: 0 10px; font-weight: bold;
+    }
+    /* Scrollbar styling for that retro feel */
+    #chat-body::-webkit-scrollbar { width: 8px; }
+    #chat-body::-webkit-scrollbar-track { background: #000; }
+    #chat-body::-webkit-scrollbar-thumb { background: #333; border: 1px solid #555; }
+`;
+document.head.appendChild(style);
+
+// --- DOM ELEMENTS CREATION ---
+const btn = document.createElement('div');
+btn.id = 'chat-widget-btn';
+btn.innerHTML = '>> CHAT ONLINE';
+
+const windowEl = document.createElement('div');
+windowEl.id = 'chat-window';
+windowEl.innerHTML = `
+    <div id="chat-header">
+        <span id="chat-title">:: GLOBAL_NET ::</span>
+        <div class="window-controls">
+            <button id="chat-min">_</button>
+            <button id="chat-full">[]</button>
+            <button id="chat-close">X</button>
         </div>
     </div>
+    <div id="chat-body">
+        <div style="color:#666; text-align:center; margin-top:20px;">Connecting to server...</div>
+    </div>
+    <div id="chat-footer">
+        <div id="reply-indicator">
+            <span id="reply-text">Replying...</span>
+            <button id="cancel-reply" style="background:none;border:none;color:red;cursor:pointer;">[x]</button>
+        </div>
+        <div class="chat-input-row">
+            <input type="text" id="chat-input" placeholder="Type message..." autocomplete="off">
+            <button id="chat-send">SEND</button>
+        </div>
+    </div>
+`;
 
-    <script>
+document.body.appendChild(btn);
+document.body.appendChild(windowEl);
 
-        const baseURL = "https://ewsmusic1.netlify.app/"; 
-        const playlist = [
-            { title: "Xtal", artist: "Aphex Twin", src: baseURL + "xtal.mp3", cover: baseURL + "aphex.jpg" },
-            { title: "I Don't Wanna Be Me", artist: "Type O Negative", src: baseURL + "idontwannabeme.mp3", cover: baseURL + "ton.jpg" },
-            { title: "Life Is Killing Me", artist: "Type O Negative", src: baseURL + "lifeiskilling.mp3", cover: baseURL + "ton.jpg" },
-            { title: "Exit Music (For a Film)", artist: "Radiohead", src: baseURL + "exitmusic.mp3", cover: baseURL + "radiohead.jpg" },
-            { title: "Alternative Outro", artist: "LUCKI", src: baseURL + "alternativeoutro.mp3", cover: baseURL + "lucki.jpg" },
-            { title: "Bite My Lip", artist: "fakemink", src: baseURL + "bitemylip.mp3", cover: baseURL + "fakemink.jpg" },
-            { title: "Ambilux", artist: "fakemink", src: baseURL + "ambilux.mp3", cover: baseURL + "fakemink3.jpg" },
-            { title: "I'm Like Why", artist: "xaviersobased", src: baseURL + "imlikewhy.mp3", cover: baseURL + "xav.jpg" },
-            { title: "Love Hate", artist: "xaviersobased", src: baseURL + "lovehate.mp3", cover: baseURL + "xav2.jpg" },
-            { title: "Foamposite Interlude", artist: "smokedope2016", src: baseURL + "foamposite.mp3", cover: baseURL + "smokedope2016.jpg" },
-            { title: "Abysmal Depths Are Flooded", artist: "Xasthur", src: baseURL + "abysmaldepthsareflooded.mp3", cover: baseURL + "xasthur.jpg" },
-            { title: "Diamonds", artist: "Chris Travis", src: baseURL + "diamonds.mp3", cover: baseURL + "christravis.jpg" },
-            { title: "Black Magic", artist: "Ethel Wulf", src: baseURL + "blackmagic.mp3", cover: baseURL + "ethel.jpg" },
-            { title: "4 Raws", artist: "EsDeeKid", src: baseURL + "4raws.mp3", cover: baseURL + "esdee.jpg" },
-            { title: "Fever", artist: "fakemink/buckshot", src: baseURL + "fever.mp3", cover: baseURL + "buckshot.jpg" },
-            { title: "Stalks", artist: "Ghost Mountain", src: baseURL + "stalks.mp3", cover: baseURL + "ghostmountain.jpg" },
-            { title: "MIA", artist: "feng", src: baseURL + "mia.mp3", cover: baseURL + "feng.jpg" },
-            { title: "head in the ceiling fan", artist: "Title Fight", src: baseURL + "titlefight.mp3", cover: baseURL + "title-fih.jpg" },
-            { title: "Turn Me Loose", artist: "limpbizkit/eminem", src: baseURL + "turnmeloose.mp3", cover: baseURL + "limp.jpg" },
-            { title: "black beetles", artist: "esdeekid", src: baseURL + "bbr.mp3", cover: baseURL + "esdee2.jpg" },
-            { title: "apathy", artist: "esdeekid", src: baseURL + "apathy.mp3", cover: baseURL + "esdee3.jpg" },
-            { title: "bring it back", artist: "chris travis", src: baseURL + "bib.mp3", cover: baseURL + "chris2.jpg" },
-            { title: "die til you live", artist: "fakemink", src: baseURL + "dtyl.mp3", cover: baseURL + "fakemink5.jpg" },
-            { title: "worthit", artist: "xaviersobased", src: baseURL + "worthit.mp3", cover: baseURL + "81853ABB-FB87-4A20-9303-9624B777245B.jpeg" },
-            { title: "in da party", artist: "smokedope2016", src: baseURL + "indaparty.mp3", cover: baseURL + "smokedope4.jpg" },
-            { title: "say it aint dro", artist: "smokedope2016", src: baseURL + "dro.mp3", cover: baseURL + "smokedope3.jpg" },
-            { title: "blunts on my mind", artist: "ethel wulf", src: baseURL + "bluntsomm.mp3", cover: baseURL + "ethel2.jpg" },
-            { title: "luper", artist: "earl sweatshirt", src: baseURL + "luper.mp3", cover: baseURL + "earl.jpg" },
-            { title: "frat", artist: "smokedope2016", src: baseURL + "frat.mp3", cover: baseURL + "smokedope2.jpg" },
-            { title: "hit the home", artist: "the hand of peace", src: baseURL + "clock.mp3", cover: baseURL + "handofpeace.jpg" },
-            { title: "blow me", artist: "fakemink", src: baseURL + "blowme.mp3", cover: baseURL + "fakeminkk.jpg" },
-            { title: "minerva", artist: "deftones", src: baseURL + "minerva.mp3", cover: baseURL + "deftones.jpg" },
-            { title: "hold on", artist: "limpbizkit", src: baseURL + "holdon.mp3", cover: baseURL + "limpbizkit.jpg" },
-            { title: "my way", artist: "limpbizkit", src: baseURL + "myway.mp3", cover: baseURL + "limpbizkit.jpg" },
-            { title: "new update soon", artist: "-nl", src: baseURL + "xtal.mp3", cover: baseURL + "aphextwin.jpg" }
+const chatBody = document.getElementById('chat-body');
+const chatInput = document.getElementById('chat-input');
+const sendBtn = document.getElementById('chat-send');
+const cancelReplyBtn = document.getElementById('cancel-reply');
 
-        ];
+// --- FIREBASE LOGIC ---
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const playerTitleEl = document.getElementById('player-title');
-            const playerArtistEl = document.getElementById('player-artist');
-            
-            try {
-                // --- BACKGROUND LOGIC (1/100 Chance) ---
-                const specialBg = '81853ABB-FB87-4A20-9303-9624B777245B.jpeg';
-                const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg' ,IMG_5264.jpeg',  'IMG_4945.jpeg'];
-                const chance = Math.floor(Math.random() * 100); 
-                let chosenBg = (chance === 0) ? specialBg : normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
-                document.body.style.backgroundImage = `url('${chosenBg}')`;
-                
-                // --- SPLASH TEXT & AUTH ---
-                const splashElement = document.getElementById('splash-text');
-                if (splashElement) {
-                    const splashOptions = [
-                        "blacked out like an lv sandal", "son", "bbq chicken alert", 
-                        "trick or treat.. smell my.. donuts..", "100 perkaholic or pounded by a margwa",
-                        "considering a page", "long live futtbucker", "six seven", "oh brother..",
-                        "are you even an ew student?", "i bet ur failing", "get the bawlls!!",
-                        "six one", "add jiggletip on clash", "new stuff soon",
-                        "WE yes WE are brainless and failing", "updates soon.. -nl", "no super seniors", "considering a chat board"
-                    ];
-                    splashElement.textContent = splashOptions[Math.floor(Math.random() * splashOptions.length)];
-                }
-                
-                const welcomeMessage = document.getElementById('welcome-message');
-                const authLink = document.getElementById('auth-link');
-                function updateUI() {
-                    let username = localStorage.getItem('username');
-                    if (username) {
-                        welcomeMessage.textContent = `Welcome, ${username}`;
-                        authLink.textContent = '(sign out)';
-                        authLink.onclick = signOut;
-                    } else {
-                        welcomeMessage.textContent = 'Welcome, ?';
-                        authLink.textContent = '(sign up / sign in)';
-                        authLink.onclick = signIn;
-                    }
-                }
-                function signIn(e) {
-                    e.preventDefault();
-                    const name = prompt('Enter yourname:');
-                    if (name && name.trim() !== '') {
-                        localStorage.setItem('username', name.trim());
-                        updateUI();
-                    }
-                }
-                function signOut(e) {
-                    e.preventDefault();
-                    localStorage.removeItem('username');
-                    updateUI();
-                }
-                updateUI();
-                
-                // --- MUSIC PLAYER LOGIC ---
-                const audioPlayer = document.getElementById('audio-player');
-                const playPauseBtn = document.getElementById('play-pause-btn');
-                const rewindBtn = document.getElementById('rewind-btn');
-                const skipBtn = document.getElementById('skip-btn');
-                const playerInfoContainer = document.getElementById('player-info-container');
-                const volumeSlider = document.getElementById('volume-slider');
-                const playerCoverArt = document.getElementById('player-cover-art');
-                const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
-                
-                let currentSongIndex = 0;
-                let isPlaying = false;
-
-                const secretSong = {
-                    title: "hey, big guy said im an easter egg",
-                    artist: "i heard, if u put /secret at the end of the link",
-                    src: "clock.mp3",
-                    cover: "handofpeace.jpg"
-                };
-
-                function loadSong(songIndex) {
-                    const song = (songIndex === -1) ? secretSong : playlist[songIndex];
-                    if (!song || !song.src || !song.cover) {
-                        console.error("Invalid song data at index:", songIndex);
-                        skipSong(true); 
-                        return;
-                    }
-                    
-                    audioPlayer.src = song.src; 
-                    playerInfoContainer.title = `${song.title} - ${song.artist}`; 
-                    playerTitleEl.textContent = song.title;
-                    playerArtistEl.textContent = song.artist;
-                    playerCoverArt.src = song.cover;
-                    playPauseBtn.textContent = '[>]';
-                    isPlaying = false;
-                }
-
-                function playSong() {
-                    if (!audioPlayer.src) { return; }
-                    audioPlayer.volume = volumeSlider.value; 
-                    
-                    const playPromise = audioPlayer.play();
-                    if (playPromise !== undefined) {
-                        playPromise.then(() => {
-                            playPauseBtn.textContent = '[||]';
-                            isPlaying = true;
-                        }).catch(error => {
-                            console.warn("Auto-play failed:", error.name);
-                            playerTitleEl.textContent = "Click Play";
-                            playerArtistEl.textContent = "to start music";
-                            isPlaying = false;
-                        });
-                    }
-                }
-
-                function pauseSong() {
-                    audioPlayer.pause();
-                    playPauseBtn.textContent = '[>]';
-                    isPlaying = false;
-                }
-
-                function togglePlayPause() {
-                    if (isPlaying) { pauseSong(); } else { playSong(); }
-                }
-
-                function skipSong(skipOnly = false) {
-                    let nextSongIndex = Math.floor(Math.random() * playlist.length);
-                    if (nextSongIndex === currentSongIndex && playlist.length > 1) {
-                        nextSongIndex = (nextSongIndex + 1) % playlist.length; 
-                    }
-                    currentSongIndex = nextSongIndex;
-                    loadSong(currentSongIndex);
-                    if (audioPlayer.src && !skipOnly) { playSong(); }
-                }
-
-                function rewindSong() {
-                    currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
-                    loadSong(currentSongIndex);
-                    if (audioPlayer.src) { playSong(); }
-                }
-                
-                // --- STORAGE SAVE/LOAD ---
-                window.addEventListener('beforeunload', () => {
-                    if (audioPlayer.currentTime > 0) {
-                        const musicState = {
-                            currentSongIndex: currentSongIndex,
-                            currentTime: audioPlayer.currentTime,
-                            volume: audioPlayer.volume,
-                            isPlaying: isPlaying
-                        };
-                        sessionStorage.setItem('musicPlayerState', JSON.stringify(musicState));
-                    } else {
-                        sessionStorage.removeItem('musicPlayerState');
-                    }
-                });
-                
-                function loadInitialState() {
-                    const savedStateJSON = sessionStorage.getItem('musicPlayerState');
-                    let savedState = null;
-                    if (savedStateJSON) {
-                        try { savedState = JSON.parse(savedStateJSON); } 
-                        catch (e) { sessionStorage.removeItem('musicPlayerState'); }
-                    }
-
-                    if (savedState) {
-                        currentSongIndex = savedState.currentSongIndex;
-                        loadSong(currentSongIndex);
-                        volumeSlider.value = savedState.volume || 1;
-                        audioPlayer.volume = savedState.volume || 1;
-                        audioPlayer.addEventListener('loadedmetadata', () => {
-                            audioPlayer.currentTime = savedState.currentTime || 0;
-                            if (savedState.isPlaying) { playSong(); }
-                        }, { once: true }); 
-                        
-                    } else {
-                        const rareSongChance = Math.floor(Math.random() * 50);
-                        currentSongIndex = (rareSongChance === 0) ? -1 : Math.floor(Math.random() * playlist.length);
-                        loadSong(currentSongIndex);
-                        audioPlayer.volume = volumeSlider.value;
-                    }
-                }
-                
-                playPauseBtn.addEventListener('click', togglePlayPause);
-                skipBtn.addEventListener('click', () => skipSong(false));
-                rewindBtn.addEventListener('click', rewindSong);
-                volumeSlider.addEventListener('input', (e) => { audioPlayer.volume = e.target.value; });
-                audioPlayer.addEventListener('ended', () => skipSong(false));
-                audioPlayer.addEventListener('error', (e) => {
-                    playerTitleEl.textContent = `Load Error (404)`;
-                    playerArtistEl.textContent = `Check file name`;
-                });
-                playerCoverArt.addEventListener('error', () => {
-                    playerCoverArt.src = placeholderCover;
-                    playerArtistEl.textContent = `${playerArtistEl.textContent} (no art)`;
-                });
-
-                loadInitialState();
-                
-            } catch (e) {
-                console.error("Global script error:", e);
-                playerTitleEl.textContent = "Code Error";
-                playerArtistEl.textContent = e.message;
-            }
+// 1. Listen for Messages
+const messagesRef = ref(db, 'messages');
+onValue(messagesRef, (snapshot) => {
+    const data = snapshot.val();
+    messages = [];
+    if (data) {
+        // Convert object to array and sort
+        Object.keys(data).forEach(key => {
+            messages.push({ ...data[key], id: key });
         });
-    </script>
-</body>
-</html>
+        // Sort by timestamp (oldest first)
+        messages.sort((a, b) => a.time - b.time);
+    }
+    render();
+});
+
+// 2. Listen for Muted Users
+const mutedRef = ref(db, 'muted');
+onValue(mutedRef, (snapshot) => {
+    const data = snapshot.val();
+    mutedUsers = data ? Object.keys(data) : [];
+    // If current user just got muted, alert them
+    if (mutedUsers.includes(currentUser) && document.activeElement === chatInput) {
+        chatInput.blur();
+        alert("You have been muted by an administrator.");
+    }
+});
+
+// 3. Render Function
+function render() {
+    chatBody.innerHTML = '';
+    
+    if (messages.length === 0) {
+        chatBody.innerHTML = '<div style="color:#444; text-align:center; margin-top:20px;">No messages yet.</div>';
+        return;
+    }
+
+    messages.forEach(msg => {
+        // Don't render messages from muted users (unless you are Admin)
+        if (mutedUsers.includes(msg.user) && !isAdmin) return;
+
+        const el = document.createElement('div');
+        el.className = 'msg';
+        
+        // Handle Reply display
+        let replyHTML = '';
+        if (msg.replyTo) {
+            const parentMsg = messages.find(m => m.id === msg.replyTo);
+            const parentText = parentMsg ? parentMsg.text.substring(0, 20) + (parentMsg.text.length>20?'...':'') : '[Message Deleted]';
+            const parentUser = parentMsg ? parentMsg.user : '?';
+            replyHTML = `<span class="msg-reply-context">Ref: @${parentUser} "${parentText}"</span>`;
+        }
+
+        // Admin Actions
+        let adminControls = '';
+        if (isAdmin) {
+            adminControls = `
+                <span class="admin-action delete-btn" data-id="${msg.id}">[DEL]</span>
+                ${!ADMINS.includes(msg.user) ? `<span class="admin-action mute-btn" data-user="${msg.user}">[MUTE]</span>` : ''}
+            `;
+        }
+
+        const time = new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const userClass = ADMINS.includes(msg.user) ? 'msg-user admin' : 'msg-user';
+
+        el.innerHTML = `
+            ${replyHTML}
+            <span class="msg-meta">[${time}]</span>
+            <span class="${userClass} reply-trigger" data-id="${msg.id}" data-user="${msg.user}">${msg.user}:</span>
+            <span class="msg-text">${escapeHtml(msg.text)}</span>
+            ${adminControls}
+        `;
+        chatBody.appendChild(el);
+    });
+    chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+// Security: Prevent HTML injection
+function escapeHtml(text) {
+    if (!text) return text;
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// --- ACTIONS ---
+
+async function sendMessage() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+    
+    // Check if muted locally first to save a network request
+    if (mutedUsers.includes(currentUser)) {
+        alert("You are muted.");
+        chatInput.value = '';
+        return;
+    }
+
+    // Push to Firebase
+    try {
+        await push(messagesRef, {
+            user: currentUser,
+            text: text.substring(0, 300), // Limit length
+            time: Date.now(),
+            replyTo: replyingTo ? replyingTo.id : null
+        });
+        
+        chatInput.value = '';
+        cancelReply();
+    } catch (e) {
+        console.error("Send error:", e);
+        alert("Error sending message. Check console.");
+    }
+}
+
+// Helper to handle clicks globally within chat body (for dynamic elements)
+chatBody.addEventListener('click', (e) => {
+    // Reply Click
+    if (e.target.classList.contains('reply-trigger')) {
+        const id = e.target.getAttribute('data-id');
+        const user = e.target.getAttribute('data-user');
+        startReply(id, user);
+    }
+    
+    // Admin Delete
+    if (e.target.classList.contains('delete-btn')) {
+        if (!isAdmin) return;
+        if(confirm('Delete this message?')) {
+            const id = e.target.getAttribute('data-id');
+            remove(ref(db, `messages/${id}`));
+        }
+    }
+    
+    // Admin Mute
+    if (e.target.classList.contains('mute-btn')) {
+        if (!isAdmin) return;
+        const userToMute = e.target.getAttribute('data-user');
+        if (confirm(`Mute user ${userToMute}?`)) {
+            // Set user as true in muted node
+            set(ref(db, `muted/${userToMute}`), true);
+        }
+    }
+});
+
+function startReply(id, user) {
+    replyingTo = { id, user };
+    document.getElementById('reply-text').innerText = `Replying to @${user}`;
+    document.getElementById('reply-indicator').style.display = 'flex';
+    chatInput.focus();
+}
+
+function cancelReply() {
+    replyingTo = null;
+    document.getElementById('reply-indicator').style.display = 'none';
+}
+
+cancelReplyBtn.addEventListener('click', cancelReply);
+
+// --- WINDOW CONTROLS & DRAG ---
+
+btn.addEventListener('click', () => {
+    isMinimized = false;
+    windowEl.style.display = 'flex';
+    btn.style.display = 'none';
+    chatBody.scrollTop = chatBody.scrollHeight; // Scroll to bottom on open
+});
+
+document.getElementById('chat-min').addEventListener('click', () => {
+    isMinimized = true;
+    windowEl.style.display = 'none';
+    btn.style.display = 'block';
+});
+
+document.getElementById('chat-close').addEventListener('click', () => {
+    isMinimized = true;
+    windowEl.style.display = 'none';
+    btn.style.display = 'block';
+});
+
+document.getElementById('chat-full').addEventListener('click', () => {
+    isFullscreen = !isFullscreen;
+    windowEl.classList.toggle('fullscreen', isFullscreen);
+});
+
+// Input handling
+chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+});
+sendBtn.addEventListener('click', sendMessage);
+
+// Draggable Logic
+const header = document.getElementById('chat-header');
+let isDragging = false;
+let startX, startY, initialLeft, initialTop;
+
+header.addEventListener('mousedown', (e) => {
+    if(e.target.tagName === 'BUTTON' || isFullscreen) return;
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    const rect = windowEl.getBoundingClientRect();
+    initialLeft = rect.left;
+    initialTop = rect.top;
+    header.style.cursor = 'grabbing';
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    windowEl.style.left = `${initialLeft + dx}px`;
+    windowEl.style.top = `${initialTop + dy}px`;
+});
+
+document.addEventListener('mouseup', () => {
+    isDragging = false;
+    header.style.cursor = 'grab';
+});
