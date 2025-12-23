@@ -109,7 +109,7 @@
 ```
 <div class="flex items-center justify-center min-h-screen p-4">
     <div class="login-container pixel-font">
-        <h1 class="text-4xl text-yellow-400 mb-6 text-center" id="form-title">SIGN IN</h1>
+        <h1 class="text-4xl text-yellow-400 mb-6 text-center" id="form-title">sign in</h1>
         
         <div class="error-message" id="error-message"></div>
         <div class="success-message" id="success-message"></div>
@@ -134,19 +134,19 @@
             >
             
             <button type="submit" class="btn" id="submit-btn">
-                [ SIGN IN ]
+           
             </button>
         </form>
         
         <div class="text-center mt-4">
             <span class="toggle-text" id="toggle-mode">
-                need an account? sign up
+                sign up
             </span>
         </div>
         
         <div class="text-center mt-4">
             <a href="index.html" class="toggle-text">
-                back to home
+             home
             </a>
         </div>
     </div>
@@ -193,14 +193,14 @@
         isSignUp = !isSignUp;
         
         if (isSignUp) {
-            formTitle.textContent = 'SIGN UP';
-            submitBtn.textContent = '[ SIGN UP ]';
-            toggleMode.textContent = 'already have an account? sign in';
+            formTitle.textContent = 'sign up';
+            submitBtn.textContent = 'sign up';
+            toggleMode.textContent = 'sign in';
             passwordInput.setAttribute('autocomplete', 'new-password');
         } else {
             formTitle.textContent = 'SIGN IN';
-            submitBtn.textContent = '[ SIGN IN ]';
-            toggleMode.textContent = 'need an account? sign up';
+            submitBtn.textContent = 'SIGN IN ';
+            toggleMode.textContent = 'sign up';
             passwordInput.setAttribute('autocomplete', 'current-password');
         }
         
@@ -220,13 +220,13 @@
             return;
         }
         
-        if (username.length < 3) {
-            showError('username must be at least 3 characters');
+        if (username.length < 2) {
+            showError('oh yeah youre so cool with your one or two letter username, try again');
             return;
         }
         
-        if (password.length < 4) {
-            showError('password must be at least 4 characters');
+        if (password.length < 2) {
+            showError('its two letters dude cmon');
             return;
         }
         
@@ -243,7 +243,7 @@
         
         // Check if username already exists
         if (users[username]) {
-            showError('username already exists');
+            showError('try again');
             return;
         }
         
