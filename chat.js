@@ -37,6 +37,7 @@ const isAdmin = ADMINS.includes(currentUser);
 const style = document.createElement('style');
 style.textContent = `
     #chat-widget-btn {
+        display:none
         position: fixed; bottom: 20px; left: 20px; z-index: 9999;
         background: #000; border: 1px solid #facc15; color: #facc15;
         padding: 8px 12px; font-family: 'VT323', monospace; font-size: 1.25rem;
