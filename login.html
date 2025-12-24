@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>login</title>
+    <title>LOGIN // NETWORK</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 
@@ -76,6 +76,9 @@
         font-size: 1.125rem;
         margin-bottom: 1rem;
         display: none;
+        border: 1px solid #ef4444;
+        background: rgba(20,0,0,0.5);
+        padding: 5px;
     }
     
     .success-message {
@@ -105,7 +108,7 @@
 
 <div class="flex items-center justify-center min-h-screen p-4">
     <div class="login-container pixel-font">
-        <h1 class="text-4xl text-yellow-400 mb-6 text-center" id="form-title">sign in</h1>
+        <h1 class="text-4xl text-yellow-400 mb-6 text-center" id="form-title">SIGN IN</h1>
         
         <div class="error-message" id="error-message"></div>
         <div class="success-message" id="success-message"></div>
@@ -115,7 +118,7 @@
                 type="text" 
                 id="username" 
                 class="input-field" 
-                placeholder="username" 
+                placeholder="USERNAME" 
                 required
                 autocomplete="username"
             >
@@ -124,20 +127,22 @@
                 type="password" 
                 id="password" 
                 class="input-field" 
-                placeholder="password" 
+                placeholder="PASSWORD" 
                 required
                 autocomplete="current-password"
             >
             
             <button type="submit" class="btn" id="submit-btn">
-                SIGN IN
+                ENTER NETWORK
             </button>
         </form>
         
         <div class="text-center mt-4">
-            <span class="toggle-text" id="toggle-mode">
-                sign up
-            </span>
+            <span style="color:#666">NO IDENTITY?</span>
+            <br>
+            <a href="register.html" class="toggle-text">
+                CREATE ACCOUNT
+            </a>
         </div>
         
         <div class="text-center mt-4">
@@ -148,14 +153,25 @@
     </div>
 </div>
 
-<script>
-    // --- CONFIGURATION ---
-    // These names cannot be created by strangers.
-    const RESERVED_ADMINS = ['-nl', 'admin', 'root'];
-    // The master password for the names above.
-    const SYSTEM_PASSWORD = "sixandseven"; 
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-    // Set random background
+    // --- FIREBASE CONFIG ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
+        authDomain: "ewsitechat.firebaseapp.com",
+        databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
+        projectId: "ewsitechat",
+        storageBucket: "ewsitechat.firebasestorage.app",
+        messagingSenderId: "282495574514",
+        appId: "1:282495574514:web:e2781da630d93fc1ce8b6b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // --- BACKGROUND SETUP ---
     const normalBackgrounds = [
         'IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 
         'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg', 
@@ -164,165 +180,74 @@
     const chosenBg = normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
     document.body.style.backgroundImage = `url('${chosenBg}')`;
 
-    // Check if user is already logged in
-    window.addEventListener('DOMContentLoaded', () => {
-        const username = localStorage.getItem('username');
-        if (username) {
-            window.location.href = 'index.html';
-        }
-    });
+    // --- CHECK LOGIN STATUS ---
+    // If already logged in, kick them to index
+    const existingUser = localStorage.getItem('username');
+    if (existingUser) {
+        window.location.href = 'index.html';
+    }
 
-    // Form elements
+    // --- FORM LOGIC ---
     const authForm = document.getElementById('auth-form');
-    const formTitle = document.getElementById('form-title');
-    const submitBtn = document.getElementById('submit-btn');
-    const toggleMode = document.getElementById('toggle-mode');
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const errorMessage = document.getElementById('error-message');
     const successMessage = document.getElementById('success-message');
 
-    let isSignUp = false;
+    function showError(msg) {
+        errorMessage.innerText = ">> " + msg;
+        errorMessage.style.display = 'block';
+        successMessage.style.display = 'none';
+    }
 
-    // Toggle between sign in and sign up
-    toggleMode.addEventListener('click', () => {
-        isSignUp = !isSignUp;
-        
-        if (isSignUp) {
-            formTitle.textContent = 'sign up';
-            submitBtn.textContent = 'sign up';
-            toggleMode.textContent = 'sign in';
-            passwordInput.setAttribute('autocomplete', 'new-password');
-        } else {
-            formTitle.textContent = 'SIGN IN';
-            submitBtn.textContent = 'SIGN IN ';
-            toggleMode.textContent = 'sign up';
-            passwordInput.setAttribute('autocomplete', 'current-password');
-        }
-        
-        clearMessages();
-    });
+    function showSuccess(msg) {
+        successMessage.innerText = ">> " + msg;
+        successMessage.style.display = 'block';
+        errorMessage.style.display = 'none';
+    }
 
-    // Handle form submission
-    authForm.addEventListener('submit', (e) => {
+    // Handle Login
+    authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        clearMessages();
         
         const username = usernameInput.value.trim();
         const password = passwordInput.value;
-        
-        if (username === '' || password === '') {
-            showError('please fill in all fields');
+
+        if (!username || !password) {
+            showError("FIELDS CANNOT BE EMPTY");
             return;
         }
-        
-        if (username.length < 2) {
-            showError('oh yeah youre so cool with your one or two letter username, try again');
-            return;
-        }
-        
-        if (password.length < 2) {
-            showError('its two letters dude cmon');
-            return;
-        }
-        
-        if (isSignUp) {
-            handleSignUp(username, password);
-        } else {
-            handleSignIn(username, password);
+
+        showSuccess("AUTHENTICATING...");
+
+        try {
+            // Check Firebase for this user
+            const userRef = ref(db, 'users/' + username);
+            const snapshot = await get(userRef);
+
+            if (snapshot.exists()) {
+                const userData = snapshot.val();
+                
+                // Check Password
+                if (userData.password === password) {
+                    // SUCCESS
+                    localStorage.setItem('username', username);
+                    showSuccess("ACCESS GRANTED.");
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                } else {
+                    showError("INCORRECT PASSWORD.");
+                }
+            } else {
+                showError("USER NOT FOUND.");
+            }
+        } catch (error) {
+            console.error(error);
+            showError("CONNECTION ERROR.");
         }
     });
-
-    function handleSignUp(username, password) {
-        // --- 1. ADMIN SECURITY CHECK ---
-        // Prevent randoms from creating admin accounts
-        if (RESERVED_ADMINS.includes(username)) {
-            showError('restricted identity. contact sys admin.');
-            return;
-        }
-
-        // Get existing users
-        let users = JSON.parse(localStorage.getItem('users') || '{}');
-        
-        // Check if username already exists
-        if (users[username]) {
-            showError('username taken. try again.');
-            return;
-        }
-        
-        // Store new user with full profile
-        users[username] = {
-            password,
-            bio: '',
-            profilePicUrl: '',
-            email: '',
-            posts: 0,
-            followers: 0,
-            following: 0,
-            muted: false
-        };
-        localStorage.setItem('users', JSON.stringify(users));
-        
-        // Log the user in
-        localStorage.setItem('username', username);
-        
-        showSuccess('account created! redirecting...');
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 1500);
-    }
-
-    function handleSignIn(username, password) {
-        // --- 2. ADMIN BACKDOOR CHECK ---
-        // Allow the real owner to login even if not in "users" database
-        if (RESERVED_ADMINS.includes(username)) {
-            if (password === SYSTEM_PASSWORD) {
-                localStorage.setItem('username', username);
-                showSuccess('system access granted. redirecting...');
-                setTimeout(() => { window.location.href = 'index.html'; }, 1000);
-                return;
-            } else {
-                showError('access denied: invalid system key');
-                return;
-            }
-        }
-
-        // Standard User Login Logic
-        const users = JSON.parse(localStorage.getItem('users') || '{}');
-        
-        if (!users[username]) {
-            showError('user not found');
-            return;
-        }
-        
-        if (users[username].password !== password) {
-            showError('incorrect password');
-            return;
-        }
-        
-        // Log the user in
-        localStorage.setItem('username', username);
-        
-        showSuccess('welcome back! redirecting...');
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 1500);
-    }
-
-    function showError(message) {
-        errorMessage.textContent = `[!] ${message}`;
-        errorMessage.style.display = 'block';
-    }
-
-    function showSuccess(message) {
-        successMessage.textContent = `[✓] ${message}`;
-        successMessage.style.display = 'block';
-    }
-
-    function clearMessages() {
-        errorMessage.style.display = 'none';
-        successMessage.style.display = 'none';
-    }
 </script>
 
 </body>
