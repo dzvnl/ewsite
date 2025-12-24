@@ -1,9 +1,12 @@
-/* * GLOBAL_NET CHAT LOGIC (FIXED)
+/* * GLOBAL_NET CHAT LOGIC (FIXED IMPORTS)
  * Target: chat.html
  */
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, set, onDisconnect } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+// !!! FIXED IMPORTS: Switched to version 10.12.2 !!!
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, push, onValue, remove, set, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+console.log("Chat Script: Starting...");
 
 // --- FIREBASE CONFIGURATION ---
 const firebaseConfig = {
@@ -17,15 +20,15 @@ const firebaseConfig = {
     measurementId: "G-GTN3TL1P2K"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// --- STATE & DOM ELEMENTS ---
+// --- VARIABLES & SELECTORS ---
 const ADMINS = ['root', 'fb67'];
 const currentUser = localStorage.getItem('username') || 'Guest-' + Math.floor(Math.random()*1000);
 const isAdmin = ADMINS.includes(currentUser);
 
-// Map to your HTML IDs
 const dom = {
     messages: document.getElementById('chat-messages'),
     input: document.getElementById('msg-input'),
@@ -33,11 +36,10 @@ const dom = {
     userDisplay: document.getElementById('display-name')
 };
 
-// Set User Display Name in Menu
+// Display User Name
 if(dom.userDisplay) dom.userDisplay.innerText = currentUser;
 
-// --- CSS INJECTION (For Message Styling Only) ---
-// We inject this so your messages look cool (colors, spacing) inside your HTML container
+// --- CSS STYLES ---
 const style = document.createElement('style');
 style.textContent = `
     .msg { margin-bottom: 8px; line-height: 1.2; word-wrap: break-word; }
@@ -50,20 +52,19 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// --- 1. MESSAGING LOGIC ---
-
+// --- 1. LISTEN FOR MESSAGES ---
 const messagesRef = ref(db, 'messages');
 
 onValue(messagesRef, (snapshot) => {
+    console.log("Data received from Firebase"); // Debug log
     const data = snapshot.val();
-    dom.messages.innerHTML = ''; // Clear current list
+    dom.messages.innerHTML = ''; 
     
     if (!data) {
-        dom.messages.innerHTML = '<div style="opacity:0.5; text-align:center">No signal...</div>';
+        dom.messages.innerHTML = '<div style="opacity:0.5; text-align:center; margin-top: 10px;">No signal detected...</div>';
         return;
     }
 
-    // Convert object to array and sort by time
     const msgList = Object.keys(data).map(key => ({ ...data[key], id: key }));
     msgList.sort((a, b) => a.time - b.time);
 
@@ -71,7 +72,6 @@ onValue(messagesRef, (snapshot) => {
         const el = document.createElement('div');
         el.className = 'msg';
         
-        // Admin Controls
         let adminControls = '';
         if (isAdmin) {
             adminControls = `<span class="admin-action delete-btn" data-id="${msg.id}">[DEL]</span>`;
@@ -89,13 +89,13 @@ onValue(messagesRef, (snapshot) => {
         dom.messages.appendChild(el);
     });
 
-    // Auto-scroll to bottom
     dom.messages.scrollTop = dom.messages.scrollHeight;
+}, (error) => {
+    console.error("Firebase Read Error:", error);
+    dom.messages.innerHTML = '<div style="color:red">CONNECTION ERROR: ' + error.message + '</div>';
 });
 
-// --- 2. SENDING MESSAGES ---
-
-// Make 'send' globally available so your HTML <button onclick="send()"> works
+// --- 2. SEND FUNCTION ---
 window.send = async function() {
     const text = dom.input.value.trim();
     if (!text) return;
@@ -109,46 +109,32 @@ window.send = async function() {
         dom.input.value = '';
         dom.input.focus();
     } catch (e) {
-        console.error("Transmission failed:", e);
-        alert("Error sending message.");
+        console.error("Send failed:", e);
+        alert("Transmission Error: " + e.message);
     }
 };
 
-// Allow pressing "Enter" to send
 dom.input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') window.send();
 });
 
-// --- 3. USER COUNTER (PRESENCE SYSTEM) ---
-
-// Reference to where we store online users
+// --- 3. PRESENCE SYSTEM (USER COUNT) ---
 const connectionsRef = ref(db, 'connections');
 const connectedRef = ref(db, '.info/connected');
 
 onValue(connectedRef, (snap) => {
     if (snap.val() === true) {
-        // We are connected. Add ourselves to the 'connections' list.
         const con = push(connectionsRef);
-        
-        // When we disconnect (close tab), remove ourselves.
         onDisconnect(con).remove();
-        
-        // Set our value in the database
-        set(con, {
-            user: currentUser,
-            time: Date.now()
-        });
+        set(con, { user: currentUser, time: Date.now() });
     }
 });
 
-// Update the counter UI
 onValue(connectionsRef, (snap) => {
-    const count = snap.size; // .size returns number of children
-    dom.count.innerText = count;
+    dom.count.innerText = snap.size || 0;
 });
 
-// --- 4. ADMIN ACTIONS (DELETE) ---
-
+// --- 4. ADMIN DELETE ---
 dom.messages.addEventListener('click', (e) => {
     if (e.target.classList.contains('delete-btn') && isAdmin) {
         if(confirm('Delete transmission?')) {
@@ -158,13 +144,7 @@ dom.messages.addEventListener('click', (e) => {
     }
 });
 
-// --- UTILS ---
 function escapeHtml(text) {
     if (!text) return text;
-    return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
