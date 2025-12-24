@@ -1,4 +1,3 @@
-<!-- login.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -131,7 +130,7 @@
             >
             
             <button type="submit" class="btn" id="submit-btn">
-           
+                SIGN IN
             </button>
         </form>
         
@@ -150,16 +149,17 @@
 </div>
 
 <script>
+    // --- CONFIGURATION ---
+    // These names cannot be created by strangers.
+    const RESERVED_ADMINS = ['-nl', 'admin', 'root'];
+    // The master password for the names above.
+    const SYSTEM_PASSWORD = "canvas2025"; 
+
     // Set random background
     const normalBackgrounds = [
-        'IMG_4928.jpeg', 
-        'IMG_4946.jpeg', 
-        'IMG_4944.jpeg', 
-        'IMG_4943.jpeg', 
-        'IMG_5262.jpeg', 
-        'IMG_5263.jpeg', 
-        'IMG_5264.jpeg', 
-        'IMG_4945.jpeg'
+        'IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 
+        'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg', 
+        'IMG_5264.jpeg', 'IMG_4945.jpeg'
     ];
     const chosenBg = normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
     document.body.style.backgroundImage = `url('${chosenBg}')`;
@@ -168,7 +168,6 @@
     window.addEventListener('DOMContentLoaded', () => {
         const username = localStorage.getItem('username');
         if (username) {
-            // User is already logged in, redirect to home
             window.location.href = 'index.html';
         }
     });
@@ -235,12 +234,19 @@
     });
 
     function handleSignUp(username, password) {
+        // --- 1. ADMIN SECURITY CHECK ---
+        // Prevent randoms from creating admin accounts
+        if (RESERVED_ADMINS.includes(username)) {
+            showError('restricted identity. contact sys admin.');
+            return;
+        }
+
         // Get existing users
         let users = JSON.parse(localStorage.getItem('users') || '{}');
         
         // Check if username already exists
         if (users[username]) {
-            showError('try again');
+            showError('username taken. try again.');
             return;
         }
         
@@ -267,10 +273,23 @@
     }
 
     function handleSignIn(username, password) {
-        // Get existing users
+        // --- 2. ADMIN BACKDOOR CHECK ---
+        // Allow the real owner to login even if not in "users" database
+        if (RESERVED_ADMINS.includes(username)) {
+            if (password === SYSTEM_PASSWORD) {
+                localStorage.setItem('username', username);
+                showSuccess('system access granted. redirecting...');
+                setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+                return;
+            } else {
+                showError('access denied: invalid system key');
+                return;
+            }
+        }
+
+        // Standard User Login Logic
         const users = JSON.parse(localStorage.getItem('users') || '{}');
         
-        // Check if user exists and password matches
         if (!users[username]) {
             showError('user not found');
             return;
