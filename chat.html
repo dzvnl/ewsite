@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GLOBAL_NET // CHAT</title>
+    <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -16,15 +16,20 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 10px; /* Provides breathing room on mobile */
+            padding: 10px;
         }
 
-        /* Responsive Container */
+        /* Responsive Container - UPDATED FOR GLASS EFFECT */
         #chat-container {
             width: 100%;
-            max-width: 800px; /* Limits width on desktop */
-            height: 85vh; /* Leaves room for background visibility */
-            background: rgba(0, 0, 0, 0.9);
+            max-width: 800px;
+            height: 85vh;
+            
+            /* Transparent Background + Blur */
+            background: rgba(0, 0, 0, 0.3); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px); /* For Safari */
+            
             border: 2px solid #969696;
             display: flex;
             flex-direction: column;
@@ -39,23 +44,36 @@
             color: #e5e5e5;
             font-size: 1.1rem;
             line-height: 1.2;
+            text-shadow: 1px 1px 2px black; /* text shadow helps readability on transparent bg */
         }
 
         #chat-input-area {
-            border-top: 1px dotted #555;
+            border-top: 1px dotted #999;
             padding: 10px;
             display: flex;
             gap: 8px;
+            background: rgba(0, 0, 0, 0.4); /* Slightly darker input area */
         }
 
         input {
             flex-grow: 1;
-            background: #111;
-            border: 1px solid #444;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #666;
             color: #facc15;
             padding: 6px 10px;
             outline: none;
             font-size: 1rem;
+            font-family: 'VT323', monospace;
+        }
+
+        button {
+            font-family: 'VT323', monospace;
+            background: none;
+            border: 1px solid #facc15;
+            cursor: pointer;
+        }
+        button:hover {
+            background: rgba(250, 204, 21, 0.2);
         }
 
         /* Top Bar Indicators */
@@ -67,20 +85,23 @@
             align-items: center;
             gap: 6px;
             color: #4ade80;
+            background: rgba(0,0,0,0.5);
+            padding: 2px 6px;
+            border-radius: 4px;
         }
         .dot { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 5px #4ade80; }
         
         /* Person Outline Icon */
         .user-menu { position: absolute; top: 8px; right: 12px; }
         #user-display { background: none; border: none; cursor: pointer; padding: 4px; }
-        .person-icon { width: 24px; height: 24px; fill: #facc15; }
+        .person-icon { width: 24px; height: 24px; fill: #facc15; filter: drop-shadow(1px 1px 2px black); }
 
         .dropdown {
             display: none;
             position: absolute;
             right: 0;
             top: 100%;
-            background: #1a1a1a;
+            background: rgba(26, 26, 26, 0.95);
             border: 1px solid #969696;
             min-width: 130px;
             z-index: 100;
@@ -114,9 +135,9 @@
             </button>
             <div id="user-dropdown" class="dropdown">
                 <a href="#" id="display-name" style="color:#fff; pointer-events:none;"></a>
-                <a href="/account">ACCOUNT</a>
-                <a href="/settings">SETTINGS</a>
-                <a href="#" onclick="logout()">LOGOUT</a>
+                <a href="/account">account</a>
+                <a href="/settings">settings</a>
+                <a href="#" onclick="logout()">logout</a>
             </div>
         </div>
 
@@ -124,7 +145,7 @@
 
         <div id="chat-input-area">
             <input type="text" id="msg-input" placeholder="Type..." autocomplete="off">
-            <button onclick="send()" style="color: #facc15;">[SEND]</button>
+            <button onclick="send()" style="color: #facc15; padding: 0 15px;">[SEND]</button>
         </div>
     </div>
 
