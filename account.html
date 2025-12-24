@@ -7,347 +7,172 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
-        /* --- CORE STYLES --- */
-        html, body { 
-            height: 100%; 
-            margin: 0;
-            overflow-x: hidden; /* Prevent horizontal scroll */
-        }
         body {
             font-family: 'VT323', monospace;
             color: #e5e5e5;
-            background-color: #000000; 
+            background-color: #000000;
             background-size: cover;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
             background-position: center;
-        }
-        .pixel-font {
-            font-family: 'VT323', monospace;
-            font-smooth: never;
-            -webkit-font-smoothing: none;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-        }
-
-        /* --- LAYOUT GRID (MySpace Style) --- */
-        .main-container {
-            max-width: 1200px;
-            margin: 40px auto;
-            display: grid;
-            grid-template-columns: 320px 1fr; /* Left Sidebar | Right Content */
-            gap: 20px;
-            padding: 0 20px;
-            align-items: start;
-        }
-
-        /* --- SHARED BOX STYLES --- */
-        .content-box {
-            background-color: rgba(10, 10, 10, 0.9);
-            border: 1px solid #444;
-            margin-bottom: 20px;
-            box-shadow: 4px 4px 0px rgba(0,0,0,0.5);
-        }
-        
-        .box-header {
-            background-color: #facc15; /* Yellow Header */
-            color: #000;
-            padding: 4px 10px;
-            font-size: 1.25rem;
-            font-weight: bold;
-            text-transform: uppercase;
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;
             display: flex;
-            justify-content: space-between;
-        }
-
-        .box-body {
-            padding: 15px;
-        }
-
-        /* --- LEFT COLUMN SPECIFICS --- */
-        .profile-pic-container {
-            width: 100%;
-            height: 300px;
-            border-bottom: 1px solid #444;
-            overflow: hidden;
-            position: relative;
-        }
-        .profile-pic-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            image-rendering: pixelated;
-        }
-        
-        .status-indicator {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: #00ff00;
-            color: #000;
-            padding: 0 5px;
-            font-size: 1rem;
-            box-shadow: 2px 2px 0 #000;
-        }
-
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px dotted #333;
-            font-size: 1.25rem;
-        }
-        .stat-row:last-child { border-bottom: none; }
-        .stat-val { color: #facc15; }
-
-        /* --- RIGHT COLUMN SPECIFICS --- */
-        .username-header {
-            font-size: 3rem;
-            line-height: 1;
-            color: #facc15;
-            margin-bottom: 5px;
-            text-shadow: 2px 2px 0 #000;
-        }
-        .user-tagline {
-            color: #969696;
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-        }
-
-        .bio-text {
-            font-size: 1.2rem;
-            line-height: 1.4;
-            color: #ccc;
-            white-space: pre-wrap; /* Keeps line breaks */
-        }
-
-        /* --- ADMIN & NAV --- */
-        .nav-bar {
-            background: rgba(0,0,0,0.9);
-            border-bottom: 1px solid #333;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: center;
         }
-        .nav-link { color: #facc15; text-decoration: none; font-size: 1.25rem; margin-right: 20px; }
-        .nav-link:hover { text-decoration: underline; color: #fff; }
 
-        .admin-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px;
-            background: #1a1a1a;
-            margin-bottom: 5px;
+        .profile-card {
+            background: rgba(0, 0, 0, 0.9);
             border: 1px solid #333;
+            padding: 30px;
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,1);
         }
-        .admin-btn {
-            background: transparent;
-            border: 1px solid #ef4444;
-            color: #ef4444;
-            cursor: pointer;
-            padding: 2px 8px;
-            font-family: inherit;
-        }
-        .admin-btn:hover { background: #ef4444; color: #fff; }
 
-        /* --- MOBILE --- */
-        @media (max-width: 768px) {
-            .main-container { grid-template-columns: 1fr; }
-            .profile-pic-container { height: 250px; }
+        .pfp-main {
+            width: 150px;
+            height: 150px;
+            border: 2px solid #facc15;
+            image-rendering: pixelated;
+            object-fit: cover;
+            margin-bottom: 20px;
+        }
+
+        .username {
+            font-size: 3rem;
+            color: #facc15;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .bio {
+            color: #969696;
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            border-left: 2px solid #333;
+            padding-left: 10px;
+        }
+
+        /* Action Buttons in the Corner */
+        .actions-corner {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-align: right;
+        }
+
+        .action-btn {
+            font-family: 'VT323', monospace;
+            font-size: 1.1rem;
+            background: transparent;
+            border: 1px solid #444;
+            color: #969696;
+            padding: 2px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            border-color: #facc15;
+            color: #facc15;
+        }
+
+        .action-btn.block:hover {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .nav-back {
+            margin-top: 20px;
+            color: #444;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .nav-back:hover { color: #facc15; }
+
+        /* Admin Tag */
+        .admin-tag {
+            color: #ef4444;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
         }
     </style>
 </head>
 <body>
 
-    <div class="nav-bar pixel-font">
-        <div>
-            <a href="index.html" class="nav-link"><<home</a>
-            <a href="chat.html" class="nav-link">chat</a>
+    <div class="profile-card">
+        <div class="actions-corner">
+            <button class="action-btn" id="friendBtn" onclick="toggleFriend()">+ FRIEND</button>
+            <button class="action-btn block" onclick="handleBlock()">[ BLOCK ]</button>
         </div>
-        <div class="text-yellow-400">canvas 2.0</div>
-    </div>
 
-    <div class="main-container pixel-font">
+        <img id="profilePicture" class="pfp-main" src="https://placehold.co/300x300/111/facc15?text=?">
         
-        <aside class="left-col">
-            
-            <div class="content-box">
-                <div class="box-header">
-                    <span>Identity</span>
-                    <span>[ID]</span>
-                </div>
-                <div class="profile-pic-container">
-                    <img id="profilePicture" src="https://placehold.co/400x400/000000/333333?text=NO+IMG&font=vt323" alt="PFP">
-                    <div class="status-indicator">ONLINE</div>
-                </div>
-                <div class="box-body">
-                    <div class="stat-row">
-                        <span>activity</span>
-                        <span class="stat-val" id="postCount">0</span>
-                    </div>
-                    <div class="stat-row">
-                        <span>followers</span>
-                        <span class="stat-val" id="followerCount">0</span>
-                    </div>
-                    <div class="stat-row">
-                        <span>following</span>
-                        <span class="stat-val" id="followingCount">0</span>
-                    </div>
-                    <div class="stat-row">
-                        <span>joined</span>
-                        <span class="stat-val">2024</span>
-                    </div>
-                    
-                    <div style="margin-top: 15px; text-align: center;">
-                         <button class="admin-btn" style="border-color: #facc15; color: #facc15; width: 100%;">EDIT PROFILE</button>
-                    </div>
-                </div>
-            </div>
+        <div id="adminStatus" class="admin-tag" style="display:none;">SYS_OPERATOR</div>
+        <h1 class="username" id="usernameDisplay">@username</h1>
+        
+        <div class="bio" id="userBio">
+            This user hasn't set a bio yet.
+        </div>
 
-            <div class="content-box">
-                <div class="box-header">Connect</div>
-                <div class="box-body" style="display: flex; flex-direction: column; gap: 5px;">
-                    <a href="#" class="nav-link" style="color: #999; font-size: 1rem;">> Send Message</a>
-                    <a href="#" class="nav-link" style="color: #999; font-size: 1rem;">> Add to Friends</a>
-                    <a href="#" class="nav-link" style="color: #999; font-size: 1rem;">> Block User</a>
-                </div>
-            </div>
+        <div style="display: flex; gap: 20px; color: #555; font-size: 1.1rem;">
+            <span>POSTS: <span id="postCount" style="color:#969696">0</span></span>
+            <span>LEVEL: <span style="color:#969696">1</span></span>
+        </div>
 
-        </aside>
-
-        <main class="right-col">
-            
-            <div style="margin-bottom: 20px;">
-                <div class="username-header" id="usernameDisplay">LOADING...</div>
-                <div class="user-tagline">"Insert a cool quote or lyric here..."</div>
-            </div>
-
-            <div id="adminPanel" class="content-box" style="display: none; border-color: #facc15;">
-                <div class="box-header" style="background-color: #ef4444; color: white;">
-                    <span>panel</span>
-                    <span>[ROOT]</span>
-                </div>
-                <div class="box-body">
-                    <p style="margin-bottom: 10px; color: #facc15;">// USER_MANAGEMENT_SYSTEM</p>
-                    <div id="userList"></div>
-                </div>
-            </div>
-
-            <div class="content-box">
-                <div class="box-header">
-                    <span>About Me</span>
-                    <span>[-]</span>
-                </div>
-                <div class="box-body">
-                    <div class="bio-text" id="userBio">
-                        Loading bio information...
-                    </div>
-                </div>
-            </div>
-
-            <div class="content-box">
-                <div class="box-header">
-                    <span>Recent Activity</span>
-                    <span>[LOGS]</span>
-                </div>
-                <div class="box-body" id="activityFeed">
-                    <div style="color: #666; padding: 20px; text-align: center; border: 1px dashed #333;">
-                        [ NO RECENT NEURAL ACTIVITY DETECTED ]
-                    </div>
-                </div>
-            </div>
-
-            <div class="content-box">
-                <div class="box-header">
-                    <span>Friend Space</span>
-                    <span>[Top 8]</span>
-                </div>
-                <div class="box-body">
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-                        <div style="background: #111; height: 80px; border: 1px solid #333;"></div>
-                        <div style="background: #111; height: 80px; border: 1px solid #333;"></div>
-                        <div style="background: #111; height: 80px; border: 1px solid #333;"></div>
-                        <div style="background: #111; height: 80px; border: 1px solid #333;"></div>
-                    </div>
-                </div>
-            </div>
-
-        </main>
+        <a href="index.html" class="nav-back"><< BACK_TO_HOME</a>
     </div>
 
     <script>
-        // --- 1. BACKGROUND LOGIC ---
-        const specialBg = '81853ABB-FB87-4A20-9303-9624B777245B.jpeg';
-        const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg', 'IMG_5264.jpeg', 'IMG_4945.jpeg'];
-        const chance = Math.floor(Math.random() * 100); 
-        let chosenBg = (chance === 0) ? specialBg : normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
+        // Set Background
+        const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_5262.jpeg'];
+        const chosenBg = normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
         document.body.style.backgroundImage = `url('${chosenBg}')`;
 
-        // --- 2. AUTH CHECK ---
         const currentUser = localStorage.getItem('username');
-        if (!currentUser) {
-            window.location.href = 'login.html';
-        }
+        if (!currentUser) window.location.href = 'login.html';
 
-        // --- 3. DATA LOADING ---
-        function loadUserData() {
+        // Load Data
+        function init() {
             const users = JSON.parse(localStorage.getItem('users') || '{}');
-            const userData = users[currentUser] || {};
+            const data = users[currentUser] || {};
+
+            document.getElementById('usernameDisplay').textContent = `@${currentUser}`;
+            document.getElementById('userBio').textContent = data.bio || "No status set.";
+            document.getElementById('postCount').textContent = data.posts || 0;
             
-            // Populate Text
-            document.getElementById('usernameDisplay').textContent = currentUser;
-            document.getElementById('userBio').textContent = userData.bio || 'User has not initialized bio protocol yet.';
-            
-            // Populate Stats
-            document.getElementById('postCount').textContent = userData.posts || 0;
-            document.getElementById('followerCount').textContent = userData.followers || 0;
-            document.getElementById('followingCount').textContent = userData.following || 0;
-            
-            // Populate Image
-            const profilePic = document.getElementById('profilePicture');
-            if (userData.profilePicUrl) {
-                profilePic.src = userData.profilePicUrl;
+            if (data.profilePicUrl) {
+                document.getElementById('profilePicture').src = data.profilePicUrl;
             }
-            
-            // Admin Check
-            if (currentUser === 'root' || currentUser === 'fb67' || currentUser === '-nl' || currentUser === 'admin') {
-                document.getElementById('adminPanel').style.display = 'block';
-                renderAdminPanel(users);
+
+            // Show admin tag if applicable
+            if (['-nl', 'root', 'admin'].includes(currentUser)) {
+                document.getElementById('adminStatus').style.display = 'block';
             }
         }
 
-        // --- 4. ADMIN FUNCTIONS ---
-        function renderAdminPanel(users) {
-            const userList = document.getElementById('userList');
-            userList.innerHTML = '';
-            
-            Object.keys(users).forEach(username => {
-                if (username === currentUser) return; // Skip self
-                
-                const item = document.createElement('div');
-                item.className = 'admin-row';
-                item.innerHTML = `
-                    <span style="color: #ccc;">${username} ${users[username].muted ? '<span style="color:red">[MUTED]</span>' : ''}</span>
-                    <button class="admin-btn" onclick="toggleMute('${username}')">
-                        ${users[username].muted ? 'UNMUTE' : 'MUTE'}
-                    </button>
-                `;
-                userList.appendChild(item);
-            });
+        // Logic for Friend/Unfriend
+        let isFriend = false;
+        function toggleFriend() {
+            isFriend = !isFriend;
+            const btn = document.getElementById('friendBtn');
+            btn.textContent = isFriend ? "- UNFRIEND" : "+ FRIEND";
+            btn.style.color = isFriend ? "#facc15" : "#969696";
         }
 
-        window.toggleMute = function(username) {
-            const users = JSON.parse(localStorage.getItem('users'));
-            if(users[username]) {
-                users[username].muted = !users[username].muted;
-                localStorage.setItem('users', JSON.stringify(users));
-                renderAdminPanel(users);
+        function handleBlock() {
+            if(confirm("Terminate connection with this user?")) {
+                alert("User blocked.");
             }
-        };
+        }
 
-        // Initialize
-        loadUserData();
+        init();
     </script>
 </body>
 </html>
