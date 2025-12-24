@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ACCOUNT // NETWORK</title>
+    <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -128,12 +128,12 @@
             letter-spacing: 2px;
             text-transform: uppercase;
             font-weight: bold;
-            display: none; /* Hidden by default */
+            display: none;
         }
 
         /* --- ADMIN PANEL --- */
         #admin-panel {
-            display: none; /* Hidden unless admin */
+            display: none; 
             margin-top: 30px;
             width: 100%;
             max-width: 450px;
@@ -143,7 +143,7 @@
         }
         .admin-header { color: #ef4444; border-bottom: 1px solid #ef4444; margin-bottom: 10px; }
         .admin-input { width: 100%; background: #000; color: #ef4444; border: 1px solid #555; margin-bottom: 5px; }
-        .admin-btn { background: #ef4444; color: #000; border: none; cursor: pointer; padding: 2px 8px; font-family: 'VT323'; }
+        .admin-btn { background: #ef4444; color: #000; border: none; cursor: pointer; padding: 2px 8px; font-family: 'VT323'; margin-right: 5px;}
     </style>
 </head>
 <body>
@@ -155,17 +155,14 @@
 
     <div class="profile-card">
         
-        <div class="actions-corner" id="action-buttons">
-            </div>
+        <div class="actions-corner" id="action-buttons"></div>
 
         <img id="profilePicture" class="pfp-main" src="https://placehold.co/300x300/111/facc15?text=?">
         
-        <div id="adminStatus" class="admin-tag">ADMINISTRATOR</div>
-        <h1 class="username" id="usernameDisplay">LOADING...</h1>
+        <div id="adminStatus" class="admin-tag">founder</div>
+        <h1 class="username" id="usernameDisplay">loading</h1>
         
-        <div class="bio" id="userBio">
-            Fetching data...
-        </div>
+        <div class="bio" id="userBio">Fetching data...</div>
 
         <div style="display: flex; gap: 20px; color: #555; font-size: 1.1rem;">
             <span>FRIENDS: <span id="friendCount" style="color:#969696">0</span></span>
@@ -175,11 +172,12 @@
     </div>
 
     <div id="admin-panel">
-        <div class="admin-header">/// ADMIN CONSOLE ///</div>
+        <div class="admin-header">admin abuse</div>
         
         <p style="margin:5px 0; color:#ccc;">Set Global Announcement:</p>
         <input type="text" id="announce-input" class="admin-input" placeholder="Enter alert text...">
         <button class="admin-btn" onclick="setAnnouncement()">BROADCAST</button>
+        <button class="admin-btn" style="background:#444;" onclick="clearAnnouncement()">CLEAR</button>
         
         <hr style="border-color:#333; margin: 15px 0;">
 
@@ -189,7 +187,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, get, set, remove, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref, get, set, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
         // --- CONFIG ---
         const firebaseConfig = {
@@ -229,73 +227,58 @@
         // --- INIT ---
         if (!myUsername) window.location.href = 'login.html';
         
-        // Random Background
         const bgs = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg'];
         document.body.style.backgroundImage = `url('${bgs[Math.floor(Math.random()*bgs.length)]}')`;
 
         loadProfile();
 
         // --- FUNCTIONS ---
-
         async function loadProfile() {
-            console.log(`Loading profile for: ${viewUser}`);
-            
-            // 1. Check if user exists (mock check for now, assumes yes if viewing)
             dom.name.innerText = `@${viewUser}`;
             
-            // 2. Fetch User Data from Firebase
+            // Fetch User Data from Firebase
             const userRef = ref(db, 'users/' + viewUser);
             const snapshot = await get(userRef);
             const data = snapshot.val() || {};
 
-            // 3. Update UI
             dom.bio.innerText = data.bio || "User has not established a bio.";
             if (data.pfp) dom.pfp.src = data.pfp;
 
-            // 4. Friend Count
             const friends = data.friends ? Object.keys(data.friends).length : 0;
             dom.friendCount.innerText = friends;
 
-            // 5. Check Admin Status of the VIEWED user
             if (STAFF_LIST.includes(viewUser)) {
                 dom.adminTag.style.display = 'block';
             }
 
-            // 6. Render Action Buttons
             renderButtons();
 
-            // 7. Render Admin Panel (If *I* am staff)
             if (amIAdmin) {
                 dom.adminPanel.style.display = 'block';
             }
         }
 
         async function renderButtons() {
-            dom.actions.innerHTML = ''; // Clear existing
+            dom.actions.innerHTML = ''; 
 
             if (isMe) {
-                // Viewing myself
                 dom.actions.innerHTML = `<button class="action-btn" onclick="location.href='settings.html'">[ EDIT PROFILE ]</button>`;
                 return;
             }
 
-            // Check Friend Status
             const friendRef = ref(db, `users/${myUsername}/friends/${viewUser}`);
             const friendSnap = await get(friendRef);
             const isFriend = friendSnap.exists();
 
-            // Check Block Status
             const blockRef = ref(db, `users/${myUsername}/blocked/${viewUser}`);
             const blockSnap = await get(blockRef);
             const isBlocked = blockSnap.exists();
 
-            // Friend Button
             const friendBtn = document.createElement('button');
             friendBtn.className = isFriend ? 'action-btn active' : 'action-btn';
             friendBtn.innerText = isFriend ? '- UNFRIEND' : '+ FRIEND';
             friendBtn.onclick = () => toggleFriend(isFriend);
             
-            // Block Button
             const blockBtn = document.createElement('button');
             blockBtn.className = 'action-btn block-btn';
             blockBtn.innerText = isBlocked ? '[ UNBLOCK ]' : '[ BLOCK ]';
@@ -306,7 +289,6 @@
         }
 
         // --- ACTIONS ---
-
         window.toggleFriend = async (currentlyFriends) => {
             const myFriendRef = ref(db, `users/${myUsername}/friends/${viewUser}`);
             const theirFriendRef = ref(db, `users/${viewUser}/friends/${myUsername}`);
@@ -314,14 +296,13 @@
             if (currentlyFriends) {
                 if(!confirm(`Remove ${viewUser} from friends?`)) return;
                 await remove(myFriendRef);
-                // Optional: Remove me from them too? usually yes for mutual friends
                 await remove(theirFriendRef); 
             } else {
                 await set(myFriendRef, { since: Date.now() });
-                await set(theirFriendRef, { since: Date.now() }); // Mutual add
+                await set(theirFriendRef, { since: Date.now() }); 
             }
             renderButtons();
-            loadProfile(); // Update counts
+            loadProfile(); 
         };
 
         window.toggleBlock = async (currentlyBlocked) => {
@@ -331,17 +312,14 @@
                 await remove(blockRef);
                 alert(`${viewUser} unblocked.`);
             } else {
-                if(!confirm(`Block ${viewUser}? They will not see your posts.`)) return;
+                if(!confirm(`Block ${viewUser}?`)) return;
                 await set(blockRef, { since: Date.now() });
-                
-                // Also remove friendship if exists
                 await remove(ref(db, `users/${myUsername}/friends/${viewUser}`));
                 await remove(ref(db, `users/${viewUser}/friends/${myUsername}`));
             }
             renderButtons();
         };
 
-        // --- SEARCH ---
         window.handleEnter = (e) => {
             if (e.key === 'Enter') performSearch();
         };
@@ -367,11 +345,17 @@
             alert("Announcement Broadcasted.");
         };
 
+        window.clearAnnouncement = async () => {
+            if (!amIAdmin) return;
+            await remove(ref(db, 'admin/announcement'));
+            alert("Announcement Cleared.");
+        };
+
         window.banCurrentUser = async () => {
             if (!amIAdmin) return;
-            if (viewUser === myUsername) return alert("You cannot ban yourself.");
+            if (viewUser === myUsername) return alert("?.");
             
-            if(confirm(`ARE YOU SURE YOU WANT TO BAN ${viewUser}?`)) {
+            if(confirm(`genuinely ban them?${viewUser}?`)) {
                 await set(ref(db, `banned/${viewUser}`), {
                     reason: "Admin Action",
                     by: myUsername,
