@@ -88,6 +88,28 @@
             min-height: 40px;
         }
 
+        /* --- BADGES --- */
+        .role-badge {
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: bold;
+            display: none; /* Hidden by default */
+            margin-bottom: 5px;
+        }
+
+        .admin-tag { color: #ef4444; text-shadow: 0 0 5px #7f1d1d; }
+        
+        /* NEW: Founder Style (Purple/Gold) */
+        .founder-tag { 
+            color: #c084fc; /* Light Purple */
+            text-shadow: 0 0 8px #581c87;
+            border: 1px solid #c084fc;
+            display: inline-block;
+            padding: 0 5px;
+            margin-bottom: 8px;
+        }
+
         /* --- ACTIONS (FRIEND/BLOCK) --- */
         .actions-corner {
             position: absolute;
@@ -122,15 +144,6 @@
         }
         .nav-back:hover { color: #facc15; }
 
-        .admin-tag {
-            color: #ef4444;
-            font-size: 1.2rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            font-weight: bold;
-            display: none;
-        }
-
         /* --- ADMIN PANEL --- */
         #admin-panel {
             display: none; 
@@ -150,7 +163,7 @@
 
     <div class="search-container">
         <input type="text" id="search-input" class="search-input" placeholder="Search user ID..." onkeypress="handleEnter(event)">
-        <button class="search-btn" onclick="performSearch()">SEARCH</button>
+        <button class="search-btn" onclick="performSearch()">search</button>
     </div>
 
     <div class="profile-card">
@@ -159,10 +172,12 @@
 
         <img id="profilePicture" class="pfp-main" src="https://placehold.co/300x300/111/facc15?text=?">
         
-        <div id="adminStatus" class="admin-tag">founder</div>
-        <h1 class="username" id="usernameDisplay">loading</h1>
+        <div id="founderStatus" class="role-badge founder-tag">founder</div>
+        <div id="adminStatus" class="role-badge admin-tag"></div>
         
-        <div class="bio" id="userBio">Fetching data...</div>
+        <h1 class="username" id="usernameDisplay">loading..</h1>
+        
+        <div class="bio" id="userBio">fetching</div>
 
         <div style="display: flex; gap: 20px; color: #555; font-size: 1.1rem;">
             <span>FRIENDS: <span id="friendCount" style="color:#969696">0</span></span>
@@ -172,7 +187,7 @@
     </div>
 
     <div id="admin-panel">
-        <div class="admin-header">admin abuse</div>
+        <div class="admin-header">abuse me</div>
         
         <p style="margin:5px 0; color:#ccc;">Set Global Announcement:</p>
         <input type="text" id="announce-input" class="admin-input" placeholder="Enter alert text...">
@@ -202,8 +217,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- STATE ---
-        const STAFF_LIST = ['root', 'fb67', '-nl'];
+        // --- ROLES SETUP ---
+        // !!! CHANGE THIS: Add your co-founder's name inside the quotes !!!
+        const FOUNDERS = ['root', '-nl', 'futtbucker67']; 
+        
+        const ADMINS = ['root', 'fb67', '-nl'];
+        
         const myUsername = localStorage.getItem('username');
         
         // Determine who we are viewing (URL param ?user=xyz OR myself)
@@ -211,7 +230,7 @@
         const viewUser = urlParams.get('user') || myUsername;
         
         const isMe = (myUsername === viewUser);
-        const amIAdmin = STAFF_LIST.includes(myUsername);
+        const amIAdmin = ADMINS.includes(myUsername) || FOUNDERS.includes(myUsername);
 
         // DOM Elements
         const dom = {
@@ -219,6 +238,7 @@
             bio: document.getElementById('userBio'),
             pfp: document.getElementById('profilePicture'),
             adminTag: document.getElementById('adminStatus'),
+            founderTag: document.getElementById('founderStatus'),
             actions: document.getElementById('action-buttons'),
             friendCount: document.getElementById('friendCount'),
             adminPanel: document.getElementById('admin-panel')
@@ -236,7 +256,7 @@
         async function loadProfile() {
             dom.name.innerText = `@${viewUser}`;
             
-            // Fetch User Data from Firebase
+            // Fetch User Data
             const userRef = ref(db, 'users/' + viewUser);
             const snapshot = await get(userRef);
             const data = snapshot.val() || {};
@@ -247,7 +267,16 @@
             const friends = data.friends ? Object.keys(data.friends).length : 0;
             dom.friendCount.innerText = friends;
 
-            if (STAFF_LIST.includes(viewUser)) {
+            // --- SHOW TAGS ---
+            // Hide both first
+            dom.adminTag.style.display = 'none';
+            dom.founderTag.style.display = 'none';
+
+            // Check Founder First (Overrides Admin visual usually, or shows alongside)
+            if (FOUNDERS.includes(viewUser)) {
+                dom.founderTag.style.display = 'block';
+            } else if (ADMINS.includes(viewUser)) {
+                // Only show Admin if they aren't a founder
                 dom.adminTag.style.display = 'block';
             }
 
@@ -353,9 +382,9 @@
 
         window.banCurrentUser = async () => {
             if (!amIAdmin) return;
-            if (viewUser === myUsername) return alert("?.");
+            if (viewUser === myUsername) return alert("?");
             
-            if(confirm(`genuinely ban them?${viewUser}?`)) {
+            if(confirm(`genuinely ban ${viewUser}?`)) {
                 await set(ref(db, `banned/${viewUser}`), {
                     reason: "Admin Action",
                     by: myUsername,
@@ -364,7 +393,6 @@
                 alert("User has been banned.");
             }
         };
-
     </script>
 </body>
 </html>
