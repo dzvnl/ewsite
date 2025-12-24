@@ -194,7 +194,7 @@
 
         if (data && data.text) {
             // ADMIN MODE
-            splashEl.innerText = `/// ALERT: ${data.text.toUpperCase()} ///`;
+            splashEl.innerText =` ${data.text.toLowerCase()} `;
             splashEl.classList.add('alert-mode');
         } else {
             // NORMAL MODE
