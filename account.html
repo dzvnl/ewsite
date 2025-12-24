@@ -1,721 +1,232 @@
+<!-- account.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account - retro web</title>
+    <title>account</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
-        * {
+        html, body { 
+            height: 100%; 
+            scroll-behavior: smooth; 
             margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'VT323', monospace;
-            background-color: #0a0a0a;
-            color: #00ff00;
-            line-height: 1.6;
-            min-height: 100vh;
-            position: relative;
-        }
-
-        /* Scanline effect */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 0, 0, 0.15),
-                rgba(0, 0, 0, 0.15) 1px,
-                transparent 1px,
-                transparent 2px
-            );
-            z-index: 9998;
-        }
-
-        /* Notification Badge */
-        .notification-badge {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background-color: #ff0000;
-            color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 18px;
-            border: 2px solid #ff6600;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.7);
-            cursor: pointer;
-            z-index: 1000;
-            transition: all 0.2s;
-        }
-
-        .notification-badge:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 30px rgba(255, 0, 0, 0.9);
-        }
-
-        .notification-badge.empty {
-            display: none;
-        }
-
-        /* Notification dropdown */
-        .notifications-dropdown {
-            position: fixed;
-            top: 70px;
-            left: 20px;
-            background-color: #1a1a1a;
-            border: 2px solid #00ff00;
-            padding: 15px;
-            max-width: 300px;
-            max-height: 400px;
-            overflow-y: auto;
-            display: none;
-            z-index: 999;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
-        }
-
-        .notifications-dropdown.active {
-            display: block;
-        }
-
-        .notification-item {
-            padding: 10px;
-            margin-bottom: 10px;
-            background-color: #0a0a0a;
-            border: 1px solid #00ff00;
-            color: #00ff00;
-            font-size: 12px;
-        }
-
-        .notification-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .notification-item .user {
-            color: #ffff00;
-            font-weight: bold;
-        }
-
-        /* Header */
-        header {
-            background-color: #1a1a1a;
-            border-bottom: 3px solid #00ff00;
-            padding: 20px;
-            position: relative;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 28px;
-            font-weight: bold;
-            color: #00ff00;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-
-        .logo:hover {
-            color: #ffff00;
-            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
-        }
-
-        /* Search Bar */
-        .search-container {
-            flex: 1;
-            max-width: 400px;
-            margin: 0 30px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 15px;
-            background-color: #0a0a0a;
-            border: 2px solid #00ff00;
-            color: #00ff00;
-            font-family: 'VT323', monospace;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        .search-input::placeholder {
-            color: #00aa00;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: #ffff00;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
-        }
-
-        .search-results {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background-color: #1a1a1a;
-            border: 2px solid #00ff00;
-            border-top: none;
-            display: none;
-            z-index: 500;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .search-results.active {
-            display: block;
-        }
-
-        .search-result-item {
-            padding: 12px 15px;
-            border-bottom: 1px solid #00aa00;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .search-result-item:hover {
-            background-color: #0a0a0a;
-            color: #ffff00;
-        }
-
-        .search-result-item:last-child {
-            border-bottom: none;
-        }
-
-        .search-result-user {
-            font-weight: bold;
-            color: #ffff00;
-        }
-
-        /* Main Container */
-        .container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        /* Profile Section */
-        .profile-section {
-            background-color: #1a1a1a;
-            border: 3px solid #00ff00;
-            padding: 40px;
-            margin-bottom: 40px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
-        }
-
-        .profile-header {
-            display: flex;
-            gap: 40px;
-            align-items: flex-start;
-            margin-bottom: 30px;
-        }
-
-        .profile-picture-box {
-            width: 200px;
-            height: 200px;
-            background-color: #0a0a0a;
-            border: 3px solid #00ff00;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            font-size: 14px;
-            color: #00aa00;
-            position: relative;
             overflow: hidden;
         }
-
-        .profile-picture-box.has-image {
+        body {
+            font-family: 'VT323', monospace;
+            color: #e5e5e5;
+            background-color: #000000; 
             background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             background-position: center;
         }
-
-        .profile-picture-placeholder {
-            text-align: center;
+        .pixel-font {
+            font-family: 'VT323', monospace;
+            font-smooth: never;
+            -webkit-font-smoothing: none;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
         }
-
+        
+        .account-container {
+            background-color: rgba(0, 0, 0, 0.85);
+            border: 2px solid #969696;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            margin: 4rem auto;
+        }
+        
+        .profile-header {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .profile-picture-box {
+            width: 128px;
+            height: 128px;
+            background-color: #111;
+            border: 2px dotted #969696;
+            flex-shrink: 0;
+            image-rendering: pixelated;
+        }
+        
         .profile-info {
             flex: 1;
         }
-
+        
         .username-display {
-            font-size: 32px;
-            font-weight: bold;
-            color: #ffff00;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+            font-size: 2.5rem;
+            color: #facc15;
+            margin-bottom: 0.5rem;
         }
-
-        .user-handle {
-            font-size: 18px;
-            color: #00ff00;
-            margin-bottom: 20px;
-        }
-
+        
         .user-bio {
-            font-size: 14px;
-            color: #00ff00;
-            margin-bottom: 20px;
-            max-width: 500px;
-            line-height: 1.8;
+            font-size: 1.25rem;
+            color: #969696;
+            margin-bottom: 1.5rem;
         }
-
+        
         .user-stats {
             display: flex;
-            gap: 30px;
-            margin-bottom: 20px;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
         }
-
-        .stat {
-            display: flex;
-            flex-direction: column;
-        }
-
+        
         .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #ffff00;
+            font-size: 2rem;
+            color: #facc15;
         }
-
+        
         .stat-label {
-            font-size: 12px;
-            color: #00aa00;
+            font-size: 1rem;
+            color: #969696;
         }
-
-        .profile-actions {
-            display: flex;
-            gap: 15px;
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 12px 30px;
-            background-color: #1a1a1a;
-            border: 2px solid #00ff00;
-            color: #00ff00;
-            font-family: 'VT323', monospace;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn:hover {
-            background-color: #00ff00;
-            color: #0a0a0a;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .btn-primary {
-            border-color: #ffff00;
-            color: #ffff00;
-        }
-
-        .btn-primary:hover {
-            background-color: #ffff00;
-            color: #0a0a0a;
-            box-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
-        }
-
-        /* Content Sections */
-        .content-section {
-            background-color: #1a1a1a;
-            border: 3px solid #00ff00;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
-        }
-
+        
         .section-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #ffff00;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px dashed #00ff00;
+            font-size: 1.75rem;
+            color: #facc15;
+            margin-bottom: 1rem;
         }
-
-        /* Settings/Account Info */
-        .settings-form {
+        
+        .admin-panel {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: rgba(20, 20, 20, 0.9);
+            border: 2px solid #facc15;
+        }
+        
+        .user-list-item {
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px dotted #969696;
         }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-label {
-            font-size: 14px;
-            color: #00ff00;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        .form-input {
-            padding: 10px 15px;
-            background-color: #0a0a0a;
-            border: 2px solid #00ff00;
-            color: #00ff00;
+        
+        .admin-btn {
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid #facc15;
+            color: #facc15;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
             font-family: 'VT323', monospace;
-            font-size: 14px;
-            transition: all 0.3s;
         }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #ffff00;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
-        }
-
-        .form-textarea {
-            padding: 10px 15px;
-            background-color: #0a0a0a;
-            border: 2px solid #00ff00;
-            color: #00ff00;
-            font-family: 'VT323', monospace;
-            font-size: 14px;
-            min-height: 100px;
-            resize: vertical;
-            transition: all 0.3s;
-        }
-
-        .form-textarea:focus {
-            outline: none;
-            border-color: #ffff00;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
-        }
-
-        /* Footer */
-        footer {
-            background-color: #1a1a1a;
-            border-top: 3px solid #00ff00;
-            padding: 20px;
-            text-align: center;
-            color: #00aa00;
-            font-size: 12px;
-            margin-top: 60px;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .search-container {
-                max-width: 100%;
-                margin: 0;
-            }
-
-            .profile-header {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .profile-picture-box {
-                width: 150px;
-                height: 150px;
-            }
-
-            .username-display {
-                font-size: 24px;
-            }
-
-            .user-stats {
-                flex-wrap: wrap;
-            }
-
-            .profile-actions {
-                flex-wrap: wrap;
-            }
+        
+        .admin-btn:hover {
+            background-color: #facc15;
+            color: #000;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="header-content">
-            <a href="index.html" class="logo">&lt;retro web&gt;</a>
-            <div class="search-container">
-                <input 
-                    type="text" 
-                    class="search-input" 
-                    id="userSearch" 
-                    placeholder="search users..."
-                >
-                <div class="search-results" id="searchResults"></div>
-            </div>
-        </div>
-    </header>
+    <div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
+        <p>2.0</p>
+    </div>
 
-    <!-- Notification Badge -->
-    <div class="notification-badge" id="notificationBadge">0</div>
-    <div class="notifications-dropdown" id="notificationsDropdown"></div>
-
-    <!-- Main Container -->
-    <div class="container">
-        <!-- Profile Section -->
-        <div class="profile-section">
-            <div class="profile-header">
-                <!-- Profile Picture Box -->
-                <div class="profile-picture-box" id="profilePicture">
-                    <div class="profile-picture-placeholder">
-                        [profile pic]
+    <div class="account-container pixel-font">
+        <div class="profile-header">
+            <img id="profilePicture" class="profile-picture-box" src="https://placehold.co/128x128/000000/333333?text=..." alt="Profile Picture">
+            <div class="profile-info">
+                <div class="username-display" id="usernameDisplay">@username</div>
+                <div class="user-bio" id="userBio">No bio yet.</div>
+                <div class="user-stats">
+                    <div>
+                        <div class="stat-value" id="postCount">0</div>
+                        <div class="stat-label">POSTS</div>
                     </div>
-                </div>
-
-                <!-- Profile Info -->
-                <div class="profile-info">
-                    <div class="username-display" id="usernameDisplay">@your_username</div>
-                    <div class="user-handle" id="userHandle">User Profile</div>
-                    <div class="user-bio" id="userBio">Welcome to your account page. Edit your profile to customize your presence on retro web.</div>
-                    
-                    <div class="user-stats">
-                        <div class="stat">
-                            <div class="stat-value" id="postCount">0</div>
-                            <div class="stat-label">POSTS</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value" id="followerCount">0</div>
-                            <div class="stat-label">FOLLOWERS</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value" id="followingCount">0</div>
-                            <div class="stat-label">FOLLOWING</div>
-                        </div>
+                    <div>
+                        <div class="stat-value" id="followerCount">0</div>
+                        <div class="stat-label">FOLLOWERS</div>
                     </div>
-
-                    <div class="profile-actions">
-                        <button class="btn btn-primary" id="editButton">EDIT PROFILE</button>
-                        <button class="btn">SETTINGS</button>
+                    <div>
+                        <div class="stat-value" id="followingCount">0</div>
+                        <div class="stat-label">FOLLOWING</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Edit Profile Section (Hidden by default) -->
-        <div class="content-section" id="editSection" style="display: none;">
-            <div class="section-title">EDIT PROFILE</div>
-            <form class="settings-form" id="editForm">
-                <div class="form-group">
-                    <label class="form-label">Username</label>
-                    <input type="text" class="form-input" id="usernameInput" placeholder="Enter username">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Bio</label>
-                    <textarea class="form-textarea" id="bioInput" placeholder="Tell us about yourself..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Profile Picture URL</label>
-                    <input type="text" class="form-input" id="picUrlInput" placeholder="Enter image URL">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-input" id="emailInput" placeholder="Enter email">
-                </div>
-                <div class="profile-actions">
-                    <button type="submit" class="btn btn-primary">SAVE CHANGES</button>
-                    <button type="button" class="btn" id="cancelEditButton">CANCEL</button>
-                </div>
-            </form>
+        <div class="section-title">RECENT ACTIVITY</div>
+        <div id="activityFeed" style="color: #969696; font-size: 1.25rem;">
+            <p>[No recent activity yet.]</p>
         </div>
 
-        <!-- Recent Activity Section -->
-        <div class="content-section">
-            <div class="section-title">YOUR RECENT ACTIVITY</div>
-            <div id="activityFeed" style="color: #00aa00; font-size: 14px;">
-                <p>[No recent activity yet. Start posting to populate your feed!]</p>
-            </div>
+        <div id="adminPanel" style="display: none;">
+            <div class="section-title">ADMIN PANEL</div>
+            <div id="userList"></div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer>
-        <p>&copy; 2025 retro web. Stay vintage. | <a href="index.html" style="color: #00ff00; text-decoration: none;">home</a> | <a href="account.html" style="color: #00ff00; text-decoration: none;">account</a></p>
-    </footer>
-
     <script>
-        // Profile data storage
-        let profileData = {
-            username: '@dzvnl',
-            bio: 'Welcome to retro web. Keeping it vintage since 2025.',
-            profilePicUrl: '',
-            email: 'user@example.com',
-            posts: 0,
-            followers: 0,
-            following: 0
+        // Set random background like index
+        const specialBg = '81853ABB-FB87-4A20-9303-9624B777245B.jpeg';
+        const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg', 'IMG_5264.jpeg', 'IMG_4945.jpeg'];
+        const chance = Math.floor(Math.random() * 100); 
+        let chosenBg = (chance === 0) ? specialBg : normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
+        document.body.style.backgroundImage = `url('${chosenBg}')`;
+
+        // Redirect if not logged in
+        const currentUser = localStorage.getItem('username');
+        if (!currentUser) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // Load user data
+        function loadUserData() {
+            const users = JSON.parse(localStorage.getItem('users') || '{}');
+            const userData = users[currentUser] || {};
+            
+            document.getElementById('usernameDisplay').textContent = currentUser;
+            document.getElementById('userBio').textContent = userData.bio || 'No bio yet.';
+            document.getElementById('postCount').textContent = userData.posts || 0;
+            document.getElementById('followerCount').textContent = userData.followers || 0;
+            document.getElementById('followingCount').textContent = userData.following || 0;
+            
+            const profilePic = document.getElementById('profilePicture');
+            if (userData.profilePicUrl) {
+                profilePic.src = userData.profilePicUrl;
+            }
+            
+            // Admin check
+            if (currentUser === 'root' || currentUser === 'fb67') {
+                document.getElementById('adminPanel').style.display = 'block';
+                renderAdminPanel(users);
+            }
+        }
+
+        function renderAdminPanel(users) {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = '';
+            
+            Object.keys(users).forEach(username => {
+                if (username === currentUser) return; // Skip self
+                
+                const item = document.createElement('div');
+                item.className = 'user-list-item';
+                item.innerHTML = `
+                    <span>${username} ${users[username].muted ? '(Muted)' : ''}</span>
+                    <button class="admin-btn" onclick="toggleMute('${username}')">
+                        ${users[username].muted ? 'Unmute' : 'Mute'}
+                    </button>
+                `;
+                userList.appendChild(item);
+            });
+        }
+
+        window.toggleMute = function(username) {
+            const users = JSON.parse(localStorage.getItem('users'));
+            users[username].muted = !users[username].muted;
+            localStorage.setItem('users', JSON.stringify(users));
+            renderAdminPanel(users);
         };
 
-        // Notifications
-        let mentions = [];
-
-        // Load profile data from localStorage
-        function loadProfileData() {
-            const saved = localStorage.getItem('profileData');
-            if (saved) {
-                profileData = JSON.parse(saved);
-            }
-            updateProfileDisplay();
-        }
-
-        // Update profile display
-        function updateProfileDisplay() {
-            document.getElementById('usernameDisplay').textContent = profileData.username;
-            document.getElementById('userHandle').textContent = profileData.username;
-            document.getElementById('userBio').textContent = profileData.bio || 'No bio set yet.';
-            document.getElementById('postCount').textContent = profileData.posts;
-            document.getElementById('followerCount').textContent = profileData.followers;
-            document.getElementById('followingCount').textContent = profileData.following;
-
-            // Update profile picture
-            const picBox = document.getElementById('profilePicture');
-            if (profileData.profilePicUrl) {
-                picBox.style.backgroundImage = `url('${profileData.profilePicUrl}')`;
-                picBox.classList.add('has-image');
-                picBox.innerHTML = '';
-            }
-
-            // Update form inputs
-            document.getElementById('usernameInput').value = profileData.username;
-            document.getElementById('bioInput').value = profileData.bio;
-            document.getElementById('picUrlInput').value = profileData.profilePicUrl;
-            document.getElementById('emailInput').value = profileData.email;
-        }
-
-        // Edit profile button
-        document.getElementById('editButton').addEventListener('click', function() {
-            document.getElementById('editSection').style.display = 'block';
-            document.querySelector('.profile-section').style.display = 'none';
-            window.scrollTo(0, 0);
-        });
-
-        // Cancel edit button
-        document.getElementById('cancelEditButton').addEventListener('click', function() {
-            document.getElementById('editSection').style.display = 'none';
-            document.querySelector('.profile-section').style.display = 'block';
-        });
-
-        // Edit form submit
-        document.getElementById('editForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            profileData.username = document.getElementById('usernameInput').value || profileData.username;
-            profileData.bio = document.getElementById('bioInput').value;
-            profileData.profilePicUrl = document.getElementById('picUrlInput').value;
-            profileData.email = document.getElementById('emailInput').value;
-
-            localStorage.setItem('profileData', JSON.stringify(profileData));
-            updateProfileDisplay();
-
-            document.getElementById('editSection').style.display = 'none';
-            document.querySelector('.profile-section').style.display = 'block';
-        });
-
-        // Search functionality
-        document.getElementById('userSearch').addEventListener('input', function(e) {
-            const query = e.target.value.toLowerCase();
-            const resultsContainer = document.getElementById('searchResults');
-
-            if (query.length < 2) {
-                resultsContainer.classList.remove('active');
-                return;
-            }
-
-            // Mock user data - in a real app, this would come from a server
-            const mockUsers = [
-                { username: '@dzvnl', handle: 'dzvnl' },
-                { username: '@retro_dev', handle: 'retro_dev' },
-                { username: '@pixel_art', handle: 'pixel_art' },
-                { username: '@vintage_web', handle: 'vintage_web' },
-                { username: '@neon_nights', handle: 'neon_nights' }
-            ];
-
-            const filtered = mockUsers.filter(user => 
-                user.username.toLowerCase().includes(query) || 
-                user.handle.toLowerCase().includes(query)
-            );
-
-            if (filtered.length > 0) {
-                resultsContainer.innerHTML = filtered.map(user => 
-                    `<div class="search-result-item" onclick="visitProfile('${user.handle}')">
-                        <span class="search-result-user">${user.username}</span>
-                    </div>`
-                ).join('');
-                resultsContainer.classList.add('active');
-            } else {
-                resultsContainer.classList.remove('active');
-            }
-        });
-
-        // Visit profile (mock function)
-        function visitProfile(handle) {
-            alert(`Visiting @${handle}'s profile...`);
-            document.getElementById('searchResults').classList.remove('active');
-            document.getElementById('userSearch').value = '';
-        }
-
-        // Notification badge functionality
-        document.getElementById('notificationBadge').addEventListener('click', function() {
-            const dropdown = document.getElementById('notificationsDropdown');
-            dropdown.classList.toggle('active');
-        });
-
-        // Mock mention notification
-        function addMention(username) {
-            mentions.push({
-                username: username,
-                timestamp: new Date()
-            });
-            updateNotifications();
-        }
-
-        // Update notifications display
-        function updateNotifications() {
-            const badge = document.getElementById('notificationBadge');
-            const dropdown = document.getElementById('notificationsDropdown');
-
-            if (mentions.length > 0) {
-                badge.textContent = mentions.length;
-                badge.classList.remove('empty');
-                dropdown.innerHTML = mentions.map(mention => 
-                    `<div class="notification-item">
-                        <span class="user">@${mention.username}</span> mentioned you
-                    </div>`
-                ).join('');
-            } else {
-                badge.classList.add('empty');
-                dropdown.innerHTML = '<div class="notification-item">No new mentions</div>';
-            }
-        }
-
-        // Initialize
-        loadProfileData();
-        updateNotifications();
-
-        // Demo: Add a sample mention (remove in production)
-        // addMention('retro_dev');
+        loadUserData();
     </script>
 </body>
 </html>
