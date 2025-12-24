@@ -1,12 +1,11 @@
-/* * GLOBAL_NET CHAT LOGIC (FIXED IMPORTS)
+/* * GLOBAL_NET CHAT LOGIC (FIXED)
  * Target: chat.html
  */
 
-// !!! FIXED IMPORTS: Switched to version 10.12.2 !!!
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove, set, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-console.log("Chat Script: Starting...");
+console.log("Chat Script: Loading...");
 
 // --- FIREBASE CONFIGURATION ---
 const firebaseConfig = {
@@ -20,15 +19,15 @@ const firebaseConfig = {
     measurementId: "G-GTN3TL1P2K"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// --- VARIABLES & SELECTORS ---
+// --- STATE ---
 const ADMINS = ['root', 'fb67'];
 const currentUser = localStorage.getItem('username') || 'Guest-' + Math.floor(Math.random()*1000);
 const isAdmin = ADMINS.includes(currentUser);
 
+// Map to your HTML IDs
 const dom = {
     messages: document.getElementById('chat-messages'),
     input: document.getElementById('msg-input'),
@@ -36,32 +35,32 @@ const dom = {
     userDisplay: document.getElementById('display-name')
 };
 
-// Display User Name
+// Set User Display Name in Menu
 if(dom.userDisplay) dom.userDisplay.innerText = currentUser;
 
-// --- CSS STYLES ---
+// --- CSS INJECTION (For Message Styling) ---
 const style = document.createElement('style');
 style.textContent = `
     .msg { margin-bottom: 8px; line-height: 1.2; word-wrap: break-word; }
-    .msg-meta { font-size: 0.8rem; color: #666; margin-right: 6px; }
-    .msg-user { color: #facc15; font-weight: bold; cursor: pointer; }
+    .msg-meta { font-size: 0.8rem; color: #bbb; margin-right: 6px; }
+    .msg-user { color: #facc15; font-weight: bold; cursor: pointer; text-shadow: 1px 1px 1px black; }
     .msg-user.admin { color: #ef4444; }
-    .msg-text { color: #e5e5e5; }
-    .admin-action { color: #ef4444; cursor: pointer; font-size: 0.7rem; margin-left: 5px; opacity: 0.7; }
+    .msg-text { color: #fff; text-shadow: 1px 1px 1px black; }
+    .admin-action { color: #ef4444; cursor: pointer; font-size: 0.7rem; margin-left: 5px; opacity: 0.8; background:black; padding:0 2px; }
     .admin-action:hover { opacity: 1; text-decoration: underline; }
 `;
 document.head.appendChild(style);
 
-// --- 1. LISTEN FOR MESSAGES ---
+// --- 1. MESSAGING LOGIC ---
+
 const messagesRef = ref(db, 'messages');
 
 onValue(messagesRef, (snapshot) => {
-    console.log("Data received from Firebase"); // Debug log
     const data = snapshot.val();
     dom.messages.innerHTML = ''; 
     
     if (!data) {
-        dom.messages.innerHTML = '<div style="opacity:0.5; text-align:center; margin-top: 10px;">No signal detected...</div>';
+        dom.messages.innerHTML = '<div style="opacity:0.7; text-align:center; color:#ccc;">No signal...</div>';
         return;
     }
 
@@ -91,11 +90,11 @@ onValue(messagesRef, (snapshot) => {
 
     dom.messages.scrollTop = dom.messages.scrollHeight;
 }, (error) => {
-    console.error("Firebase Read Error:", error);
-    dom.messages.innerHTML = '<div style="color:red">CONNECTION ERROR: ' + error.message + '</div>';
+    console.error(error);
 });
 
-// --- 2. SEND FUNCTION ---
+// --- 2. SENDING MESSAGES ---
+
 window.send = async function() {
     const text = dom.input.value.trim();
     if (!text) return;
@@ -110,7 +109,7 @@ window.send = async function() {
         dom.input.focus();
     } catch (e) {
         console.error("Send failed:", e);
-        alert("Transmission Error: " + e.message);
+        alert("Error sending message.");
     }
 };
 
@@ -118,7 +117,8 @@ dom.input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') window.send();
 });
 
-// --- 3. PRESENCE SYSTEM (USER COUNT) ---
+// --- 3. USER COUNTER ---
+
 const connectionsRef = ref(db, 'connections');
 const connectedRef = ref(db, '.info/connected');
 
@@ -134,7 +134,8 @@ onValue(connectionsRef, (snap) => {
     dom.count.innerText = snap.size || 0;
 });
 
-// --- 4. ADMIN DELETE ---
+// --- 4. ADMIN ACTIONS ---
+
 dom.messages.addEventListener('click', (e) => {
     if (e.target.classList.contains('delete-btn') && isAdmin) {
         if(confirm('Delete transmission?')) {
