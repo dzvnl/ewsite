@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REGISTER // NETWORK</title>
+    <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -100,29 +100,29 @@
 <body>
 
     <div class="register-card">
-        <h1>/// JOIN NETWORK ///</h1>
-        <p>CREATE YOUR IDENTITY</p>
+        <h1></h1>
+        <p>name</p>
 
         <div id="error-display" class="error-msg"></div>
 
         <div class="input-group">
-            <label>USERNAME</label>
+            <label>username</label>
             <input type="text" id="reg-username" placeholder="Enter username..." autocomplete="off">
         </div>
 
         <div class="input-group">
-            <label>PASSWORD</label>
+            <label>passworr</label>
             <input type="password" id="reg-password" placeholder="Create password...">
         </div>
 
         <div class="input-group">
-            <label>CONFIRM PASSWORD</label>
+            <label>one more time sorry</label>
             <input type="password" id="reg-confirm" placeholder="Repeat password...">
         </div>
 
-        <button onclick="handleRegister()">INITIALIZE ACCOUNT</button>
+        <button onclick="handleRegister()">sign up</button>
 
-        <a href="login.html" class="login-link">ALREADY HAVE AN ACCOUNT? LOGIN >></a>
+        <a href="login.html" class="login-link">login >></a>
     </div>
 
     <script type="module">
@@ -169,7 +169,7 @@
                 const snapshot = await get(userRef);
 
                 if (snapshot.exists()) {
-                    showError("USERNAME IS ALREADY TAKEN.");
+                    showError("try again");
                     return;
                 }
 
@@ -178,7 +178,7 @@
                 await set(userRef, {
                     password: password,
                     joined: Date.now(),
-                    bio: "New user.",
+                    bio: "new user.",
                     pfp: "https://placehold.co/150x150/111/facc15?text=" + username.charAt(0).toUpperCase()
                 });
 
@@ -186,7 +186,6 @@
                 localStorage.setItem('username', username);
 
                 // 5. Success
-                alert("ACCOUNT CREATED. WELCOME, " + username);
                 window.location.href = 'index.html';
 
             } catch (err) {
