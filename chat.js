@@ -1,11 +1,12 @@
-/* * GLOBAL_NET CHAT LOGIC (FIXED)
+/* * GLOBAL_NET CHAT LOGIC (STABLE v9.23)
  * Target: chat.html
  */
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, set, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+// We use v9.23.0 which is highly stable for CDN usage
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, remove, set, onDisconnect } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-console.log("Chat Script: Loading...");
+console.log("System: Initializing Global_Net...");
 
 // --- FIREBASE CONFIGURATION ---
 const firebaseConfig = {
@@ -19,52 +20,97 @@ const firebaseConfig = {
     measurementId: "G-GTN3TL1P2K"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// --- STATE ---
+// --- VARIABLES ---
 const ADMINS = ['root', 'fb67'];
 const currentUser = localStorage.getItem('username') || 'Guest-' + Math.floor(Math.random()*1000);
 const isAdmin = ADMINS.includes(currentUser);
 
-// Map to your HTML IDs
+// DOM Elements
 const dom = {
     messages: document.getElementById('chat-messages'),
     input: document.getElementById('msg-input'),
     count: document.getElementById('user-count'),
-    userDisplay: document.getElementById('display-name')
+    userDisplay: document.getElementById('display-name'),
+    sendBtn: document.querySelector('#chat-input-area button') // Grab the button explicitly
 };
 
-// Set User Display Name in Menu
+// Set UI Name
 if(dom.userDisplay) dom.userDisplay.innerText = currentUser;
 
-// --- CSS INJECTION (For Message Styling) ---
+// --- CSS STYLES (Dynamic) ---
 const style = document.createElement('style');
 style.textContent = `
     .msg { margin-bottom: 8px; line-height: 1.2; word-wrap: break-word; }
-    .msg-meta { font-size: 0.8rem; color: #bbb; margin-right: 6px; }
-    .msg-user { color: #facc15; font-weight: bold; cursor: pointer; text-shadow: 1px 1px 1px black; }
+    .msg-meta { font-size: 0.8rem; color: #ddd; margin-right: 6px; }
+    .msg-user { color: #facc15; font-weight: bold; cursor: pointer; text-shadow: 1px 1px 2px black; }
     .msg-user.admin { color: #ef4444; }
-    .msg-text { color: #fff; text-shadow: 1px 1px 1px black; }
-    .admin-action { color: #ef4444; cursor: pointer; font-size: 0.7rem; margin-left: 5px; opacity: 0.8; background:black; padding:0 2px; }
-    .admin-action:hover { opacity: 1; text-decoration: underline; }
+    .msg-text { color: #fff; text-shadow: 1px 1px 2px black; }
+    .admin-action { color: #ef4444; cursor: pointer; font-size: 0.7rem; margin-left: 5px; background: rgba(0,0,0,0.5); padding: 0 4px; }
 `;
 document.head.appendChild(style);
 
-// --- 1. MESSAGING LOGIC ---
 
+// --- 1. SENDING FUNCTION ---
+
+// Defined as a standalone function first
+async function sendMessage() {
+    console.log("Action: Attempting send..."); // Debug Log
+    const text = dom.input.value.trim();
+    
+    if (!text) {
+        console.log("Action Aborted: Empty text");
+        return;
+    }
+
+    try {
+        const messagesRef = ref(db, 'messages');
+        await push(messagesRef, {
+            user: currentUser,
+            text: text.substring(0, 300),
+            time: Date.now()
+        });
+        
+        console.log("Success: Message sent.");
+        dom.input.value = '';
+        dom.input.focus();
+    } catch (e) {
+        console.error("FIREBASE ERROR:", e);
+        alert("Transmission Failed: " + e.message);
+    }
+}
+
+// Attach to Window so HTML onclick works
+window.send = sendMessage;
+
+// Also attach listener to button directly (backup method)
+if (dom.sendBtn) dom.sendBtn.addEventListener('click', sendMessage);
+
+// Enter key support
+dom.input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+});
+
+
+// --- 2. RECEIVING MESSAGES ---
 const messagesRef = ref(db, 'messages');
 
 onValue(messagesRef, (snapshot) => {
+    console.log("Network: Data received"); // Debug Log
     const data = snapshot.val();
     dom.messages.innerHTML = ''; 
     
     if (!data) {
-        dom.messages.innerHTML = '<div style="opacity:0.7; text-align:center; color:#ccc;">No signal...</div>';
+        dom.messages.innerHTML = '<div style="opacity:0.7; text-align:center; color:#ccc; margin-top:20px;">Signal Empty...</div>';
         return;
     }
 
+    // Convert object to array
     const msgList = Object.keys(data).map(key => ({ ...data[key], id: key }));
+    // Sort by time
     msgList.sort((a, b) => a.time - b.time);
 
     msgList.forEach(msg => {
@@ -73,52 +119,29 @@ onValue(messagesRef, (snapshot) => {
         
         let adminControls = '';
         if (isAdmin) {
-            adminControls = `<span class="admin-action delete-btn" data-id="${msg.id}">[DEL]</span>`;
+            adminControls = `<span class="admin-action delete-btn" data-id="${msg.id}">DEL</span>`;
         }
 
         const time = new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        const userClass = ADMINS.includes(msg.user) ? 'msg-user admin' : 'msg-user';
-
+        
         el.innerHTML = `
             <span class="msg-meta">${time}</span>
-            <span class="${userClass}">${escapeHtml(msg.user)}:</span>
+            <span class="msg-user ${ADMINS.includes(msg.user) ? 'admin' : ''}">${escapeHtml(msg.user)}:</span>
             <span class="msg-text">${escapeHtml(msg.text)}</span>
             ${adminControls}
         `;
         dom.messages.appendChild(el);
     });
 
+    // Scroll to bottom
     dom.messages.scrollTop = dom.messages.scrollHeight;
 }, (error) => {
-    console.error(error);
+    console.error("Read Error:", error);
+    dom.messages.innerHTML = `<div style="color:red">CONNECTION ERROR: ${error.message}</div>`;
 });
 
-// --- 2. SENDING MESSAGES ---
 
-window.send = async function() {
-    const text = dom.input.value.trim();
-    if (!text) return;
-
-    try {
-        await push(messagesRef, {
-            user: currentUser,
-            text: text.substring(0, 300),
-            time: Date.now()
-        });
-        dom.input.value = '';
-        dom.input.focus();
-    } catch (e) {
-        console.error("Send failed:", e);
-        alert("Error sending message.");
-    }
-};
-
-dom.input.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') window.send();
-});
-
-// --- 3. USER COUNTER ---
-
+// --- 3. PRESENCE (USER COUNT) ---
 const connectionsRef = ref(db, 'connections');
 const connectedRef = ref(db, '.info/connected');
 
@@ -134,8 +157,8 @@ onValue(connectionsRef, (snap) => {
     dom.count.innerText = snap.size || 0;
 });
 
-// --- 4. ADMIN ACTIONS ---
 
+// --- 4. ADMIN TOOLS ---
 dom.messages.addEventListener('click', (e) => {
     if (e.target.classList.contains('delete-btn') && isAdmin) {
         if(confirm('Delete transmission?')) {
