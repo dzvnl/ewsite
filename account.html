@@ -1,18 +1,17 @@
-<!-- account.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>account</title>
+    <title>account // canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
+        /* --- CORE STYLES --- */
         html, body { 
             height: 100%; 
-            scroll-behavior: smooth; 
             margin: 0;
-            overflow: hidden;
+            overflow-x: hidden; /* Prevent horizontal scroll */
         }
         body {
             font-family: 'VT323', monospace;
@@ -27,179 +26,298 @@
             font-family: 'VT323', monospace;
             font-smooth: never;
             -webkit-font-smoothing: none;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+
+        /* --- LAYOUT GRID (MySpace Style) --- */
+        .main-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            display: grid;
+            grid-template-columns: 320px 1fr; /* Left Sidebar | Right Content */
+            gap: 20px;
+            padding: 0 20px;
+            align-items: start;
+        }
+
+        /* --- SHARED BOX STYLES --- */
+        .content-box {
+            background-color: rgba(10, 10, 10, 0.9);
+            border: 1px solid #444;
+            margin-bottom: 20px;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.5);
         }
         
-        .account-container {
-            background-color: rgba(0, 0, 0, 0.85);
-            border: 2px solid #969696;
-            padding: 2rem;
-            max-width: 600px;
-            width: 90%;
-            margin: 4rem auto;
-        }
-        
-        .profile-header {
+        .box-header {
+            background-color: #facc15; /* Yellow Header */
+            color: #000;
+            padding: 4px 10px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            text-transform: uppercase;
             display: flex;
-            gap: 2rem;
-            align-items: center;
-            margin-bottom: 2rem;
+            justify-content: space-between;
         }
-        
-        .profile-picture-box {
-            width: 128px;
-            height: 128px;
-            background-color: #111;
-            border: 2px dotted #969696;
-            flex-shrink: 0;
+
+        .box-body {
+            padding: 15px;
+        }
+
+        /* --- LEFT COLUMN SPECIFICS --- */
+        .profile-pic-container {
+            width: 100%;
+            height: 300px;
+            border-bottom: 1px solid #444;
+            overflow: hidden;
+            position: relative;
+        }
+        .profile-pic-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             image-rendering: pixelated;
         }
         
-        .profile-info {
-            flex: 1;
-        }
-        
-        .username-display {
-            font-size: 2.5rem;
-            color: #facc15;
-            margin-bottom: 0.5rem;
-        }
-        
-        .user-bio {
-            font-size: 1.25rem;
-            color: #969696;
-            margin-bottom: 1.5rem;
-        }
-        
-        .user-stats {
-            display: flex;
-            gap: 2rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .stat-value {
-            font-size: 2rem;
-            color: #facc15;
-        }
-        
-        .stat-label {
+        .status-indicator {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: #00ff00;
+            color: #000;
+            padding: 0 5px;
             font-size: 1rem;
-            color: #969696;
+            box-shadow: 2px 2px 0 #000;
         }
-        
-        .section-title {
-            font-size: 1.75rem;
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dotted #333;
+            font-size: 1.25rem;
+        }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-val { color: #facc15; }
+
+        /* --- RIGHT COLUMN SPECIFICS --- */
+        .username-header {
+            font-size: 3rem;
+            line-height: 1;
             color: #facc15;
-            margin-bottom: 1rem;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 0 #000;
         }
-        
-        .admin-panel {
-            margin-top: 2rem;
-            padding: 1.5rem;
-            background-color: rgba(20, 20, 20, 0.9);
-            border: 2px solid #facc15;
+        .user-tagline {
+            color: #969696;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
         }
-        
-        .user-list-item {
+
+        .bio-text {
+            font-size: 1.2rem;
+            line-height: 1.4;
+            color: #ccc;
+            white-space: pre-wrap; /* Keeps line breaks */
+        }
+
+        /* --- ADMIN & NAV --- */
+        .nav-bar {
+            background: rgba(0,0,0,0.9);
+            border-bottom: 1px solid #333;
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.75rem 0;
-            border-bottom: 1px dotted #969696;
         }
-        
+        .nav-link { color: #facc15; text-decoration: none; font-size: 1.25rem; margin-right: 20px; }
+        .nav-link:hover { text-decoration: underline; color: #fff; }
+
+        .admin-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: #1a1a1a;
+            margin-bottom: 5px;
+            border: 1px solid #333;
+        }
         .admin-btn {
-            background-color: rgba(250, 204, 21, 0.2);
-            border: 1px solid #facc15;
-            color: #facc15;
-            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid #ef4444;
+            color: #ef4444;
             cursor: pointer;
-            font-family: 'VT323', monospace;
+            padding: 2px 8px;
+            font-family: inherit;
         }
-        
-        .admin-btn:hover {
-            background-color: #facc15;
-            color: #000;
+        .admin-btn:hover { background: #ef4444; color: #fff; }
+
+        /* --- MOBILE --- */
+        @media (max-width: 768px) {
+            .main-container { grid-template-columns: 1fr; }
+            .profile-pic-container { height: 250px; }
         }
     </style>
 </head>
 <body>
-    <div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
-        <p>2.0</p>
+
+    <div class="nav-bar pixel-font">
+        <div>
+            <a href="index.html" class="nav-link"><<home</a>
+            <a href="chat.html" class="nav-link">chat</a>
+        </div>
+        <div class="text-yellow-400">canvas 2.0</div>
     </div>
 
-    <div class="account-container pixel-font">
-        <div class="profile-header">
-            <img id="profilePicture" class="profile-picture-box" src="https://placehold.co/128x128/000000/333333?text=..." alt="Profile Picture">
-            <div class="profile-info">
-                <div class="username-display" id="usernameDisplay">@username</div>
-                <div class="user-bio" id="userBio">No bio yet.</div>
-                <div class="user-stats">
-                    <div>
-                        <div class="stat-value" id="postCount">0</div>
-                        <div class="stat-label">POSTS</div>
+    <div class="main-container pixel-font">
+        
+        <aside class="left-col">
+            
+            <div class="content-box">
+                <div class="box-header">
+                    <span>Identity</span>
+                    <span>[ID]</span>
+                </div>
+                <div class="profile-pic-container">
+                    <img id="profilePicture" src="https://placehold.co/400x400/000000/333333?text=NO+IMG&font=vt323" alt="PFP">
+                    <div class="status-indicator">ONLINE</div>
+                </div>
+                <div class="box-body">
+                    <div class="stat-row">
+                        <span>activity</span>
+                        <span class="stat-val" id="postCount">0</span>
                     </div>
-                    <div>
-                        <div class="stat-value" id="followerCount">0</div>
-                        <div class="stat-label">FOLLOWERS</div>
+                    <div class="stat-row">
+                        <span>followers</span>
+                        <span class="stat-val" id="followerCount">0</span>
                     </div>
-                    <div>
-                        <div class="stat-value" id="followingCount">0</div>
-                        <div class="stat-label">FOLLOWING</div>
+                    <div class="stat-row">
+                        <span>following</span>
+                        <span class="stat-val" id="followingCount">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>joined</span>
+                        <span class="stat-val">2024</span>
+                    </div>
+                    
+                    <div style="margin-top: 15px; text-align: center;">
+                         <button class="admin-btn" style="border-color: #facc15; color: #facc15; width: 100%;">EDIT PROFILE</button>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="section-title">RECENT ACTIVITY</div>
-        <div id="activityFeed" style="color: #969696; font-size: 1.25rem;">
-            <p>[No recent activity yet.]</p>
-        </div>
+            <div class="content-box">
+                <div class="box-header">Connect</div>
+                <div class="box-body" style="display: flex; flex-direction: column; gap: 5px;">
+                    <a href="#" class="nav-link" style="color: #999; font-size: 1rem;">> Send Message</a>
+                    <a href="#" class="nav-link" style="color: #999; font-size: 1rem;">> Add to Friends</a>
+                    <a href="#" class="nav-link" style="color: #999; font-size: 1rem;">> Block User</a>
+                </div>
+            </div>
 
-        <div id="adminPanel" style="display: none;">
-            <div class="section-title">ADMIN PANEL</div>
-            <div id="userList"></div>
-        </div>
+        </aside>
+
+        <main class="right-col">
+            
+            <div style="margin-bottom: 20px;">
+                <div class="username-header" id="usernameDisplay">LOADING...</div>
+                <div class="user-tagline">"Insert a cool quote or lyric here..."</div>
+            </div>
+
+            <div id="adminPanel" class="content-box" style="display: none; border-color: #facc15;">
+                <div class="box-header" style="background-color: #ef4444; color: white;">
+                    <span>panel</span>
+                    <span>[ROOT]</span>
+                </div>
+                <div class="box-body">
+                    <p style="margin-bottom: 10px; color: #facc15;">// USER_MANAGEMENT_SYSTEM</p>
+                    <div id="userList"></div>
+                </div>
+            </div>
+
+            <div class="content-box">
+                <div class="box-header">
+                    <span>About Me</span>
+                    <span>[-]</span>
+                </div>
+                <div class="box-body">
+                    <div class="bio-text" id="userBio">
+                        Loading bio information...
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-box">
+                <div class="box-header">
+                    <span>Recent Activity</span>
+                    <span>[LOGS]</span>
+                </div>
+                <div class="box-body" id="activityFeed">
+                    <div style="color: #666; padding: 20px; text-align: center; border: 1px dashed #333;">
+                        [ NO RECENT NEURAL ACTIVITY DETECTED ]
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-box">
+                <div class="box-header">
+                    <span>Friend Space</span>
+                    <span>[Top 8]</span>
+                </div>
+                <div class="box-body">
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                        <div style="background: #111; height: 80px; border: 1px solid #333;"></div>
+                        <div style="background: #111; height: 80px; border: 1px solid #333;"></div>
+                        <div style="background: #111; height: 80px; border: 1px solid #333;"></div>
+                        <div style="background: #111; height: 80px; border: 1px solid #333;"></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
     </div>
 
     <script>
-        // Set random background like index
+        // --- 1. BACKGROUND LOGIC ---
         const specialBg = '81853ABB-FB87-4A20-9303-9624B777245B.jpeg';
         const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg', 'IMG_5264.jpeg', 'IMG_4945.jpeg'];
         const chance = Math.floor(Math.random() * 100); 
         let chosenBg = (chance === 0) ? specialBg : normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
         document.body.style.backgroundImage = `url('${chosenBg}')`;
 
-        // Redirect if not logged in
+        // --- 2. AUTH CHECK ---
         const currentUser = localStorage.getItem('username');
         if (!currentUser) {
             window.location.href = 'login.html';
-            return;
         }
 
-        // Load user data
+        // --- 3. DATA LOADING ---
         function loadUserData() {
             const users = JSON.parse(localStorage.getItem('users') || '{}');
             const userData = users[currentUser] || {};
             
+            // Populate Text
             document.getElementById('usernameDisplay').textContent = currentUser;
-            document.getElementById('userBio').textContent = userData.bio || 'No bio yet.';
+            document.getElementById('userBio').textContent = userData.bio || 'User has not initialized bio protocol yet.';
+            
+            // Populate Stats
             document.getElementById('postCount').textContent = userData.posts || 0;
             document.getElementById('followerCount').textContent = userData.followers || 0;
             document.getElementById('followingCount').textContent = userData.following || 0;
             
+            // Populate Image
             const profilePic = document.getElementById('profilePicture');
             if (userData.profilePicUrl) {
                 profilePic.src = userData.profilePicUrl;
             }
             
-            // Admin check
-            if (currentUser === 'root' || currentUser === 'fb67') {
+            // Admin Check
+            if (currentUser === 'root' || currentUser === 'fb67' || currentUser === '-nl' || currentUser === 'admin') {
                 document.getElementById('adminPanel').style.display = 'block';
                 renderAdminPanel(users);
             }
         }
 
+        // --- 4. ADMIN FUNCTIONS ---
         function renderAdminPanel(users) {
             const userList = document.getElementById('userList');
             userList.innerHTML = '';
@@ -208,11 +326,11 @@
                 if (username === currentUser) return; // Skip self
                 
                 const item = document.createElement('div');
-                item.className = 'user-list-item';
+                item.className = 'admin-row';
                 item.innerHTML = `
-                    <span>${username} ${users[username].muted ? '(Muted)' : ''}</span>
+                    <span style="color: #ccc;">${username} ${users[username].muted ? '<span style="color:red">[MUTED]</span>' : ''}</span>
                     <button class="admin-btn" onclick="toggleMute('${username}')">
-                        ${users[username].muted ? 'Unmute' : 'Mute'}
+                        ${users[username].muted ? 'UNMUTE' : 'MUTE'}
                     </button>
                 `;
                 userList.appendChild(item);
@@ -221,11 +339,14 @@
 
         window.toggleMute = function(username) {
             const users = JSON.parse(localStorage.getItem('users'));
-            users[username].muted = !users[username].muted;
-            localStorage.setItem('users', JSON.stringify(users));
-            renderAdminPanel(users);
+            if(users[username]) {
+                users[username].muted = !users[username].muted;
+                localStorage.setItem('users', JSON.stringify(users));
+                renderAdminPanel(users);
+            }
         };
 
+        // Initialize
         loadUserData();
     </script>
 </body>
