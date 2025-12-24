@@ -1,5 +1,5 @@
+<!-- login.html -->
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 
-```
 <style>
     html, body { 
         height: 100%; 
@@ -98,7 +97,6 @@
         color: #facc15;
     }
 </style>
-```
 
 </head>
 <body>
@@ -106,7 +104,6 @@
         <p>2.0</p>
     </div>
 
-```
 <div class="flex items-center justify-center min-h-screen p-4">
     <div class="login-container pixel-font">
         <h1 class="text-4xl text-yellow-400 mb-6 text-center" id="form-title">sign in</h1>
@@ -239,7 +236,7 @@
 
     function handleSignUp(username, password) {
         // Get existing users
-        const users = JSON.parse(localStorage.getItem('users') || '{}');
+        let users = JSON.parse(localStorage.getItem('users') || '{}');
         
         // Check if username already exists
         if (users[username]) {
@@ -247,8 +244,17 @@
             return;
         }
         
-        // Store new user
-        users[username] = password;
+        // Store new user with full profile
+        users[username] = {
+            password,
+            bio: '',
+            profilePicUrl: '',
+            email: '',
+            posts: 0,
+            followers: 0,
+            following: 0,
+            muted: false
+        };
         localStorage.setItem('users', JSON.stringify(users));
         
         // Log the user in
@@ -270,7 +276,7 @@
             return;
         }
         
-        if (users[username] !== password) {
+        if (users[username].password !== password) {
             showError('incorrect password');
             return;
         }
@@ -299,7 +305,6 @@
         successMessage.style.display = 'none';
     }
 </script>
-```
 
 </body>
 </html>
