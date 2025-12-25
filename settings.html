@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SETTINGS // CONFIG</title>
+    <title>settings</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -119,39 +119,39 @@
 <body>
 
     <div class="settings-card">
-        <h1>/// CONFIGURATION ///</h1>
+        <h1>config</h1>
 
         <img id="pfp-preview" class="preview-img" src="https://placehold.co/100x100/111/facc15?text=?">
 
         <div class="form-group">
-            <label>USERNAME (CANNOT CHANGE)</label>
+            <label>name (cant change)</label>
             <input type="text" id="username-field" readonly>
         </div>
 
         <div class="form-group">
-            <label>PROFILE PICTURE URL</label>
+            <label>profile pic/icon url</label>
             <input type="text" id="pfp-field" placeholder="https://example.com/image.jpg" oninput="updatePreview()">
         </div>
 
         <div class="form-group">
-            <label>BIO / STATUS</label>
+            <label>bio</label>
             <textarea id="bio-field" placeholder="Enter your bio..."></textarea>
         </div>
 
         <div class="divider"><span>SECURITY</span></div>
 
         <div class="form-group">
-            <label>NEW PASSWORD (LEAVE EMPTY TO KEEP CURRENT)</label>
+            <label>change password?)</label>
             <input type="text" id="new-pass-field" placeholder="Enter new password...">
         </div>
 
         <div class="form-group">
-            <label style="color:#ef4444;">* CONFIRM CURRENT PASSWORD TO SAVE</label>
+            <label style="color:#ef4444;">* current password (needed to save)</label>
             <input type="password" id="current-pass-field" placeholder="Required to make changes...">
         </div>
 
-        <button class="btn save-btn" onclick="saveSettings()">[ SAVE CHANGES ]</button>
-        <button class="btn cancel-btn" onclick="goBack()">CANCEL / RETURN</button>
+        <button class="btn save-btn" onclick="saveSettings()">save</button>
+        <button class="btn cancel-btn" onclick="goBack()">go back</button>
     </div>
 
     <script type="module">
