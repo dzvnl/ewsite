@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas_os</title>
+    <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 
@@ -173,7 +173,7 @@
 
 <div id="os-window">
     <div id="window-header">
-        <div id="window-title">C:\USERS\EWS\CANVAS.EXE</div>
+        <div id="window-title"></div>
         <div class="window-controls">
             <div class="win-btn" onclick="minimizeWindow()">_</div>
             <div class="win-btn" onclick="toggleFullscreen()">[]</div>
@@ -185,7 +185,7 @@
         <div id="site-wrapper">
             
             <div id="top-bar">
-                <span id="welcome-message">Welcome, ?</span>
+                <span id="welcome-message">welcome, ?</span>
                 <a href="account.html">(my account)</a>
             </div>
 
@@ -194,13 +194,13 @@
             </div>
 
             <div id="nav">
-                <a href="index.html" class="nav-link">HOME</a>
-                <a href="list.html" class="nav-link">LIST</a>
+                <a href="index.html" class="nav-link">home</a>
+                <a href="list.html" class="nav-link">list</a>
                 
                 <div class="dropdown">
-                    <span class="nav-link" style="color: #facc15;">RADIO ▼</span>
+                    <span class="nav-link" style="color: #facc15;">music ▼</span>
                     <div class="dropdown-content">
-                        <div style="color: #fff; margin-bottom: 10px; font-size: 18px;">PLAYER CONTROLS</div>
+                        <div style="color: #fff; margin-bottom: 10px; font-size: 18px;"></div>
                         <button id="rewind-btn" class="player-btn">[&lt;&lt;]</button>
                         <button id="play-pause-btn" class="player-btn">[&gt;]</button>
                         <button id="skip-btn" class="player-btn">[&gt;&gt;]</button>
@@ -208,15 +208,15 @@
                     </div>
                 </div>
 
-                <a href="chat.html" class="nav-link">CHAT</a>
-                <a href="settings.html" class="nav-link">SETTINGS</a>
+                <a href="chat.html" class="nav-link">chat</a>
+                <a href="settings.html" class="nav-link">settings</a>
             </div>
 
             <div id="content">
                 
                 <div id="hero">
                     <div class="bg-img" style="background-image: url('https://placehold.co/960x250/111/000?text=.');"></div>
-                    <p id="splash-text">Loading...</p>
+                    <p id="splash-text">loading</p>
                 </div>
 
                 <div class="grid-container">
@@ -239,7 +239,7 @@
                         <div class="box h-half" style="border-color: #555;">
                             <div style="z-index: 2; text-align: center; padding: 10px;">
                                 <img id="player-cover-art" src="" style="width: 60px; height: 60px; border: 1px solid #fff; margin: 0 auto 10px;">
-                                <div style="font-size: 14px; color: #b91c1c;">NOW PLAYING:</div>
+                                <div style="font-size: 14px; color: #b91c1c;">playing:</div>
                                 <div id="player-title" style="color: #fff; font-size: 18px;">...</div>
                                 <div id="player-artist" style="color: #888; font-size: 14px;">Loading...</div>
                             </div>
@@ -249,15 +249,15 @@
                     <div class="col">
                         <a href="settings.html" class="box h-half">
                             <div class="bg-img" style="background-image: url('https://placehold.co/300x200/222/000?text=.');"></div>
-                            <h2>SETTINGS</h2>
-                            <p>Config</p>
+                            <h2>settings</h2>
+                            <p>config</p>
                         </a>
                         
                         <div class="box h-half">
                             <div style="z-index: 2; text-align: center;">
-                                <h2 style="font-size: 24px;">V 2.0</h2>
-                                <p>EWS Live 2025</p>
-                                <a href="chat.html" style="color: #b91c1c; font-size: 14px; margin-top: 5px;">Check Updates</a>
+                                <h2 style="font-size: 24px;">2.0</h2>
+                                <p></p>
+                                <a href="chat.html" style="color: #b91c1c; font-size: 14px; margin-top: 5px;">updates</a>
                             </div>
                         </div>
                     </div>
@@ -269,7 +269,7 @@
 </div>
 
 <div id="taskbar">
-    <button id="restore-btn" onclick="restoreWindow()">[ RESTORE SYSTEM ]</button>
+    <button id="restore-btn" onclick="restoreWindow()"></button>
 </div>
 
 <audio id="audio-player"></audio>
@@ -311,7 +311,7 @@
             splashEl.classList.add('alert-mode');
         } else {
             splashEl.classList.remove('alert-mode');
-            if (splashEl.innerText.includes("ALERT") || splashEl.innerText === "Loading...") {
+            if (splashEl.innerText.includes("announcement") || splashEl.innerText === "loading...") {
                 splashEl.innerText = randomSplashes[Math.floor(Math.random() * randomSplashes.length)];
             }
         }
