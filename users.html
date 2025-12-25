@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>database // users</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'VT323', monospace;
+            color: #e5e5e5;
+            background-color: #000;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- HEADER --- */
+        .header-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto 30px auto;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: #facc15;
+            line-height: 1;
+            margin: 0;
+            text-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
+        }
+
+        /* --- SEARCH --- */
+        .filter-input {
+            background: #111;
+            border: 1px solid #444;
+            color: #fff;
+            font-family: 'VT323';
+            font-size: 1.5rem;
+            padding: 5px 10px;
+            width: 250px;
+        }
+        .filter-input:focus { outline: none; border-color: #facc15; }
+
+        /* --- GRID LAYOUT --- */
+        .user-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* --- USER CARD --- */
+        .user-card {
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #333;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-card:hover {
+            border-color: #facc15;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+        }
+
+        /* Special borders for roles */
+        .user-card.is-founder { border-color: #c084fc; }
+        .user-card.is-founder:hover { box-shadow: 0 0 10px rgba(192, 132, 252, 0.3); }
+        
+        .user-card.is-admin { border-color: #ef4444; }
+
+        .card-pfp {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border: 1px solid #555;
+            margin-bottom: 10px;
+            background: #000;
+        }
+
+        .card-name {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 5px;
+            word-break: break-all;
+            text-align: center;
+        }
+
+        .card-role {
+            font-size: 1rem;
+            text-transform: uppercase;
+            padding: 0 5px;
+            margin-bottom: 5px;
+        }
+        .role-founder { color: #c084fc; border: 1px solid #c084fc; }
+        .role-admin { color: #ef4444; border: 1px solid #ef4444; }
+
+        .card-bio {
+            color: #888;
+            font-size: 1rem;
+            text-align: center;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Limit to 2 lines */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.1;
+        }
+
+        .nav-back {
+            display: block;
+            width: 100%;
+            max-width: 900px;
+            margin: 20px auto;
+            color: #666;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        .nav-back:hover { color: #facc15; }
+        
+        #loading-text { font-size: 1.5rem; color: #666; text-align: center; width: 100%; }
+
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="nav-back"><< RETURN_HOME</a>
+
+    <div class="header-container">
+        <h1>USER_DATABASE</h1>
+        <input type="text" id="filterInput" class="filter-input" placeholder="Filter users..." onkeyup="filterUsers()">
+    </div>
+
+    <div id="userGrid" class="user-grid">
+        <div id="loading-text">Fetching data packets...</div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+        // --- CONFIG (Same as your other files) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
+            authDomain: "ewsitechat.firebaseapp.com",
+            databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
+            projectId: "ewsitechat",
+            storageBucket: "ewsitechat.firebasestorage.app",
+            messagingSenderId: "282495574514",
+            appId: "1:282495574514:web:e2781da630d93fc1ce8b6b"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // --- ROLES (Keep these synced with your other files) ---
+        const FOUNDERS = ['root', '-nl', 'futtbucker67']; 
+        const ADMINS = ['root', 'fb67', '-nl'];
+
+        const grid = document.getElementById('userGrid');
+        let allUsers = []; // Store data here for filtering
+
+        // Set background randomly
+        const bgs = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg'];
+        document.body.style.backgroundImage = `url('${bgs[Math.floor(Math.random()*bgs.length)]}')`;
+
+        async function fetchUsers() {
+            const usersRef = ref(db, 'users');
+            try {
+                const snapshot = await get(usersRef);
+                grid.innerHTML = ''; // Clear loading text
+
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    
+                    // Convert object to array for sorting/filtering
+                    allUsers = Object.keys(data).map(key => {
+                        return { username: key, ...data[key] };
+                    });
+
+                    // Render all initially
+                    renderList(allUsers);
+                } else {
+                    grid.innerHTML = '<div style="color:#ef4444">NO DATA FOUND</div>';
+                }
+            } catch (error) {
+                console.error(error);
+                grid.innerHTML = '<div style="color:#ef4444">CONNECTION ERROR</div>';
+            }
+        }
+
+        function renderList(users) {
+            grid.innerHTML = '';
+            
+            // Sort: Founders first, then Admins, then A-Z
+            users.sort((a, b) => {
+                const aFounder = FOUNDERS.includes(a.username);
+                const bFounder = FOUNDERS.includes(b.username);
+                if (aFounder && !bFounder) return -1;
+                if (!aFounder && bFounder) return 1;
+                return 0;
+            });
+
+            users.forEach(user => {
+                const card = document.createElement('div');
+                
+                // Determine CSS classes for roles
+                let roleHTML = '';
+                let borderClass = '';
+
+                if (FOUNDERS.includes(user.username)) {
+                    roleHTML = '<div class="card-role role-founder">FOUNDER</div>';
+                    borderClass = 'is-founder';
+                } else if (ADMINS.includes(user.username)) {
+                    roleHTML = '<div class="card-role role-admin">ADMIN</div>';
+                    borderClass = 'is-admin';
+                }
+
+                card.className = `user-card ${borderClass}`;
+                
+                // On click, go to their profile
+                card.onclick = () => window.location.href = `account.html?user=${user.username}`;
+
+                // Default PFP if missing
+                const pfpSrc = user.pfp ? user.pfp : 'https://placehold.co/100x100/111/444?text=?';
+                const bioText = user.bio ? user.bio : 'No bio established.';
+
+                card.innerHTML = `
+                    <img src="${pfpSrc}" class="card-pfp" alt="${user.username}">
+                    ${roleHTML}
+                    <div class="card-name">${user.username}</div>
+                    <div class="card-bio">${bioText}</div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        // --- SEARCH FUNCTION ---
+        window.filterUsers = () => {
+            const input = document.getElementById('filterInput').value.toLowerCase();
+            const filtered = allUsers.filter(user => user.username.toLowerCase().includes(input));
+            renderList(filtered);
+        };
+
+        // Start
+        fetchUsers();
+
+    </script>
+</body>
+</html>
