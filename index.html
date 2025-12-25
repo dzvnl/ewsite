@@ -8,218 +8,176 @@
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 
 <style>
-    /* --- RESET & BASIC SETUP --- */
+    /* --- RESET & BASICS --- */
     * { box-sizing: border-box; }
     html, body { height: 100%; margin: 0; padding: 0; }
     
     body {
         font-family: 'VT323', monospace;
-        color: #cccccc;
+        color: #e5e5e5;
         background-color: #000000; 
-        background-image: url('IMG_4928.jpeg'); /* Default, JS will update */
+        background-image: url('IMG_4928.jpeg'); /* JS will override */
         background-size: cover;
         background-attachment: fixed;
         background-position: center;
         overflow-y: scroll;
     }
 
-    /* --- THE WRAPPER (800px Fixed Width like 2007) --- */
+    /* --- LAYOUT CONTAINER (Fixed width like the image) --- */
     #site-wrapper {
-        width: 900px;
+        width: 960px;
         margin: 0 auto;
-        background-color: #000;
+        background-color: rgba(0, 0, 0, 0.95);
         border-left: 1px solid #333;
         border-right: 1px solid #333;
         min-height: 100vh;
-        position: relative;
         box-shadow: 0 0 50px #000;
+        display: flex;
+        flex-direction: column;
     }
 
-    /* --- TOP TINY BAR --- */
-    #top-ticker {
-        height: 20px;
+    /* --- TOP BAR --- */
+    #top-bar {
+        height: 25px;
         background: #000;
-        text-align: right;
-        padding-right: 10px;
-        font-size: 14px;
-        color: #999;
         border-bottom: 1px solid #333;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 0 10px;
+        font-size: 14px;
+        color: #888;
     }
-    #top-ticker a { text-decoration: none; color: #999; margin-left: 10px; }
-    #top-ticker a:hover { color: #fff; }
+    #top-bar a { color: #888; margin-left: 15px; text-decoration: none; }
+    #top-bar a:hover { color: #fff; }
 
     /* --- HEADER --- */
     #header {
-        height: 80px;
-        background: linear-gradient(to bottom, #3f0000, #000);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 20px;
-        position: relative;
-    }
-    .logo-text { font-size: 32px; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
-    .logo-text span { color: #b91c1c; } /* Red accent */
-    
-    /* Center Badge (The Bat Logo Replacement) */
-    .center-badge {
-        position: absolute;
-        left: 50%;
-        top: 10px;
-        transform: translateX(-50%);
-        width: 80px;
-        height: 80px;
-        background: #000;
-        border: 2px solid #b91c1c;
-        border-radius: 50%;
-        z-index: 10;
+        height: 100px;
+        background: linear-gradient(to bottom, #450a0a, #000);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #b91c1c;
-        font-size: 24px;
-        box-shadow: 0 0 10px #b91c1c;
+        border-bottom: 2px solid #b91c1c;
+        position: relative;
+    }
+    #header h1 {
+        font-size: 60px;
+        color: #fff;
+        text-shadow: 0 0 10px #b91c1c;
+        margin: 0;
+        line-height: 1;
     }
 
-    /* --- NAVIGATION BAR --- */
-    #nav-bar {
-        height: 30px;
+    /* --- NAV BAR --- */
+    #nav {
         background: #000;
-        border-top: 1px solid #333;
         border-bottom: 1px solid #333;
         display: flex;
-        justify-content: center; /* Centered like image */
-        align-items: center;
-        gap: 30px;
-        position: relative;
-        z-index: 50; /* Above Hero */
+        justify-content: center;
+        gap: 40px;
+        padding: 10px 0;
     }
     .nav-link {
-        color: #fff;
-        text-transform: uppercase;
+        color: #ccc;
+        font-size: 24px;
         text-decoration: none;
-        font-size: 18px;
+        text-transform: uppercase;
         cursor: pointer;
     }
-    .nav-link:hover { color: #b91c1c; }
+    .nav-link:hover { color: #b91c1c; text-shadow: 0 0 5px #b91c1c; }
 
-    /* --- RADIO DROPDOWN --- */
+    /* --- DROPDOWN (Music Player) --- */
     .dropdown { position: relative; display: inline-block; }
     .dropdown-content {
         display: none;
         position: absolute;
-        top: 25px;
+        top: 100%;
         left: 50%;
         transform: translateX(-50%);
         background-color: #111;
-        min-width: 250px;
-        border: 2px solid #fff;
-        padding: 10px;
+        min-width: 260px;
+        border: 2px solid #b91c1c;
+        padding: 15px;
         z-index: 100;
         text-align: center;
+        box-shadow: 0 10px 20px rgba(0,0,0,1);
     }
     .dropdown:hover .dropdown-content { display: block; }
-
-    /* Player Controls inside Dropdown */
-    .p-btn { background: none; border: none; color: #facc15; font-size: 20px; cursor: pointer; margin: 0 5px; }
-    .p-btn:hover { color: #fff; }
-    #volume-slider { width: 100%; margin-top: 5px; height: 5px; accent-color: #b91c1c; }
+    
+    .player-btn { background: none; border: none; color: #facc15; font-size: 22px; cursor: pointer; margin: 0 5px; }
+    .player-btn:hover { color: #fff; }
+    #volume-slider { width: 100%; margin-top: 10px; accent-color: #b91c1c; cursor: pointer; }
 
     /* --- MAIN CONTENT GRID --- */
-    #content-area { padding: 10px; }
+    #content { padding: 20px; flex-grow: 1; }
 
-    /* The "Hero" Box (Calendar Girls style) */
-    #hero-box {
+    /* Hero Box (Top Box) */
+    #hero {
         width: 100%;
-        height: 250px;
-        border: 2px solid #fff;
-        margin-bottom: 10px;
-        position: relative;
-        background: radial-gradient(circle at 30% 50%, #500000, #000);
-        overflow: hidden;
-    }
-    #hero-circle {
-        position: absolute;
-        left: -30px;
-        top: 20px;
-        width: 200px;
-        height: 200px;
-        border: 4px solid #b47d3e; /* Goldish */
-        border-radius: 50%;
-        background: rgba(100,0,0,0.5);
+        height: 220px;
+        border: 2px solid #333;
+        background: radial-gradient(circle, #222, #000);
         display: flex;
         align-items: center;
         justify-content: center;
-        transform: rotate(-10deg);
-        box-shadow: 0 0 20px #000;
+        margin-bottom: 20px;
+        position: relative;
     }
-    .hero-text-area {
-        position: absolute;
-        right: 40px;
-        top: 60px;
-        text-align: right;
+    #splash-text {
+        font-size: 32px;
+        color: #facc15;
+        text-align: center;
+        padding: 20px;
     }
 
-    /* --- 3 COLUMN BOTTOM GRID --- */
+    /* 3-Column Grid */
     .grid-container {
         display: grid;
-        grid-template-columns: 280px 280px 290px; /* Specific widths to fill 900px approx */
-        gap: 10px;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+        height: 400px; /* Fixed height for the row */
     }
-    
-    .grid-col { display: flex; flex-direction: column; gap: 10px; }
 
-    /* Common Box Style */
-    .content-box {
-        border: 2px solid #fff;
+    /* Grid Items */
+    .col { display: flex; flex-direction: column; gap: 20px; height: 100%; }
+    
+    .box {
+        border: 2px solid #333;
+        background: #0a0a0a;
         position: relative;
-        background: #0d0d0d;
         overflow: hidden;
+        transition: border-color 0.2s;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-decoration: none;
     }
-    .content-box:hover { border-color: #b91c1c; cursor: pointer; }
+    .box:hover { border-color: #b91c1c; }
+
+    /* Specific Box Heights */
+    .h-full { height: 100%; }
+    .h-half { height: 50%; }
+
+    /* Box Content */
+    .box h2 { color: #fff; font-size: 32px; margin: 0; z-index: 2; }
+    .box p { color: #888; font-size: 18px; margin: 0; z-index: 2; }
     
-    .box-header {
+    /* Background Images for Boxes (Dimmed) */
+    .bg-img {
         position: absolute;
-        top: 5px;
-        left: 5px;
-        background: #fff;
-        color: #000;
-        padding: 0 5px;
-        font-weight: bold;
-        font-size: 16px;
-        z-index: 5;
+        inset: 0;
+        opacity: 0.3;
+        background-size: cover;
+        background-position: center;
+        z-index: 1;
+        transition: opacity 0.3s;
     }
-
-    /* Specific Heights matching image */
-    .tall-box { height: 300px; } /* Left col */
-    .medium-box { height: 180px; } /* Center/Right top */
-    .small-box { height: 110px; } /* Center/Right bottom */
-
-    /* Inner Typography */
-    .box-inner-text {
-        position: absolute;
-        bottom: 10px;
-        left: 10px;
-        z-index: 5;
-    }
-    .box-big-title { font-size: 28px; color: #fff; line-height: 1; text-shadow: 2px 2px 0 #000; }
-    .box-sub { color: #999; font-size: 14px; }
-    .btn-action { 
-        background: #b91c1c; color: #fff; padding: 2px 6px; 
-        font-size: 14px; display: inline-block; margin-top: 5px;
-    }
-
-    /* Image Placeholders (Gradients to mimic photos) */
-    .bg-band { background: linear-gradient(to bottom, transparent, #000), url('https://placehold.co/280x300/111/333?text=B-LIVE'); background-size: cover; }
-    .bg-swim { background: linear-gradient(to bottom, transparent, #000), url('https://placehold.co/280x180/111/333?text=LIST'); background-size: cover; }
-    .bg-settings { background: linear-gradient(to bottom, transparent, #000), url('https://placehold.co/290x180/111/333?text=SETTINGS'); background-size: cover; }
-    
-    /* MP3 Box Specifics */
-    .mp3-box { background: #000; border: 2px solid #fff; height: 110px; padding: 10px; display: flex; align-items: center; }
-    #now-playing-cover { width: 80px; height: 80px; border: 1px solid #555; margin-right: 10px; }
+    .box:hover .bg-img { opacity: 0.5; }
 
     /* Alert Animation */
-    .alert-mode { color: #ef4444; text-shadow: 0 0 10px #ef4444; animation: pulse 1.5s infinite; }
+    .alert-mode { color: #ef4444 !important; text-shadow: 0 0 10px #ef4444; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
 </style>
@@ -227,118 +185,91 @@
 <body>
 
 <div id="site-wrapper">
-
-    <div id="top-ticker">
+    
+    <div id="top-bar">
         <span id="welcome-message">Welcome, ?</span>
-        <a href="account.html">(MY ACCOUNT)</a>
-        <a href="#">CONTACT US</a>
+        <a href="account.html">(my account)</a>
     </div>
 
     <div id="header">
-        <div class="logo-text">EWS <span>LIVE</span></div>
-        <div class="center-badge">
-            <img src="https://placehold.co/60x60/000000/b91c1c?text=BAT&font=vt323" style="border-radius:50%">
-        </div>
-        <div class="logo-text" style="font-size:18px; color: #666;">THE GIRLS | GALLERY</div>
+        <h1>canvas</h1>
     </div>
 
-    <div id="nav-bar">
-        <a href="index.html" class="nav-link">home</a>
-        <a href="list.html" class="nav-link">list</a>
-        <a href="chat.html" class="nav-link">chat</a>
+    <div id="nav">
+        <a href="index.html" class="nav-link">HOME</a>
+        <a href="list.html" class="nav-link">LIST</a>
         
         <div class="dropdown">
             <span class="nav-link" style="color: #facc15;">RADIO ▼</span>
             <div class="dropdown-content">
-                <div style="color: #fff; margin-bottom: 5px;">PLAYER CONTROLS</div>
-                <button id="rewind-btn" class="p-btn">[&lt;&lt;]</button>
-                <button id="play-pause-btn" class="p-btn">[&gt;]</button>
-                <button id="skip-btn" class="p-btn">[&gt;&gt;]</button>
+                <div style="color: #fff; margin-bottom: 10px; font-size: 18px;">PLAYER CONTROLS</div>
+                <button id="rewind-btn" class="player-btn">[&lt;&lt;]</button>
+                <button id="play-pause-btn" class="player-btn">[&gt;]</button>
+                <button id="skip-btn" class="player-btn">[&gt;&gt;]</button>
                 <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
             </div>
         </div>
 
+        <a href="chat.html" class="nav-link">CHAT</a>
         <a href="settings.html" class="nav-link">SETTINGS</a>
     </div>
 
-    <div id="content-area">
-
-        <div id="hero-box">
-            <div id="hero-circle">
-                <div style="color: #facc15; font-size: 30px; text-align: center; line-height: 0.9;">
-                    EWS<br><span style="font-size: 50px; color: #fff;">Girls</span>
-                </div>
-            </div>
-            
-            <div class="hero-text-area">
-                <div style="font-size: 24px; color: #fff;">Check out the new</div>
-                <div id="splash-text" style="font-size: 48px; color: #fff; font-weight: bold;">Loading...</div>
-                <div class="btn-action" style="float: right;">ENTER IN &gt;</div>
-            </div>
+    <div id="content">
+        
+        <div id="hero">
+            <div class="bg-img" style="background-image: url('https://placehold.co/960x250/111/000?text=.');"></div>
+            <p id="splash-text">Loading...</p>
         </div>
 
         <div class="grid-container">
             
-            <div class="grid-col">
-                <a href="chat.html" class="content-box tall-box bg-band">
-                    <div class="box-header">B-LIVE</div>
-                    <div class="box-inner-text">
-                        <div class="box-big-title">VEGAS REWIND!</div>
-                        <div class="box-sub">Join the Discussion</div>
-                        <div class="btn-action">LISTEN IN!</div>
-                    </div>
+            <div class="col">
+                <a href="chat.html" class="box h-full">
+                    <div class="bg-img" style="background-image: url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcHJhZ2Z0bnZ4eGp3eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L20mbc7yRRFja/giphy.gif');"></div>
+                    <h2>chat</h2>
+                    <p>open</p>
                 </a>
             </div>
 
-            <div class="grid-col">
-                <a href="list.html" class="content-box medium-box bg-swim">
-                    <div class="box-header">Swim Upstream</div>
-                    <div class="box-inner-text">
-                        <div class="box-big-title">THE LIST?</div>
-                        <div class="box-sub">Are you in?</div>
-                        <div class="btn-action">VIEW LIST</div>
-                    </div>
+            <div class="col">
+                <a href="list.html" class="box h-half">
+                    <div class="bg-img" style="background-image: url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0bnZ4eGp3eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o6vXVzKWtk4JC6bcU/giphy.gif');"></div>
+                    <h2>LIST</h2>
+                    <p>View</p>
                 </a>
                 
-                <div class="content-box small-box mp3-box">
-                    <img id="now-playing-cover" src="" alt="cover">
-                    <div style="flex:1; overflow: hidden;">
-                        <div style="color: #b91c1c; font-weight: bold; margin-bottom: 2px;">NOW PLAYING:</div>
-                        <div id="player-title" style="color: #fff; font-size: 18px; white-space: nowrap;">...</div>
-                        <div id="player-artist" style="color: #666; font-size: 14px;">Loading...</div>
-                        <div style="font-size: 12px; color: #facc15; margin-top: 5px;">FREE MP3 DOWNLOAD!</div>
+                <div class="box h-half" style="border-color: #555;">
+                    <div style="z-index: 2; text-align: center; padding: 10px;">
+                        <img id="player-cover-art" src="" style="width: 60px; height: 60px; border: 1px solid #fff; margin: 0 auto 10px;">
+                        <div style="font-size: 14px; color: #b91c1c;">NOW PLAYING:</div>
+                        <div id="player-title" style="color: #fff; font-size: 18px;">...</div>
+                        <div id="player-artist" style="color: #888; font-size: 14px;">Loading...</div>
                     </div>
                 </div>
             </div>
 
-            <div class="grid-col">
-                <a href="settings.html" class="content-box medium-box bg-settings">
-                    <div class="box-header">CHALLENGE</div>
-                    <div class="box-inner-text">
-                        <div class="box-big-title">SETTINGS</div>
-                        <div class="box-sub">Customize your exp.</div>
-                        <div class="btn-action">ENTER NOW</div>
-                    </div>
+            <div class="col">
+                <a href="settings.html" class="box h-half">
+                    <div class="bg-img" style="background-image: url('https://placehold.co/300x200/222/000?text=.');"></div>
+                    <h2>SETTINGS</h2>
+                    <p>Config</p>
                 </a>
-
-                <div class="content-box small-box" style="background: #fff; border: 2px solid #ccc;">
-                    <div style="padding: 10px; color: #000; text-align: center;">
-                        <div style="font-weight: bold; font-size: 20px;">VERSION 2.0</div>
-                        <img src="https://placehold.co/100x50/333/fff?text=iPOD" style="margin: 5px auto; display: block;">
-                        <a href="chat.html" style="background: #b91c1c; color: #fff; padding: 2px 5px; text-decoration: none;">DOWNLOAD IT!</a>
+                
+                <div class="box h-half">
+                    <div style="z-index: 2; text-align: center;">
+                        <h2 style="font-size: 24px;">V 2.0</h2>
+                        <p>EWS Live 2025</p>
+                        <a href="chat.html" style="color: #b91c1c; font-size: 14px; margin-top: 5px;">Check Updates</a>
                     </div>
                 </div>
             </div>
 
-        </div> </div> <div style="padding: 10px; color: #444; font-size: 12px; text-align: center;">
-        EWS Live 2025. Check the DOWNLOAD Section.
+        </div>
     </div>
-
 </div>
 
 <audio id="audio-player"></audio>
 <div id="player-info-container" style="display:none;"></div>
-<img id="player-cover-art" style="display:none;" src=""> 
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -357,6 +288,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // --- SPLASH LOGIC ---
     const splashEl = document.getElementById('splash-text');
     const randomSplashes = [
         "blacked out like an lv sandal", "son", "bbq chicken alert", 
@@ -364,10 +296,10 @@
         "considering a page", "long live futtbucker", "six seven", "oh brother..",
         "are you even an ew student?", "i bet ur failing", "get the bawlls!!",
         "six one", "add jiggletip on clash", "new stuff soon",
-        "WE yes WE are brainless and failing", "updates soon.. -nl", "no super seniors", "considering a chat board"
+        "WE yes WE are brainless and failing", "updates soon.. -nl", "no super seniors", "merry christmas, and happy update day"
     ];
-    const announcementRef = ref(db, 'admin/announcement');
 
+    const announcementRef = ref(db, 'admin/announcement');
     onValue(announcementRef, (snapshot) => {
         const data = snapshot.val();
         if (data && data.text) {
@@ -425,7 +357,8 @@
     document.addEventListener('DOMContentLoaded', () => {
         const playerTitleEl = document.getElementById('player-title');
         const playerArtistEl = document.getElementById('player-artist');
-        const nowPlayingCover = document.getElementById('now-playing-cover');
+        const playerCoverArt = document.getElementById('player-cover-art');
+        const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
 
         try {
             // --- BACKGROUND LOGIC ---
@@ -437,9 +370,14 @@
 
             // --- USER UI ---
             const welcomeMessage = document.getElementById('welcome-message');
+
             function updateUI() {
                 let username = localStorage.getItem('username');
-                welcomeMessage.textContent = username ? `Welcome, ${username}` : 'Welcome, ?';
+                if (username) {
+                    welcomeMessage.textContent = `Welcome, ${username}`;
+                } else {
+                    welcomeMessage.textContent = 'Welcome, ?';
+                }
             }
             updateUI();
 
@@ -449,8 +387,7 @@
             const rewindBtn = document.getElementById('rewind-btn');
             const skipBtn = document.getElementById('skip-btn');
             const volumeSlider = document.getElementById('volume-slider');
-            const placeholderCover = "https://placehold.co/80x80/000000/333333?text=...&font=vt323";
-
+            
             let currentSongIndex = 0;
             let isPlaying = false;
 
@@ -463,12 +400,15 @@
 
             function loadSong(songIndex) {
                 const song = (songIndex === -1) ? secretSong : playlist[songIndex];
-                if (!song || !song.src || !song.cover) { skipSong(true); return; }
+                if (!song || !song.src || !song.cover) {
+                    skipSong(true); 
+                    return;
+                }
 
                 audioPlayer.src = song.src; 
                 playerTitleEl.textContent = song.title;
                 playerArtistEl.textContent = song.artist;
-                nowPlayingCover.src = song.cover;
+                playerCoverArt.src = song.cover;
                 playPauseBtn.textContent = '[>]';
                 isPlaying = false;
             }
@@ -476,12 +416,15 @@
             function playSong() {
                 if (!audioPlayer.src) { return; }
                 audioPlayer.volume = volumeSlider.value; 
+
                 const playPromise = audioPlayer.play();
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
                         playPauseBtn.textContent = '[||]';
                         isPlaying = true;
-                    }).catch(console.warn);
+                    }).catch(error => {
+                        console.warn("Auto-play blocked", error);
+                    });
                 }
             }
 
@@ -511,7 +454,7 @@
                 if (audioPlayer.src) { playSong(); }
             }
 
-            // --- STORAGE ---
+            // --- STORAGE SAVE/LOAD ---
             window.addEventListener('beforeunload', () => {
                 if (audioPlayer.currentTime > 0) {
                     const musicState = {
@@ -527,7 +470,10 @@
             function loadInitialState() {
                 const savedStateJSON = sessionStorage.getItem('musicPlayerState');
                 let savedState = null;
-                try { savedState = JSON.parse(savedStateJSON); } catch (e) {}
+                if (savedStateJSON) {
+                    try { savedState = JSON.parse(savedStateJSON); } 
+                    catch (e) { sessionStorage.removeItem('musicPlayerState'); }
+                }
 
                 if (savedState) {
                     currentSongIndex = savedState.currentSongIndex;
@@ -539,8 +485,10 @@
                         if (savedState.isPlaying) { playSong(); }
                     }, { once: true }); 
                 } else {
-                    currentSongIndex = Math.floor(Math.random() * playlist.length);
+                    const rareSongChance = Math.floor(Math.random() * 50);
+                    currentSongIndex = (rareSongChance === 0) ? -1 : Math.floor(Math.random() * playlist.length);
                     loadSong(currentSongIndex);
+                    audioPlayer.volume = volumeSlider.value;
                 }
             }
 
@@ -549,12 +497,12 @@
             rewindBtn.addEventListener('click', rewindSong);
             volumeSlider.addEventListener('input', (e) => { audioPlayer.volume = e.target.value; });
             audioPlayer.addEventListener('ended', () => skipSong(false));
-            nowPlayingCover.addEventListener('error', () => { nowPlayingCover.src = placeholderCover; });
+            playerCoverArt.addEventListener('error', () => { playerCoverArt.src = placeholderCover; });
 
             loadInitialState();
 
         } catch (e) {
-            console.error(e);
+            console.error("Script error:", e);
         }
     });
 </script>
