@@ -3,252 +3,342 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EWS LIVE</title>
+    <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 
 <style>
-    /* --- CORE STYLES --- */
-    html, body { 
-        height: 100%; 
-        margin: 0;
-        padding: 0;
-    }
+    /* --- RESET & BASIC SETUP --- */
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; padding: 0; }
+    
     body {
         font-family: 'VT323', monospace;
-        color: #e5e5e5;
+        color: #cccccc;
         background-color: #000000; 
+        background-image: url('IMG_4928.jpeg'); /* Default, JS will update */
         background-size: cover;
-        background-repeat: no-repeat;
         background-attachment: fixed;
         background-position: center;
-        overflow-y: scroll; /* Force scrollbar for 2000s feel */
-    }
-    
-    .pixel-font {
-        font-family: 'VT323', monospace;
-        -webkit-font-smoothing: none;
+        overflow-y: scroll;
     }
 
-    /* --- LAYOUT CONTAINER (The 2000s Box Look) --- */
-    #main-container {
-        max-width: 1024px;
+    /* --- THE WRAPPER (800px Fixed Width like 2007) --- */
+    #site-wrapper {
+        width: 900px;
         margin: 0 auto;
+        background-color: #000;
+        border-left: 1px solid #333;
+        border-right: 1px solid #333;
         min-height: 100vh;
-        background: rgba(0, 0, 0, 0.95);
-        box-shadow: 0 0 50px rgba(0,0,0,1);
-        border-left: 2px solid #333;
-        border-right: 2px solid #333;
         position: relative;
+        box-shadow: 0 0 50px #000;
     }
 
-    /* --- ALERT STYLES --- */
-    .alert-mode {
-        color: #ef4444 !important; 
-        text-shadow: 0 0 10px #ef4444;
-        font-weight: bold;
-        animation: pulse 1.5s infinite;
+    /* --- TOP TINY BAR --- */
+    #top-ticker {
+        height: 20px;
+        background: #000;
+        text-align: right;
+        padding-right: 10px;
+        font-size: 14px;
+        color: #999;
+        border-bottom: 1px solid #333;
     }
-    @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.5; }
-        100% { opacity: 1; }
+    #top-ticker a { text-decoration: none; color: #999; margin-left: 10px; }
+    #top-ticker a:hover { color: #fff; }
+
+    /* --- HEADER --- */
+    #header {
+        height: 80px;
+        background: linear-gradient(to bottom, #3f0000, #000);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        position: relative;
+    }
+    .logo-text { font-size: 32px; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
+    .logo-text span { color: #b91c1c; } /* Red accent */
+    
+    /* Center Badge (The Bat Logo Replacement) */
+    .center-badge {
+        position: absolute;
+        left: 50%;
+        top: 10px;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 80px;
+        background: #000;
+        border: 2px solid #b91c1c;
+        border-radius: 50%;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #b91c1c;
+        font-size: 24px;
+        box-shadow: 0 0 10px #b91c1c;
     }
 
-    /* --- NAVIGATION & DROPDOWN PLAYER --- */
-    .nav-item {
+    /* --- NAVIGATION BAR --- */
+    #nav-bar {
+        height: 30px;
+        background: #000;
+        border-top: 1px solid #333;
+        border-bottom: 1px solid #333;
+        display: flex;
+        justify-content: center; /* Centered like image */
+        align-items: center;
+        gap: 30px;
         position: relative;
-        display: inline-block;
+        z-index: 50; /* Above Hero */
+    }
+    .nav-link {
+        color: #fff;
+        text-transform: uppercase;
+        text-decoration: none;
+        font-size: 18px;
         cursor: pointer;
     }
+    .nav-link:hover { color: #b91c1c; }
 
-    /* The Dropdown Container (Hidden by default) */
+    /* --- RADIO DROPDOWN --- */
+    .dropdown { position: relative; display: inline-block; }
     .dropdown-content {
         display: none;
         position: absolute;
-        top: 100%;
+        top: 25px;
         left: 50%;
         transform: translateX(-50%);
-        background-color: #1a0505; /* Dark Red/Black */
-        min-width: 280px;
-        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.8);
-        border: 2px solid #b91c1c; /* Red Border */
-        z-index: 100;
+        background-color: #111;
+        min-width: 250px;
+        border: 2px solid #fff;
         padding: 10px;
-        text-align: left;
+        z-index: 100;
+        text-align: center;
     }
+    .dropdown:hover .dropdown-content { display: block; }
 
-    /* Show the dropdown on hover */
-    .nav-item:hover .dropdown-content {
-        display: block;
-    }
+    /* Player Controls inside Dropdown */
+    .p-btn { background: none; border: none; color: #facc15; font-size: 20px; cursor: pointer; margin: 0 5px; }
+    .p-btn:hover { color: #fff; }
+    #volume-slider { width: 100%; margin-top: 5px; height: 5px; accent-color: #b91c1c; }
 
-    /* --- PLAYER INTERNALS --- */
-    #player-cover-art {
+    /* --- MAIN CONTENT GRID --- */
+    #content-area { padding: 10px; }
+
+    /* The "Hero" Box (Calendar Girls style) */
+    #hero-box {
         width: 100%;
-        height: 150px;
-        object-fit: cover;
-        border: 1px solid #555;
-        margin-bottom: 8px;
-        image-rendering: pixelated;
-    }
-    .player-controls-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 5px;
-        background: #000;
-        padding: 5px;
-        border: 1px solid #333;
-    }
-    .player-controls-row button {
-        color: #facc15; /* Gold */
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        cursor: pointer;
-    }
-    .player-controls-row button:hover { color: #fff; text-shadow: 0 0 5px #fff; }
-    
-    #volume-slider {
-        width: 100%;
-        margin-top: 10px;
-        accent-color: #facc15;
-    }
-    
-    /* --- GRID BOXES STYLING --- */
-    .content-box {
-        border: 2px solid #b91c1c; /* Red border like the image */
-        background: radial-gradient(circle, #2a0a0a 0%, #000000 100%);
+        height: 250px;
+        border: 2px solid #fff;
+        margin-bottom: 10px;
         position: relative;
+        background: radial-gradient(circle at 30% 50%, #500000, #000);
         overflow: hidden;
-        transition: transform 0.2s;
     }
-    .content-box:hover {
-        border-color: #facc15; /* Gold on hover */
-    }
-    .box-title {
-        background: rgba(185, 28, 28, 0.8);
-        color: white;
-        padding: 2px 8px;
+    #hero-circle {
         position: absolute;
-        top: 10px;
-        left: 0;
-        font-size: 1.2rem;
-        text-transform: uppercase;
+        left: -30px;
+        top: 20px;
+        width: 200px;
+        height: 200px;
+        border: 4px solid #b47d3e; /* Goldish */
+        border-radius: 50%;
+        background: rgba(100,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform: rotate(-10deg);
+        box-shadow: 0 0 20px #000;
     }
+    .hero-text-area {
+        position: absolute;
+        right: 40px;
+        top: 60px;
+        text-align: right;
+    }
+
+    /* --- 3 COLUMN BOTTOM GRID --- */
+    .grid-container {
+        display: grid;
+        grid-template-columns: 280px 280px 290px; /* Specific widths to fill 900px approx */
+        gap: 10px;
+    }
+    
+    .grid-col { display: flex; flex-direction: column; gap: 10px; }
+
+    /* Common Box Style */
+    .content-box {
+        border: 2px solid #fff;
+        position: relative;
+        background: #0d0d0d;
+        overflow: hidden;
+    }
+    .content-box:hover { border-color: #b91c1c; cursor: pointer; }
+    
+    .box-header {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        background: #fff;
+        color: #000;
+        padding: 0 5px;
+        font-weight: bold;
+        font-size: 16px;
+        z-index: 5;
+    }
+
+    /* Specific Heights matching image */
+    .tall-box { height: 300px; } /* Left col */
+    .medium-box { height: 180px; } /* Center/Right top */
+    .small-box { height: 110px; } /* Center/Right bottom */
+
+    /* Inner Typography */
+    .box-inner-text {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        z-index: 5;
+    }
+    .box-big-title { font-size: 28px; color: #fff; line-height: 1; text-shadow: 2px 2px 0 #000; }
+    .box-sub { color: #999; font-size: 14px; }
+    .btn-action { 
+        background: #b91c1c; color: #fff; padding: 2px 6px; 
+        font-size: 14px; display: inline-block; margin-top: 5px;
+    }
+
+    /* Image Placeholders (Gradients to mimic photos) */
+    .bg-band { background: linear-gradient(to bottom, transparent, #000), url('https://placehold.co/280x300/111/333?text=B-LIVE'); background-size: cover; }
+    .bg-swim { background: linear-gradient(to bottom, transparent, #000), url('https://placehold.co/280x180/111/333?text=LIST'); background-size: cover; }
+    .bg-settings { background: linear-gradient(to bottom, transparent, #000), url('https://placehold.co/290x180/111/333?text=SETTINGS'); background-size: cover; }
+    
+    /* MP3 Box Specifics */
+    .mp3-box { background: #000; border: 2px solid #fff; height: 110px; padding: 10px; display: flex; align-items: center; }
+    #now-playing-cover { width: 80px; height: 80px; border: 1px solid #555; margin-right: 10px; }
+
+    /* Alert Animation */
+    .alert-mode { color: #ef4444; text-shadow: 0 0 10px #ef4444; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
 </style>
 </head>
 <body>
 
-<div id="main-container">
-    
-    <div class="flex justify-between items-center px-4 py-1 text-gray-400 text-sm border-b border-gray-800 bg-black">
-        <div class="flex gap-4">
-            <span class="hover:text-white cursor-pointer">JOIN THE LIST</span>
-            <span class="hover:text-white cursor-pointer">BOOKMARK</span>
-        </div>
-        <div class="text-right">
-            <span id="welcome-message">Welcome, ?</span>
-            <a href="account.html" id="account-link" class="ml-2 text-red-500 hover:text-red-300">(my account)</a>
-        </div>
+<div id="site-wrapper">
+
+    <div id="top-ticker">
+        <span id="welcome-message">Welcome, ?</span>
+        <a href="account.html">(MY ACCOUNT)</a>
+        <a href="#">CONTACT US</a>
     </div>
 
-    <header class="relative h-24 bg-gradient-to-b from-red-900 to-black flex items-center justify-center border-b-4 border-black">
-        <div class="absolute -bottom-6 bg-black rounded-full p-2 border-2 border-red-700 z-20">
-             <div class="w-20 h-20 rounded-full bg-red-900 flex items-center justify-center border-2 border-yellow-600 shadow-lg shadow-red-900/50">
-                <span class="text-3xl text-yellow-500 font-bold drop-shadow-md">EWS</span>
-             </div>
+    <div id="header">
+        <div class="logo-text">EWS <span>LIVE</span></div>
+        <div class="center-badge">
+            <img src="https://placehold.co/60x60/000000/b91c1c?text=BAT&font=vt323" style="border-radius:50%">
         </div>
-    </header>
+        <div class="logo-text" style="font-size:18px; color: #666;">THE GIRLS | GALLERY</div>
+    </div>
 
-    <nav class="bg-black text-xl lg:text-2xl text-gray-300 border-b border-red-800 pt-8 pb-2">
-        <ul class="flex justify-center flex-wrap gap-8 lg:gap-12 uppercase tracking-widest">
-            <li class="hover:text-red-500 hover:scale-110 transition-all"><a href="index.html">Home</a></li>
-            <li class="hover:text-red-500 hover:scale-110 transition-all"><a href="list.html">List</a></li>
-            
-            <li class="nav-item text-yellow-500 font-bold border-b-2 border-transparent hover:border-yellow-500">
-                RADIO ▼
-                <div class="dropdown-content pixel-font text-base normal-case">
-                    <img id="player-cover-art" src="https://placehold.co/64x64/000000/333333?text=...&font=vt323" alt="Album Cover">
-                    <div id="player-title" class="text-white text-lg truncate">Select a Song</div>
-                    <div id="player-artist" class="text-gray-400 text-sm truncate mb-2">...</div>
-                    
-                    <div class="player-controls-row">
-                        <button id="rewind-btn" title="Previous">&lt;&lt;</button>
-                        <button id="play-pause-btn" title="Play/Pause">[&gt;]</button>
-                        <button id="skip-btn" title="Next">&gt;&gt;</button>
-                    </div>
-                    <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" title="Volume">
-                    <div class="text-center text-xs text-gray-500 mt-2">v2.0 Player</div>
-                </div>
-            </li>
-
-            <li class="hover:text-red-500 hover:scale-110 transition-all"><a href="chat.html">Chat</a></li>
-            <li class="hover:text-red-500 hover:scale-110 transition-all"><a href="settings.html">Settings</a></li>
-        </ul>
-    </nav>
-
-    <div class="p-4 md:p-8 space-y-6">
+    <div id="nav-bar">
+        <a href="index.html" class="nav-link">home</a>
+        <a href="list.html" class="nav-link">list</a>
+        <a href="chat.html" class="nav-link">chat</a>
         
-        <div class="content-box w-full h-64 md:h-80 flex flex-col items-center justify-center text-center p-6 relative group">
-            <div class="absolute inset-0 bg-gradient-to-r from-red-900/40 to-black/80 z-0"></div>
-            <div class="z-10 relative transform group-hover:scale-105 transition-transform">
-                <div class="text-yellow-500 text-2xl md:text-3xl mb-2" style="font-family: serif; font-style: italic;">EWS Live Presents</div>
-                <h1 id="splash-text" class="text-4xl md:text-6xl font-bold text-white drop-shadow-[0_2px_2px_rgba(255,0,0,0.8)]">Loading...</h1>
-                <div class="mt-4 text-gray-400 text-lg">Check out the new updates</div>
-            </div>
-             <div class="absolute bottom-4 right-4 rotate-12 border-2 border-white/20 p-2 text-white/30 text-xs">
-                EST. 2025
+        <div class="dropdown">
+            <span class="nav-link" style="color: #facc15;">RADIO ▼</span>
+            <div class="dropdown-content">
+                <div style="color: #fff; margin-bottom: 5px;">PLAYER CONTROLS</div>
+                <button id="rewind-btn" class="p-btn">[&lt;&lt;]</button>
+                <button id="play-pause-btn" class="p-btn">[&gt;]</button>
+                <button id="skip-btn" class="p-btn">[&gt;&gt;]</button>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            
-            <a href="chat.html" class="content-box h-48 block group relative">
-                <div class="absolute inset-0 bg-[url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcHJhZ2Z0bnZ4eGp3eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L20mbc7yRRFja/giphy.gif')] bg-cover opacity-30 group-hover:opacity-60 transition-opacity"></div>
-                <div class="box-title">B-LIVE CHAT</div>
-                <div class="absolute bottom-4 left-4">
-                    <h3 class="text-2xl text-white font-bold group-hover:text-yellow-400">VEGAS REWIND!</h3>
-                    <p class="text-gray-400 leading-none">Join the discussion</p>
-                    <div class="mt-2 bg-red-800 text-white text-xs px-2 py-1 inline-block hover:bg-red-600">ENTER NOW</div>
-                </div>
-            </a>
-
-            <a href="list.html" class="content-box h-48 block group relative">
-                <div class="absolute inset-0 bg-[url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0bnZ4eGp3eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o6vXVzKWtk4JC6bcU/giphy.gif')] bg-cover opacity-30 group-hover:opacity-60 transition-opacity"></div>
-                <div class="box-title">SWIM UPSTREAM</div>
-                <div class="absolute bottom-4 left-4">
-                    <h3 class="text-2xl text-white font-bold group-hover:text-yellow-400">THE LIST</h3>
-                    <p class="text-gray-400 leading-none">Are you in?</p>
-                     <div class="mt-2 bg-white text-black text-xs px-2 py-1 inline-block font-bold">VIEW LIST</div>
-                </div>
-            </a>
-
-            <div class="content-box h-48 block group relative cursor-help" onclick="document.querySelector('.dropdown-content').style.display='block'">
-                <div class="absolute inset-0 bg-[url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnZ4eGp3eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/BlVnrxJgTGsUw/giphy.gif')] bg-cover opacity-20 group-hover:opacity-50 transition-opacity"></div>
-                <div class="box-title">MP3 DOWNLOAD</div>
-                <div class="absolute bottom-4 left-4">
-                    <h3 class="text-2xl text-white font-bold group-hover:text-yellow-400">FREE MUSIC</h3>
-                    <p class="text-gray-400 leading-none">Use the Radio Menu</p>
-                    <div class="mt-2 border border-yellow-500 text-yellow-500 text-xs px-2 py-1 inline-block">LISTEN IN</div>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="border-t-2 border-red-900 pt-4 pb-8 text-center text-gray-500 text-sm">
-             <a href="chat.html" class="hover:text-white mx-2">version 2.0</a> | 
-             <a href="#" class="hover:text-white mx-2">Contact Us</a> | 
-             <a href="#" class="hover:text-white mx-2">Terms</a>
-             <p class="mt-2 opacity-50">EWS Live © 2025. All Rights Reserved.</p>
-        </div>
+        <a href="settings.html" class="nav-link">SETTINGS</a>
     </div>
+
+    <div id="content-area">
+
+        <div id="hero-box">
+            <div id="hero-circle">
+                <div style="color: #facc15; font-size: 30px; text-align: center; line-height: 0.9;">
+                    EWS<br><span style="font-size: 50px; color: #fff;">Girls</span>
+                </div>
+            </div>
+            
+            <div class="hero-text-area">
+                <div style="font-size: 24px; color: #fff;">Check out the new</div>
+                <div id="splash-text" style="font-size: 48px; color: #fff; font-weight: bold;">Loading...</div>
+                <div class="btn-action" style="float: right;">ENTER IN &gt;</div>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            
+            <div class="grid-col">
+                <a href="chat.html" class="content-box tall-box bg-band">
+                    <div class="box-header">B-LIVE</div>
+                    <div class="box-inner-text">
+                        <div class="box-big-title">VEGAS REWIND!</div>
+                        <div class="box-sub">Join the Discussion</div>
+                        <div class="btn-action">LISTEN IN!</div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="grid-col">
+                <a href="list.html" class="content-box medium-box bg-swim">
+                    <div class="box-header">Swim Upstream</div>
+                    <div class="box-inner-text">
+                        <div class="box-big-title">THE LIST?</div>
+                        <div class="box-sub">Are you in?</div>
+                        <div class="btn-action">VIEW LIST</div>
+                    </div>
+                </a>
+                
+                <div class="content-box small-box mp3-box">
+                    <img id="now-playing-cover" src="" alt="cover">
+                    <div style="flex:1; overflow: hidden;">
+                        <div style="color: #b91c1c; font-weight: bold; margin-bottom: 2px;">NOW PLAYING:</div>
+                        <div id="player-title" style="color: #fff; font-size: 18px; white-space: nowrap;">...</div>
+                        <div id="player-artist" style="color: #666; font-size: 14px;">Loading...</div>
+                        <div style="font-size: 12px; color: #facc15; margin-top: 5px;">FREE MP3 DOWNLOAD!</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-col">
+                <a href="settings.html" class="content-box medium-box bg-settings">
+                    <div class="box-header">CHALLENGE</div>
+                    <div class="box-inner-text">
+                        <div class="box-big-title">SETTINGS</div>
+                        <div class="box-sub">Customize your exp.</div>
+                        <div class="btn-action">ENTER NOW</div>
+                    </div>
+                </a>
+
+                <div class="content-box small-box" style="background: #fff; border: 2px solid #ccc;">
+                    <div style="padding: 10px; color: #000; text-align: center;">
+                        <div style="font-weight: bold; font-size: 20px;">VERSION 2.0</div>
+                        <img src="https://placehold.co/100x50/333/fff?text=iPOD" style="margin: 5px auto; display: block;">
+                        <a href="chat.html" style="background: #b91c1c; color: #fff; padding: 2px 5px; text-decoration: none;">DOWNLOAD IT!</a>
+                    </div>
+                </div>
+            </div>
+
+        </div> </div> <div style="padding: 10px; color: #444; font-size: 12px; text-align: center;">
+        EWS Live 2025. Check the DOWNLOAD Section.
+    </div>
+
 </div>
 
 <audio id="audio-player"></audio>
 <div id="player-info-container" style="display:none;"></div>
+<img id="player-cover-art" style="display:none;" src=""> 
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -267,10 +357,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // --- SPLASH LOGIC ---
     const splashEl = document.getElementById('splash-text');
-
-    // Fallback Sprashes
     const randomSplashes = [
         "blacked out like an lv sandal", "son", "bbq chicken alert", 
         "trick or treat.. smell my.. donuts..", "100 perkaholic or pounded by a margwa",
@@ -279,19 +366,14 @@
         "six one", "add jiggletip on clash", "new stuff soon",
         "WE yes WE are brainless and failing", "updates soon.. -nl", "no super seniors", "considering a chat board"
     ];
-
-    // Listen to Admin Announcement
     const announcementRef = ref(db, 'admin/announcement');
 
     onValue(announcementRef, (snapshot) => {
         const data = snapshot.val();
-
         if (data && data.text) {
-            // ADMIN MODE
             splashEl.innerText =` ${data.text.toLowerCase()} `;
             splashEl.classList.add('alert-mode');
         } else {
-            // NORMAL MODE
             splashEl.classList.remove('alert-mode');
             if (splashEl.innerText.includes("ALERT") || splashEl.innerText === "Loading...") {
                 splashEl.innerText = randomSplashes[Math.floor(Math.random() * randomSplashes.length)];
@@ -343,8 +425,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const playerTitleEl = document.getElementById('player-title');
         const playerArtistEl = document.getElementById('player-artist');
-        // Hidden container logic support
-        const playerInfoContainer = document.getElementById('player-info-container'); 
+        const nowPlayingCover = document.getElementById('now-playing-cover');
 
         try {
             // --- BACKGROUND LOGIC ---
@@ -356,14 +437,9 @@
 
             // --- USER UI ---
             const welcomeMessage = document.getElementById('welcome-message');
-
             function updateUI() {
                 let username = localStorage.getItem('username');
-                if (username) {
-                    welcomeMessage.textContent = `Welcome, ${username}`;
-                } else {
-                    welcomeMessage.textContent = 'Welcome, ?';
-                }
+                welcomeMessage.textContent = username ? `Welcome, ${username}` : 'Welcome, ?';
             }
             updateUI();
 
@@ -373,8 +449,7 @@
             const rewindBtn = document.getElementById('rewind-btn');
             const skipBtn = document.getElementById('skip-btn');
             const volumeSlider = document.getElementById('volume-slider');
-            const playerCoverArt = document.getElementById('player-cover-art');
-            const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
+            const placeholderCover = "https://placehold.co/80x80/000000/333333?text=...&font=vt323";
 
             let currentSongIndex = 0;
             let isPlaying = false;
@@ -388,18 +463,12 @@
 
             function loadSong(songIndex) {
                 const song = (songIndex === -1) ? secretSong : playlist[songIndex];
-                if (!song || !song.src || !song.cover) {
-                    skipSong(true); 
-                    return;
-                }
+                if (!song || !song.src || !song.cover) { skipSong(true); return; }
 
                 audioPlayer.src = song.src; 
-                // Updating hidden container title for compatibility if needed
-                if(playerInfoContainer) playerInfoContainer.title = `${song.title} - ${song.artist}`; 
-                
                 playerTitleEl.textContent = song.title;
                 playerArtistEl.textContent = song.artist;
-                playerCoverArt.src = song.cover;
+                nowPlayingCover.src = song.cover;
                 playPauseBtn.textContent = '[>]';
                 isPlaying = false;
             }
@@ -407,15 +476,12 @@
             function playSong() {
                 if (!audioPlayer.src) { return; }
                 audioPlayer.volume = volumeSlider.value; 
-
                 const playPromise = audioPlayer.play();
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
                         playPauseBtn.textContent = '[||]';
                         isPlaying = true;
-                    }).catch(error => {
-                        console.warn("Auto-play blocked", error);
-                    });
+                    }).catch(console.warn);
                 }
             }
 
@@ -445,7 +511,7 @@
                 if (audioPlayer.src) { playSong(); }
             }
 
-            // --- STORAGE SAVE/LOAD ---
+            // --- STORAGE ---
             window.addEventListener('beforeunload', () => {
                 if (audioPlayer.currentTime > 0) {
                     const musicState = {
@@ -461,10 +527,7 @@
             function loadInitialState() {
                 const savedStateJSON = sessionStorage.getItem('musicPlayerState');
                 let savedState = null;
-                if (savedStateJSON) {
-                    try { savedState = JSON.parse(savedStateJSON); } 
-                    catch (e) { sessionStorage.removeItem('musicPlayerState'); }
-                }
+                try { savedState = JSON.parse(savedStateJSON); } catch (e) {}
 
                 if (savedState) {
                     currentSongIndex = savedState.currentSongIndex;
@@ -476,10 +539,8 @@
                         if (savedState.isPlaying) { playSong(); }
                     }, { once: true }); 
                 } else {
-                    const rareSongChance = Math.floor(Math.random() * 50);
-                    currentSongIndex = (rareSongChance === 0) ? -1 : Math.floor(Math.random() * playlist.length);
+                    currentSongIndex = Math.floor(Math.random() * playlist.length);
                     loadSong(currentSongIndex);
-                    audioPlayer.volume = volumeSlider.value;
                 }
             }
 
@@ -488,12 +549,12 @@
             rewindBtn.addEventListener('click', rewindSong);
             volumeSlider.addEventListener('input', (e) => { audioPlayer.volume = e.target.value; });
             audioPlayer.addEventListener('ended', () => skipSong(false));
-            playerCoverArt.addEventListener('error', () => { playerCoverArt.src = placeholderCover; });
+            nowPlayingCover.addEventListener('error', () => { nowPlayingCover.src = placeholderCover; });
 
             loadInitialState();
 
         } catch (e) {
-            console.error("Script error:", e);
+            console.error(e);
         }
     });
 </script>
