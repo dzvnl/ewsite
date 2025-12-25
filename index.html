@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas</title>
+    <title>canvas_os</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 
 <style>
     /* --- RESET & BASICS --- */
     * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; padding: 0; }
+    html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; /* Prevent body scroll, window scrolls internally */ }
     
     body {
         font-family: 'VT323', monospace;
@@ -20,163 +20,150 @@
         background-size: cover;
         background-attachment: fixed;
         background-position: center;
-        overflow-y: scroll;
-    }
-
-    /* --- LAYOUT CONTAINER (Fixed width like the image) --- */
-    #site-wrapper {
-        width: 960px;
-        margin: 0 auto;
-        background-color: rgba(0, 0, 0, 0.95);
-        border-left: 1px solid #333;
-        border-right: 1px solid #333;
-        min-height: 100vh;
-        box-shadow: 0 0 50px #000;
+        /* Flex needed to center the taskbar */
         display: flex;
         flex-direction: column;
-    }
-
-    /* --- TOP BAR --- */
-    #top-bar {
-        height: 25px;
-        background: #000;
-        border-bottom: 1px solid #333;
-        display: flex;
         justify-content: flex-end;
         align-items: center;
-        padding: 0 10px;
-        font-size: 14px;
-        color: #888;
     }
-    #top-bar a { color: #888; margin-left: 15px; text-decoration: none; }
-    #top-bar a:hover { color: #fff; }
 
-    /* --- HEADER --- */
-    #header {
-        height: 100px;
-        background: linear-gradient(to bottom, #450a0a, #000);
+    /* --- OS WINDOW CONTAINER --- */
+    #os-window {
+        position: absolute;
+        top: 10vh; /* Initial Position */
+        left: 10vw;
+        width: 850px;
+        height: 600px;
+        background-color: #000;
+        border: 2px solid #333;
+        box-shadow: 10px 10px 30px rgba(0,0,0,0.8);
         display: flex;
+        flex-direction: column;
+        z-index: 50;
+        
+        /* MAGIC SAUCE FOR STRETCHING */
+        resize: both; 
+        overflow: hidden; 
+        min-width: 400px;
+        min-height: 300px;
+    }
+
+    /* --- WINDOW HEADER (DRAGGABLE AREA) --- */
+    #window-header {
+        height: 35px;
+        background: #b91c1c; /* Red header for contrast */
+        border-bottom: 2px solid #333;
+        display: flex;
+        justify-content: space-between;
         align-items: center;
-        justify-content: center;
-        border-bottom: 2px solid #b91c1c;
-        position: relative;
+        padding: 0 10px;
+        cursor: grab;
+        user-select: none;
     }
-    #header h1 {
-        font-size: 60px;
-        color: #fff;
-        text-shadow: 0 0 10px #b91c1c;
-        margin: 0;
-        line-height: 1;
-    }
+    #window-header:active { cursor: grabbing; }
 
-    /* --- NAV BAR --- */
-    #nav {
+    #window-title { font-size: 18px; color: #fff; font-weight: bold; letter-spacing: 1px; }
+    
+    .window-controls { display: flex; gap: 5px; }
+    .win-btn {
+        width: 20px; height: 20px;
         background: #000;
-        border-bottom: 1px solid #333;
-        display: flex;
-        justify-content: center;
-        gap: 40px;
-        padding: 10px 0;
-    }
-    .nav-link {
-        color: #ccc;
-        font-size: 24px;
-        text-decoration: none;
-        text-transform: uppercase;
+        border: 1px solid #fff;
+        color: #fff;
+        font-size: 14px;
+        line-height: 16px;
+        text-align: center;
         cursor: pointer;
     }
-    .nav-link:hover { color: #b91c1c; text-shadow: 0 0 5px #b91c1c; }
+    .win-btn:hover { background: #fff; color: #000; }
+    .close-btn:hover { background: red; border-color: red; color: white; }
 
-    /* --- DROPDOWN (Music Player) --- */
-    .dropdown { position: relative; display: inline-block; }
-    .dropdown-content {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: #111;
-        min-width: 260px;
-        border: 2px solid #b91c1c;
-        padding: 15px;
-        z-index: 100;
-        text-align: center;
-        box-shadow: 0 10px 20px rgba(0,0,0,1);
+    /* --- CONTENT AREA (SCROLLABLE INSIDE WINDOW) --- */
+    #window-content {
+        flex-grow: 1;
+        overflow-y: auto; /* Scroll inside the window */
+        background-color: rgba(0, 0, 0, 0.95);
+        position: relative;
     }
+
+    /* --- MODIFIED SITE WRAPPER --- */
+    #site-wrapper {
+        width: 100%; /* Changed from 960px to fit window */
+        margin: 0 auto;
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        border: none; /* Removed border as window handles it */
+        box-shadow: none;
+    }
+
+    /* --- TASKBAR (BOTTOM BUTTON) --- */
+    #taskbar {
+        width: 100%;
+        height: 50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        pointer-events: none; /* Let clicks pass through empty space */
+        z-index: 10;
+        margin-bottom: 20px;
+    }
+    #restore-btn {
+        pointer-events: auto;
+        background: #000;
+        color: #facc15;
+        border: 2px solid #facc15;
+        font-family: 'VT323', monospace;
+        font-size: 24px;
+        padding: 5px 20px;
+        cursor: pointer;
+        text-transform: uppercase;
+        box-shadow: 0 0 15px #facc15;
+        transition: all 0.2s;
+        text-shadow: 0 0 5px #facc15;
+    }
+    #restore-btn:hover {
+        background: #facc15;
+        color: #000;
+        transform: translateY(-2px);
+    }
+
+    /* --- PREVIOUS CSS (Unchanged mostly) --- */
+    #top-bar { height: 25px; background: #000; border-bottom: 1px solid #333; display: flex; justify-content: flex-end; align-items: center; padding: 0 10px; font-size: 14px; color: #888; }
+    #top-bar a { color: #888; margin-left: 15px; text-decoration: none; }
+    #top-bar a:hover { color: #fff; }
+    #header { height: 100px; background: linear-gradient(to bottom, #450a0a, #000); display: flex; align-items: center; justify-content: center; border-bottom: 2px solid #b91c1c; position: relative; }
+    #header h1 { font-size: 60px; color: #fff; text-shadow: 0 0 10px #b91c1c; margin: 0; line-height: 1; }
+    #nav { background: #000; border-bottom: 1px solid #333; display: flex; justify-content: center; gap: 40px; padding: 10px 0; }
+    .nav-link { color: #ccc; font-size: 24px; text-decoration: none; text-transform: uppercase; cursor: pointer; }
+    .nav-link:hover { color: #b91c1c; text-shadow: 0 0 5px #b91c1c; }
+    .dropdown { position: relative; display: inline-block; }
+    .dropdown-content { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background-color: #111; min-width: 260px; border: 2px solid #b91c1c; padding: 15px; z-index: 100; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,1); }
     .dropdown:hover .dropdown-content { display: block; }
-    
     .player-btn { background: none; border: none; color: #facc15; font-size: 22px; cursor: pointer; margin: 0 5px; }
     .player-btn:hover { color: #fff; }
     #volume-slider { width: 100%; margin-top: 10px; accent-color: #b91c1c; cursor: pointer; }
-
-    /* --- MAIN CONTENT GRID --- */
     #content { padding: 20px; flex-grow: 1; }
-
-    /* Hero Box (Top Box) */
-    #hero {
-        width: 100%;
-        height: 220px;
-        border: 2px solid #333;
-        background: radial-gradient(circle, #222, #000);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 20px;
-        position: relative;
-    }
-    #splash-text {
-        font-size: 32px;
-        color: #facc15;
-        text-align: center;
-        padding: 20px;
-    }
-
-    /* 3-Column Grid */
+    #hero { width: 100%; height: 220px; border: 2px solid #333; background: radial-gradient(circle, #222, #000); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; position: relative; }
+    #splash-text { font-size: 32px; color: #facc15; text-align: center; padding: 20px; }
+    
+    /* Grid adjustments for responsive window */
     .grid-container {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Auto-fit columns */
         gap: 20px;
-        height: 400px; /* Fixed height for the row */
+        min-height: 400px;
     }
 
-    /* Grid Items */
     .col { display: flex; flex-direction: column; gap: 20px; height: 100%; }
-    
-    .box {
-        border: 2px solid #333;
-        background: #0a0a0a;
-        position: relative;
-        overflow: hidden;
-        transition: border-color 0.2s;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-decoration: none;
-    }
+    .box { border: 2px solid #333; background: #0a0a0a; position: relative; overflow: hidden; transition: border-color 0.2s; display: flex; flex-direction: column; justify-content: center; align-items: center; text-decoration: none; min-height: 150px; }
     .box:hover { border-color: #b91c1c; }
-
-    /* Specific Box Heights */
     .h-full { height: 100%; }
     .h-half { height: 50%; }
-
-    /* Box Content */
     .box h2 { color: #fff; font-size: 32px; margin: 0; z-index: 2; }
     .box p { color: #888; font-size: 18px; margin: 0; z-index: 2; }
-    
-    /* Background Images for Boxes (Dimmed) */
-    .bg-img {
-        position: absolute;
-        inset: 0;
-        opacity: 0.3;
-        background-size: cover;
-        background-position: center;
-        z-index: 1;
-        transition: opacity 0.3s;
-    }
+    .bg-img { position: absolute; inset: 0; opacity: 0.3; background-size: cover; background-position: center; z-index: 1; transition: opacity 0.3s; }
     .box:hover .bg-img { opacity: 0.5; }
-
-    /* Alert Animation */
     .alert-mode { color: #ef4444 !important; text-shadow: 0 0 10px #ef4444; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
@@ -184,88 +171,105 @@
 </head>
 <body>
 
-<div id="site-wrapper">
-    
-    <div id="top-bar">
-        <span id="welcome-message">Welcome, ?</span>
-        <a href="account.html">(my account)</a>
-    </div>
-
-    <div id="header">
-        <h1>canvas</h1>
-    </div>
-
-    <div id="nav">
-        <a href="index.html" class="nav-link">HOME</a>
-        <a href="list.html" class="nav-link">LIST</a>
-        
-        <div class="dropdown">
-            <span class="nav-link" style="color: #facc15;">RADIO ▼</span>
-            <div class="dropdown-content">
-                <div style="color: #fff; margin-bottom: 10px; font-size: 18px;">PLAYER CONTROLS</div>
-                <button id="rewind-btn" class="player-btn">[&lt;&lt;]</button>
-                <button id="play-pause-btn" class="player-btn">[&gt;]</button>
-                <button id="skip-btn" class="player-btn">[&gt;&gt;]</button>
-                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
-            </div>
+<div id="os-window">
+    <div id="window-header">
+        <div id="window-title">C:\USERS\EWS\CANVAS.EXE</div>
+        <div class="window-controls">
+            <div class="win-btn" onclick="minimizeWindow()">_</div>
+            <div class="win-btn" onclick="toggleFullscreen()">[]</div>
+            <div class="win-btn close-btn" onclick="closeWindow()">X</div>
         </div>
-
-        <a href="chat.html" class="nav-link">CHAT</a>
-        <a href="settings.html" class="nav-link">SETTINGS</a>
     </div>
 
-    <div id="content">
-        
-        <div id="hero">
-            <div class="bg-img" style="background-image: url('https://placehold.co/960x250/111/000?text=.');"></div>
-            <p id="splash-text">Loading...</p>
-        </div>
-
-        <div class="grid-container">
+    <div id="window-content">
+        <div id="site-wrapper">
             
-            <div class="col">
-                <a href="chat.html" class="box h-full">
-                    <div class="bg-img" style="background-image: url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcHJhZ2Z0bnZ4eGp3eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L20mbc7yRRFja/giphy.gif');"></div>
-                    <h2>chat</h2>
-                    <p>open</p>
-                </a>
+            <div id="top-bar">
+                <span id="welcome-message">Welcome, ?</span>
+                <a href="account.html">(my account)</a>
             </div>
 
-            <div class="col">
-                <a href="list.html" class="box h-half">
-                    <div class="bg-img" style="background-image: url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0bnZ4eGp3eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o6vXVzKWtk4JC6bcU/giphy.gif');"></div>
-                    <h2>LIST</h2>
-                    <p>View</p>
-                </a>
+            <div id="header">
+                <h1>canvas</h1>
+            </div>
+
+            <div id="nav">
+                <a href="index.html" class="nav-link">HOME</a>
+                <a href="list.html" class="nav-link">LIST</a>
                 
-                <div class="box h-half" style="border-color: #555;">
-                    <div style="z-index: 2; text-align: center; padding: 10px;">
-                        <img id="player-cover-art" src="" style="width: 60px; height: 60px; border: 1px solid #fff; margin: 0 auto 10px;">
-                        <div style="font-size: 14px; color: #b91c1c;">NOW PLAYING:</div>
-                        <div id="player-title" style="color: #fff; font-size: 18px;">...</div>
-                        <div id="player-artist" style="color: #888; font-size: 14px;">Loading...</div>
+                <div class="dropdown">
+                    <span class="nav-link" style="color: #facc15;">RADIO ▼</span>
+                    <div class="dropdown-content">
+                        <div style="color: #fff; margin-bottom: 10px; font-size: 18px;">PLAYER CONTROLS</div>
+                        <button id="rewind-btn" class="player-btn">[&lt;&lt;]</button>
+                        <button id="play-pause-btn" class="player-btn">[&gt;]</button>
+                        <button id="skip-btn" class="player-btn">[&gt;&gt;]</button>
+                        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
                     </div>
                 </div>
+
+                <a href="chat.html" class="nav-link">CHAT</a>
+                <a href="settings.html" class="nav-link">SETTINGS</a>
             </div>
 
-            <div class="col">
-                <a href="settings.html" class="box h-half">
-                    <div class="bg-img" style="background-image: url('https://placehold.co/300x200/222/000?text=.');"></div>
-                    <h2>SETTINGS</h2>
-                    <p>Config</p>
-                </a>
+            <div id="content">
                 
-                <div class="box h-half">
-                    <div style="z-index: 2; text-align: center;">
-                        <h2 style="font-size: 24px;">V 2.0</h2>
-                        <p>EWS Live 2025</p>
-                        <a href="chat.html" style="color: #b91c1c; font-size: 14px; margin-top: 5px;">Check Updates</a>
+                <div id="hero">
+                    <div class="bg-img" style="background-image: url('https://placehold.co/960x250/111/000?text=.');"></div>
+                    <p id="splash-text">Loading...</p>
+                </div>
+
+                <div class="grid-container">
+                    
+                    <div class="col">
+                        <a href="chat.html" class="box h-full">
+                            <div class="bg-img" style="background-image: url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcHJhZ2Z0bnZ4eGp3eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L20mbc7yRRFja/giphy.gif');"></div>
+                            <h2>chat</h2>
+                            <p>open</p>
+                        </a>
                     </div>
+
+                    <div class="col">
+                        <a href="list.html" class="box h-half">
+                            <div class="bg-img" style="background-image: url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0bnZ4eGp3eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o6vXVzKWtk4JC6bcU/giphy.gif');"></div>
+                            <h2>LIST</h2>
+                            <p>View</p>
+                        </a>
+                        
+                        <div class="box h-half" style="border-color: #555;">
+                            <div style="z-index: 2; text-align: center; padding: 10px;">
+                                <img id="player-cover-art" src="" style="width: 60px; height: 60px; border: 1px solid #fff; margin: 0 auto 10px;">
+                                <div style="font-size: 14px; color: #b91c1c;">NOW PLAYING:</div>
+                                <div id="player-title" style="color: #fff; font-size: 18px;">...</div>
+                                <div id="player-artist" style="color: #888; font-size: 14px;">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <a href="settings.html" class="box h-half">
+                            <div class="bg-img" style="background-image: url('https://placehold.co/300x200/222/000?text=.');"></div>
+                            <h2>SETTINGS</h2>
+                            <p>Config</p>
+                        </a>
+                        
+                        <div class="box h-half">
+                            <div style="z-index: 2; text-align: center;">
+                                <h2 style="font-size: 24px;">V 2.0</h2>
+                                <p>EWS Live 2025</p>
+                                <a href="chat.html" style="color: #b91c1c; font-size: 14px; margin-top: 5px;">Check Updates</a>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-
         </div>
     </div>
+</div>
+
+<div id="taskbar">
+    <button id="restore-btn" onclick="restoreWindow()">[ RESTORE SYSTEM ]</button>
 </div>
 
 <audio id="audio-player"></audio>
@@ -315,6 +319,81 @@
 </script>
 
 <script>
+    // --- WINDOW LOGIC ---
+    const osWindow = document.getElementById("os-window");
+    const header = document.getElementById("window-header");
+
+    let isFullscreen = false;
+    let preFullscreenStyle = {};
+
+    function closeWindow() {
+        osWindow.style.display = "none";
+    }
+    
+    function minimizeWindow() {
+        osWindow.style.display = "none";
+    }
+
+    function restoreWindow() {
+        osWindow.style.display = "flex";
+    }
+
+    function toggleFullscreen() {
+        if (!isFullscreen) {
+            // Save current state
+            preFullscreenStyle = {
+                top: osWindow.style.top,
+                left: osWindow.style.left,
+                width: osWindow.style.width,
+                height: osWindow.style.height
+            };
+            // Go Full
+            osWindow.style.top = "0";
+            osWindow.style.left = "0";
+            osWindow.style.width = "100vw";
+            osWindow.style.height = "100vh";
+            isFullscreen = true;
+        } else {
+            // Restore
+            osWindow.style.top = preFullscreenStyle.top || "10vh";
+            osWindow.style.left = preFullscreenStyle.left || "10vw";
+            osWindow.style.width = preFullscreenStyle.width || "850px";
+            osWindow.style.height = preFullscreenStyle.height || "600px";
+            isFullscreen = false;
+        }
+    }
+
+    // Draggable Logic
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    header.onmousedown = dragMouseDown;
+
+    function dragMouseDown(e) {
+        if(isFullscreen) return; // Don't drag if fullscreen
+        e = e || window.event;
+        e.preventDefault();
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+    }
+
+    function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        osWindow.style.top = (osWindow.offsetTop - pos2) + "px";
+        osWindow.style.left = (osWindow.offsetLeft - pos1) + "px";
+    }
+
+    function closeDragElement() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
+
+    // --- ORIGINAL PLAYER LOGIC ---
     const baseURL = "https://ewsmusic1.netlify.app/"; 
     const playlist = [
         { title: "Xtal", artist: "Aphex Twin", src: baseURL + "xtal.mp3", cover: baseURL + "aphex.jpg" },
