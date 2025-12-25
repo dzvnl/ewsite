@@ -3,12 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas // home</title>
+    <title>EWS LIVE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 
 <style>
-    html, body { height: 100%; scroll-behavior: smooth; }
+    /* --- CORE STYLES --- */
+    html, body { 
+        height: 100%; 
+        margin: 0;
+        padding: 0;
+    }
     body {
         font-family: 'VT323', monospace;
         color: #e5e5e5;
@@ -17,17 +22,29 @@
         background-repeat: no-repeat;
         background-attachment: fixed;
         background-position: center;
+        overflow-y: scroll; /* Force scrollbar for 2000s feel */
     }
+    
     .pixel-font {
         font-family: 'VT323', monospace;
-        font-smooth: never;
         -webkit-font-smoothing: none;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
     }
 
-    /* --- ALERT STYLES (For Admin Announcements) --- */
+    /* --- LAYOUT CONTAINER (The 2000s Box Look) --- */
+    #main-container {
+        max-width: 1024px;
+        margin: 0 auto;
+        min-height: 100vh;
+        background: rgba(0, 0, 0, 0.95);
+        box-shadow: 0 0 50px rgba(0,0,0,1);
+        border-left: 2px solid #333;
+        border-right: 2px solid #333;
+        position: relative;
+    }
+
+    /* --- ALERT STYLES --- */
     .alert-mode {
-        color: #ef4444 !important; /* Red Text */
+        color: #ef4444 !important; 
         text-shadow: 0 0 10px #ef4444;
         font-weight: bold;
         animation: pulse 1.5s infinite;
@@ -38,123 +55,200 @@
         100% { opacity: 1; }
     }
 
-    /* --- PLAYER CSS --- */
-    #music-player-widget {
-        position: fixed;
-        bottom: 1.5rem; 
-        right: 1.5rem;
-        z-index: 50;
-        width: 320px; 
-        height: auto;
-        background-color: rgba(0, 0, 0, 0.8);
-        border: none;
-        padding: 0.75rem;
-        display: flex;
-        align-items: center;
-        border-radius: 4px;
+    /* --- NAVIGATION & DROPDOWN PLAYER --- */
+    .nav-item {
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
     }
+
+    /* The Dropdown Container (Hidden by default) */
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #1a0505; /* Dark Red/Black */
+        min-width: 280px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.8);
+        border: 2px solid #b91c1c; /* Red Border */
+        z-index: 100;
+        padding: 10px;
+        text-align: left;
+    }
+
+    /* Show the dropdown on hover */
+    .nav-item:hover .dropdown-content {
+        display: block;
+    }
+
+    /* --- PLAYER INTERNALS --- */
     #player-cover-art {
-        width: 64px;
-        height: 64px;
-        flex-shrink: 0; 
-        margin-right: 0.75rem; 
-        border: 2px dotted #969696; 
-        background-color: #111;
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border: 1px solid #555;
+        margin-bottom: 8px;
         image-rendering: pixelated;
     }
-    #player-main { flex-grow: 1; overflow: hidden; min-width: 0; }
-    #player-title {
-        color: #ffffff;
-        font-size: 1.125rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .player-controls-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 5px;
+        background: #000;
+        padding: 5px;
+        border: 1px solid #333;
     }
-    #player-artist {
-        font-size: 0.875rem;
-        color: #969696;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        margin-bottom: 4px;
-    }
-    .player-controls-row { display: flex; align-items: center; gap: 0.25rem; }
     .player-controls-row button {
-        color: #facc15;
-        font-size: 1.25rem;
-        flex-shrink: 0;
-        padding: 0 0.25rem;
+        color: #facc15; /* Gold */
         background: none;
         border: none;
+        font-size: 1.5rem;
         cursor: pointer;
     }
-    .player-controls-row button:hover { color: #fff; }
-    #play-pause-btn { font-size: 1.5rem; line-height: 1; }
+    .player-controls-row button:hover { color: #fff; text-shadow: 0 0 5px #fff; }
+    
     #volume-slider {
-        -webkit-appearance: none;
-        width: 100%; 
-        flex-grow: 1;
-        height: 16px; 
-        background: transparent;
-        margin-left: 0.5rem; 
-    }
-    #volume-slider::-webkit-slider-runnable-track {
         width: 100%;
-        height: 4px;
-        background: #333;
-        border: 1px solid #969696;
+        margin-top: 10px;
+        accent-color: #facc15;
     }
-    #volume-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 16px;
-        height: 16px;
-        background: #facc15; 
-        border: 1px solid #000;
-        border-radius: 50%;
-        margin-top: -7px; 
-        cursor: pointer;
+    
+    /* --- GRID BOXES STYLING --- */
+    .content-box {
+        border: 2px solid #b91c1c; /* Red border like the image */
+        background: radial-gradient(circle, #2a0a0a 0%, #000000 100%);
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s;
     }
-</style>
+    .content-box:hover {
+        border-color: #facc15; /* Gold on hover */
+    }
+    .box-title {
+        background: rgba(185, 28, 28, 0.8);
+        color: white;
+        padding: 2px 8px;
+        position: absolute;
+        top: 10px;
+        left: 0;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+    }
 
+</style>
 </head>
 <body>
 
-<nav class="fixed left-0 top-1/2 -translate-y-1/2 p-6 sm:p-8 pixel-font z-10">
-    <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;"></h1>
-    <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
-        <li><a href="index.html" class="hover:text-red-900">home</a></li>
-        <li><a href="list.html" class="hover:text-red-900">list</a></li>
-        <li><a href="chat.html" class="hover:text-red-900">chat</a></li>
-        <li><a href="settings.html" class="hover:text-red-900">settings</a></li>
-    </ul>
-</nav>
-
-<div class="fixed top-2/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pixel-font text-yellow-400 text-lg lg:text-xl text-center z-10 p-4">
-    <p id="splash-text">Loading...</p>
-</div>
-
-<div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
-    <a href="chat.html" class="hover:text-red-900 block mb-1">version 2.0</a>
-    <p id="welcome-message">Welcome, ?</p>
-    <a href="account.html" id="account-link" class="text-xs hover:text-yellow-400 transition-colors" style="color: #969696;">(my account)</a>
-</div>
-
-<audio id="audio-player"></audio>
-<div id="music-player-widget" class="pixel-font">
-    <img id="player-cover-art" src="https://placehold.co/64x64/000000/333333?text=...&font=vt323" alt="Album Cover">
-    <div id="player-main">
-        <div id="player-info-container" title="...">
-            <div id="player-title">...</div>
-            <div id="player-artist">Loading...</div>
+<div id="main-container">
+    
+    <div class="flex justify-between items-center px-4 py-1 text-gray-400 text-sm border-b border-gray-800 bg-black">
+        <div class="flex gap-4">
+            <span class="hover:text-white cursor-pointer">JOIN THE LIST</span>
+            <span class="hover:text-white cursor-pointer">BOOKMARK</span>
         </div>
-        <div class="player-controls-row">
-            <button id="rewind-btn" title="Previous">[&lt;&lt;]</button>
-            <button id="play-pause-btn" title="Play/Pause">[&gt;]</button>
-            <button id="skip-btn" title="Next (Shuffle)">[&gt;&gt;]</button>
-            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" title="Volume">
+        <div class="text-right">
+            <span id="welcome-message">Welcome, ?</span>
+            <a href="account.html" id="account-link" class="ml-2 text-red-500 hover:text-red-300">(my account)</a>
+        </div>
+    </div>
+
+    <header class="relative h-24 bg-gradient-to-b from-red-900 to-black flex items-center justify-center border-b-4 border-black">
+        <div class="absolute -bottom-6 bg-black rounded-full p-2 border-2 border-red-700 z-20">
+             <div class="w-20 h-20 rounded-full bg-red-900 flex items-center justify-center border-2 border-yellow-600 shadow-lg shadow-red-900/50">
+                <span class="text-3xl text-yellow-500 font-bold drop-shadow-md">EWS</span>
+             </div>
+        </div>
+    </header>
+
+    <nav class="bg-black text-xl lg:text-2xl text-gray-300 border-b border-red-800 pt-8 pb-2">
+        <ul class="flex justify-center flex-wrap gap-8 lg:gap-12 uppercase tracking-widest">
+            <li class="hover:text-red-500 hover:scale-110 transition-all"><a href="index.html">Home</a></li>
+            <li class="hover:text-red-500 hover:scale-110 transition-all"><a href="list.html">List</a></li>
+            
+            <li class="nav-item text-yellow-500 font-bold border-b-2 border-transparent hover:border-yellow-500">
+                RADIO ▼
+                <div class="dropdown-content pixel-font text-base normal-case">
+                    <img id="player-cover-art" src="https://placehold.co/64x64/000000/333333?text=...&font=vt323" alt="Album Cover">
+                    <div id="player-title" class="text-white text-lg truncate">Select a Song</div>
+                    <div id="player-artist" class="text-gray-400 text-sm truncate mb-2">...</div>
+                    
+                    <div class="player-controls-row">
+                        <button id="rewind-btn" title="Previous">&lt;&lt;</button>
+                        <button id="play-pause-btn" title="Play/Pause">[&gt;]</button>
+                        <button id="skip-btn" title="Next">&gt;&gt;</button>
+                    </div>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" title="Volume">
+                    <div class="text-center text-xs text-gray-500 mt-2">v2.0 Player</div>
+                </div>
+            </li>
+
+            <li class="hover:text-red-500 hover:scale-110 transition-all"><a href="chat.html">Chat</a></li>
+            <li class="hover:text-red-500 hover:scale-110 transition-all"><a href="settings.html">Settings</a></li>
+        </ul>
+    </nav>
+
+    <div class="p-4 md:p-8 space-y-6">
+        
+        <div class="content-box w-full h-64 md:h-80 flex flex-col items-center justify-center text-center p-6 relative group">
+            <div class="absolute inset-0 bg-gradient-to-r from-red-900/40 to-black/80 z-0"></div>
+            <div class="z-10 relative transform group-hover:scale-105 transition-transform">
+                <div class="text-yellow-500 text-2xl md:text-3xl mb-2" style="font-family: serif; font-style: italic;">EWS Live Presents</div>
+                <h1 id="splash-text" class="text-4xl md:text-6xl font-bold text-white drop-shadow-[0_2px_2px_rgba(255,0,0,0.8)]">Loading...</h1>
+                <div class="mt-4 text-gray-400 text-lg">Check out the new updates</div>
+            </div>
+             <div class="absolute bottom-4 right-4 rotate-12 border-2 border-white/20 p-2 text-white/30 text-xs">
+                EST. 2025
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <a href="chat.html" class="content-box h-48 block group relative">
+                <div class="absolute inset-0 bg-[url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcHJhZ2Z0bnZ4eGp3eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L20mbc7yRRFja/giphy.gif')] bg-cover opacity-30 group-hover:opacity-60 transition-opacity"></div>
+                <div class="box-title">B-LIVE CHAT</div>
+                <div class="absolute bottom-4 left-4">
+                    <h3 class="text-2xl text-white font-bold group-hover:text-yellow-400">VEGAS REWIND!</h3>
+                    <p class="text-gray-400 leading-none">Join the discussion</p>
+                    <div class="mt-2 bg-red-800 text-white text-xs px-2 py-1 inline-block hover:bg-red-600">ENTER NOW</div>
+                </div>
+            </a>
+
+            <a href="list.html" class="content-box h-48 block group relative">
+                <div class="absolute inset-0 bg-[url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0bnZ4eGp3eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o6vXVzKWtk4JC6bcU/giphy.gif')] bg-cover opacity-30 group-hover:opacity-60 transition-opacity"></div>
+                <div class="box-title">SWIM UPSTREAM</div>
+                <div class="absolute bottom-4 left-4">
+                    <h3 class="text-2xl text-white font-bold group-hover:text-yellow-400">THE LIST</h3>
+                    <p class="text-gray-400 leading-none">Are you in?</p>
+                     <div class="mt-2 bg-white text-black text-xs px-2 py-1 inline-block font-bold">VIEW LIST</div>
+                </div>
+            </a>
+
+            <div class="content-box h-48 block group relative cursor-help" onclick="document.querySelector('.dropdown-content').style.display='block'">
+                <div class="absolute inset-0 bg-[url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnZ4eGp3eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/BlVnrxJgTGsUw/giphy.gif')] bg-cover opacity-20 group-hover:opacity-50 transition-opacity"></div>
+                <div class="box-title">MP3 DOWNLOAD</div>
+                <div class="absolute bottom-4 left-4">
+                    <h3 class="text-2xl text-white font-bold group-hover:text-yellow-400">FREE MUSIC</h3>
+                    <p class="text-gray-400 leading-none">Use the Radio Menu</p>
+                    <div class="mt-2 border border-yellow-500 text-yellow-500 text-xs px-2 py-1 inline-block">LISTEN IN</div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="border-t-2 border-red-900 pt-4 pb-8 text-center text-gray-500 text-sm">
+             <a href="chat.html" class="hover:text-white mx-2">version 2.0</a> | 
+             <a href="#" class="hover:text-white mx-2">Contact Us</a> | 
+             <a href="#" class="hover:text-white mx-2">Terms</a>
+             <p class="mt-2 opacity-50">EWS Live © 2025. All Rights Reserved.</p>
         </div>
     </div>
 </div>
+
+<audio id="audio-player"></audio>
+<div id="player-info-container" style="display:none;"></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -249,6 +343,8 @@
     document.addEventListener('DOMContentLoaded', () => {
         const playerTitleEl = document.getElementById('player-title');
         const playerArtistEl = document.getElementById('player-artist');
+        // Hidden container logic support
+        const playerInfoContainer = document.getElementById('player-info-container'); 
 
         try {
             // --- BACKGROUND LOGIC ---
@@ -276,7 +372,6 @@
             const playPauseBtn = document.getElementById('play-pause-btn');
             const rewindBtn = document.getElementById('rewind-btn');
             const skipBtn = document.getElementById('skip-btn');
-            const playerInfoContainer = document.getElementById('player-info-container');
             const volumeSlider = document.getElementById('volume-slider');
             const playerCoverArt = document.getElementById('player-cover-art');
             const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
@@ -299,7 +394,9 @@
                 }
 
                 audioPlayer.src = song.src; 
-                playerInfoContainer.title = `${song.title} - ${song.artist}`; 
+                // Updating hidden container title for compatibility if needed
+                if(playerInfoContainer) playerInfoContainer.title = `${song.title} - ${song.artist}`; 
+                
                 playerTitleEl.textContent = song.title;
                 playerArtistEl.textContent = song.artist;
                 playerCoverArt.src = song.cover;
@@ -401,3 +498,4 @@
     });
 </script>
 </body>
+</html>
