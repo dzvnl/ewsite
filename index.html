@@ -3,155 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas</title>
+    <title>Starbreeze Archive</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 
 <style>
-    html, body { height: 100%; scroll-behavior: smooth; }
-    body {
-        font-family: 'VT323', monospace;
-        color: #e5e5e5;
-        background-color: #000000; 
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-position: center;
-    }
-    .pixel-font {
-        font-family: 'VT323', monospace;
-        font-smooth: never;
-        -webkit-font-smoothing: none;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+    /* --- RESET & BASIC SETUP --- */
+    html, body { 
+        height: 100%; 
+        margin: 0;
+        padding: 0;
+        background-color: #000000;
+        color: #b0b0b0;
+        font-family: Verdana, sans-serif; /* Matches the original screenshot font */
+        font-size: 11px;
     }
 
-    /* --- ALERT STYLES (For Admin Announcements) --- */
-    .alert-mode {
-        color: #ef4444 !important; /* Red Text */
-        text-shadow: 0 0 10px #ef4444;
-        font-weight: bold;
-        animation: pulse 1.5s infinite;
+    a { text-decoration: none; color: inherit; transition: color 0.2s; }
+    a:hover { color: #ffffff; }
+
+    /* --- LAYOUT CONTAINER (The Frame) --- */
+    .main-container {
+        width: 800px;
+        margin: 0 auto;
+        padding-top: 20px;
+        display: flex;
+        flex-direction: column;
     }
-    @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.5; }
-        100% { opacity: 1; }
-    }
-    
-    /* --- PLAYER CSS --- */
-    #music-player-widget {
-        position: fixed;
-        bottom: 1.5rem; 
-        right: 1.5rem;
-        z-index: 50;
-        width: 320px; 
-        height: auto;
-        background-color: rgba(0, 0, 0, 0.8);
-        border: none;
-        padding: 0.75rem;
+
+    /* --- HEADER (Simulated Skull/Logo Bar) --- */
+    .header-bar {
+        width: 100%;
+        height: 120px;
+        background: #111;
+        border: 2px solid #333;
+        border-bottom: none;
+        margin-bottom: 10px;
+        position: relative;
+        background-image: repeating-linear-gradient(45deg, #1a1a1a 0, #1a1a1a 1px, #000 0, #000 50%);
+        background-size: 10px 10px;
         display: flex;
         align-items: center;
-        border-radius: 4px;
+        justify-content: center;
     }
-    #player-cover-art {
-        width: 64px;
-        height: 64px;
-        flex-shrink: 0; 
-        margin-right: 0.75rem; 
-        border: 2px dotted #969696; 
-        background-color: #111;
-        image-rendering: pixelated;
+    
+    .header-title {
+        font-family: 'Courier New', monospace;
+        font-size: 2rem;
+        color: #444;
+        text-shadow: 1px 1px 0 #000;
+        letter-spacing: 4px;
+        font-weight: bold;
     }
-    #player-main { flex-grow: 1; overflow: hidden; min-width: 0; }
-    #player-title {
-        color: #ffffff;
-        font-size: 1.125rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+
+    /* --- CONTENT WRAPPER --- */
+    .content-wrapper {
+        display: flex;
+        gap: 15px;
     }
-    #player-artist {
-        font-size: 0.875rem;
-        color: #969696;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+
+    /* --- SIDEBAR (Left Menu) --- */
+    .sidebar {
+        width: 160px;
+        flex-shrink: 0;
+        background: #0a0a0a;
+        border: 2px solid #444;
+        border-right: 4px solid #222;
+        border-bottom: 4px solid #222;
+        padding: 10px 0;
+        text-align: center;
+        /* Simulating the metal plate look */
+        background-image: linear-gradient(to right, #1a1a1a, #000);
+    }
+
+    .nav-item {
+        display: block;
+        padding: 8px 0;
+        color: #666;
+        font-weight: bold;
+        font-size: 12px;
+        text-transform: uppercase;
+        border-bottom: 1px solid #222;
+        letter-spacing: 1px;
+    }
+    .nav-item:hover {
+        color: #d4d4d4;
+        text-shadow: 0 0 5px rgba(255,255,255,0.3);
+    }
+    .nav-item.active { color: #888; }
+
+    /* --- MAIN NEWS AREA (Right Side) --- */
+    .main-content {
+        flex-grow: 1;
+        border: 1px solid #444;
+        border-top: 4px solid #444; /* Top heavy bar */
+        border-bottom: 4px solid #444;
+        background-color: #000;
+        padding: 20px;
+        min-height: 500px;
+    }
+
+    /* --- TEXT STYLES FROM IMAGE --- */
+    .news-header {
+        color: #ff8800; /* The Starbreeze Orange */
+        font-weight: bold;
+        font-size: 13px;
         margin-bottom: 4px;
     }
-    .player-controls-row { display: flex; align-items: center; gap: 0.25rem; }
+
+    .news-date {
+        color: #666;
+        font-size: 10px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .news-body {
+        line-height: 1.4;
+        margin-bottom: 25px;
+        color: #ccc;
+    }
+
+    .news-link {
+        color: #ff8800;
+        text-decoration: underline;
+    }
+    .news-link:hover { color: #fff; }
+
+    .separator {
+        border-bottom: 1px dotted #444;
+        margin: 15px 0;
+        display: block;
+    }
+
+    /* --- SPLASH TEXT (Firebase Integration) --- */
+    /* We style the user's splash text to look like a news headline */
+    .alert-mode {
+        color: #ff0000 !important;
+        text-shadow: 0 0 5px #ff0000;
+    }
+
+    /* --- MUSIC PLAYER (Updated to match theme) --- */
+    #music-player-widget {
+        position: fixed;
+        bottom: 20px; 
+        right: 20px;
+        z-index: 50;
+        width: 300px; 
+        background-color: #0a0a0a;
+        border: 1px solid #444;
+        border-top: 3px solid #ff8800; /* Orange Accent */
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        font-family: 'VT323', monospace; /* Keeping pixel font only for player */
+        box-shadow: 0 0 10px rgba(0,0,0,0.8);
+    }
+    #player-cover-art {
+        width: 50px;
+        height: 50px;
+        border: 1px solid #333; 
+        margin-right: 10px;
+    }
+    #player-info-container { overflow: hidden; }
+    #player-title { color: #ff8800; font-size: 1.2rem; white-space: nowrap; }
+    #player-artist { color: #666; font-size: 0.9rem; }
+    
+    .player-controls-row { margin-top: 5px; display: flex; align-items: center; }
     .player-controls-row button {
-        color: #facc15;
-        font-size: 1.25rem;
-        flex-shrink: 0;
-        padding: 0 0.25rem;
-        background: none;
-        border: none;
-        cursor: pointer;
+        color: #888;
+        background: none; border: none;
+        cursor: pointer; font-size: 1.2rem;
+        margin-right: 5px;
     }
-    .player-controls-row button:hover { color: #fff; }
-    #play-pause-btn { font-size: 1.5rem; line-height: 1; }
+    .player-controls-row button:hover { color: #ff8800; }
+    
     #volume-slider {
-        -webkit-appearance: none;
-        width: 100%; 
-        flex-grow: 1;
-        height: 16px; 
-        background: transparent;
-        margin-left: 0.5rem; 
-    }
-    #volume-slider::-webkit-slider-runnable-track {
-        width: 100%;
+        width: 80px;
         height: 4px;
         background: #333;
-        border: 1px solid #969696;
+        -webkit-appearance: none;
     }
     #volume-slider::-webkit-slider-thumb {
         -webkit-appearance: none;
-        width: 16px;
-        height: 16px;
-        background: #facc15; 
-        border: 1px solid #000;
-        border-radius: 50%;
-        margin-top: -7px; 
+        width: 10px; height: 10px;
+        background: #ff8800;
         cursor: pointer;
     }
-</style>
 
+</style>
 </head>
 <body>
 
-<nav class="fixed left-0 top-1/2 -translate-y-1/2 p-6 sm:p-8 pixel-font z-10">
-    <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;"></h1>
-    <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
-        <li><a href="index.html" class="hover:text-red-900">home</a></li>
-        <li><a href="list.html" class="hover:text-red-900">list</a></li>
-        <li><a href="chat.html" class="hover:text-red-900">chat</a></li>
-        <li><a href="settings.html" class="hover:text-red-900">settings</a></li>
-    </ul>
-</nav>
+<div class="main-container">
+    <div class="header-bar">
+        <div class="header-title">STARBREEZE STUDIOS</div>
+    </div>
 
-<div class="fixed top-2/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pixel-font text-yellow-400 text-lg lg:text-xl text-center z-10 p-4">
-    <p id="splash-text">Loading...</p>
-</div>
+    <div class="content-wrapper">
+        <aside class="sidebar">
+            <div style="border-bottom: 1px solid #444; margin-bottom: 10px; padding-bottom: 5px; color:#444;">MENU</div>
+            <a href="index.html" class="nav-item">NEWS</a>
+            <a href="list.html" class="nav-item">PROJECTS</a>
+            <a href="chat.html" class="nav-item">COMPANY</a>
+            <a href="#" class="nav-item">JOBS</a>
+            <a href="#" class="nav-item">HISTORY</a>
+            <a href="settings.html" class="nav-item">DOWNLOADS</a>
+            <a href="account.html" class="nav-item">LINKS</a>
+        </aside>
 
-<div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
-    <a href="chat.html" class="hover:text-red-900 block mb-1">3</a>
-    <p id="welcome-message">Welcome, ?</p>
-    <a href="account.html" id="account-link" class="text-xs hover:text-yellow-400 transition-colors" style="color: #969696;">(my account)</a>
+        <main class="main-content">
+            
+            <div id="latest-update">
+                <div class="news-header">Latest Transmission</div>
+                <div class="news-date">LIVE FEED</div>
+                <div class="news-body">
+                    <span id="splash-text" style="font-size: 1.1em;">Loading data stream...</span>
+                    <br><br>
+                    <span id="welcome-message" style="color: #666;">Identifying user...</span>
+                </div>
+                <div class="separator"></div>
+            </div>
+
+            <div class="news-item">
+                <div class="news-header">Octagon Entertainment and Starbreeze looking for publishers for Enclave</div>
+                <div class="news-date">21 March 2000</div>
+                <div class="news-body">
+                    Starbreeze Studios have entered into an international marketing agreement with <a href="#" class="news-link">Octagon Entertainment</a>. Octagon Entertainment, in conjunction with Starbreeze, is now looking for publishers for Enclave. Enclave is a next-generation first-person shooter for the PC. The title is due for release Q3 2001.
+                </div>
+                <div class="separator"></div>
+            </div>
+
+            <div class="news-item">
+                <div class="news-header">Enclave movie</div>
+                <div class="news-date">20 March 2000</div>
+                <div class="news-body">
+                    The new Enclave <a href="#" class="news-link">movie</a> just went online.
+                </div>
+                <div class="separator"></div>
+            </div>
+
+            <div class="news-item">
+                <div class="news-header">Starbreeze unveils Enclave</div>
+                <div class="news-date">20 March 2000</div>
+                <div class="news-body">
+                    We're proud to announce our new game, Enclave, which is scheduled for release in mid-2001. Enclave is a first-person shooter set in an evolved fantasy world. Visit the <a href="#" class="news-link">Enclave site</a> for more details.
+                </div>
+                <div class="separator"></div>
+            </div>
+
+            <div class="news-item">
+                <div class="news-header">Sorcery terminated</div>
+                <div class="news-date">19 January 2000</div>
+                <div class="news-body">
+                    We regret to inform everyone waiting for Sorcery that the project has been terminated. Read more about it <a href="#" class="news-link">here</a>.
+                </div>
+            </div>
+
+            <br><br>
+            <a href="#" class="news-link" style="font-size: 10px;">Archived news</a>
+
+        </main>
+    </div>
 </div>
 
 <audio id="audio-player"></audio>
-<div id="music-player-widget" class="pixel-font">
-    <img id="player-cover-art" src="https://placehold.co/64x64/000000/333333?text=...&font=vt323" alt="Album Cover">
+<div id="music-player-widget">
+    <img id="player-cover-art" src="https://placehold.co/64x64/000000/333333?text=...&font=vt323" alt="Art">
     <div id="player-main">
         <div id="player-info-container" title="...">
             <div id="player-title">...</div>
             <div id="player-artist">Loading...</div>
         </div>
         <div class="player-controls-row">
-            <button id="rewind-btn" title="Previous">[&lt;&lt;]</button>
-            <button id="play-pause-btn" title="Play/Pause">[&gt;]</button>
-            <button id="skip-btn" title="Next (Shuffle)">[&gt;&gt;]</button>
-            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" title="Volume">
+            <button id="rewind-btn" title="Previous">&lt;&lt;</button>
+            <button id="play-pause-btn" title="Play/Pause">&gt;</button>
+            <button id="skip-btn" title="Next">&gt;&gt;</button>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
         </div>
     </div>
 </div>
@@ -173,10 +301,9 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // --- SPLASH LOGIC ---
     const splashEl = document.getElementById('splash-text');
-    
-    // Fallback Sprashes
+     
+    // Fallback Splashes
     const randomSplashes = [
         "blacked out like an lv sandal", "son", "bbq chicken alert", 
         "trick or treat.. smell my.. donuts..", "100 perkaholic or pounded by a margwa",
@@ -186,20 +313,16 @@
         "WE yes WE are brainless and failing", "updates soon.. -nl", "no super seniors", "considering a chat board"
     ];
 
-    // Listen to Admin Announcement
     const announcementRef = ref(db, 'admin/announcement');
 
     onValue(announcementRef, (snapshot) => {
         const data = snapshot.val();
-
         if (data && data.text) {
-            // ADMIN MODE
             splashEl.innerText =` ${data.text.toLowerCase()} `;
             splashEl.classList.add('alert-mode');
         } else {
-            // NORMAL MODE
             splashEl.classList.remove('alert-mode');
-            if (splashEl.innerText.includes("ALERT") || splashEl.innerText === "Loading...") {
+            if (splashEl.innerText.includes("ALERT") || splashEl.innerText === "Loading data stream...") {
                 splashEl.innerText = randomSplashes[Math.floor(Math.random() * randomSplashes.length)];
             }
         }
@@ -234,7 +357,7 @@
         { title: "die til you live", artist: "fakemink", src: baseURL + "dtyl.mp3", cover: baseURL + "fakemink5.jpg"},
         { title: "worthit", artist: "xaviersobased", src: baseURL + "worthit.mp3", cover: baseURL + "xav.jpg"},
         { title: "in da party", artist: "smokedope2016", src: baseURL + "indaparty.mp3", cover: baseURL + "smokedope4.jpg"},
-        { title: "say it aint dro", artist: "smokedope2016", src: baseURL + "dro.mp3", cover: baseURL + "smokedope3.jpg},
+        { title: "say it aint dro", artist: "smokedope2016", src: baseURL + "dro.mp3", cover: baseURL + "smokedope3.jpg" },
         { title: "blunts on my mind", artist: "ethel wulf", src: baseURL + "bluntsomm.mp3", cover: baseURL + "ethel2.jpg"},
         { title: "luper", artist: "earl sweatshirt", src: baseURL + "luper.mp3", cover: baseURL + "earl.jpg"},
         { title: "frat", artist: "smokedope2016", src: baseURL + "frat.mp3", cover: baseURL + "smokedope2.jpg"},
@@ -249,28 +372,20 @@
     document.addEventListener('DOMContentLoaded', () => {
         const playerTitleEl = document.getElementById('player-title');
         const playerArtistEl = document.getElementById('player-artist');
-        
+         
         try {
-            // --- BACKGROUND LOGIC ---
-            const specialBg = '81853ABB-FB87-4A20-9303-9624B777245B.jpeg';
-            const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg', 'IMG_5264.jpeg', 'IMG_4945.jpeg'];
-            const chance = Math.floor(Math.random() * 100); 
-            let chosenBg = (chance === 0) ? specialBg : normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
-            document.body.style.backgroundImage = `url('${chosenBg}')`;
-            
-            // --- USER UI ---
+            // --- UI ---
             const welcomeMessage = document.getElementById('welcome-message');
-            
             function updateUI() {
                 let username = localStorage.getItem('username');
                 if (username) {
-                    welcomeMessage.textContent = `Welcome, ${username}`;
+                    welcomeMessage.textContent = `Logged in as: ${username}`;
                 } else {
-                    welcomeMessage.textContent = 'Welcome, ?';
+                    welcomeMessage.textContent = 'Guest Access Granted.';
                 }
             }
             updateUI();
-            
+             
             // --- MUSIC PLAYER LOGIC ---
             const audioPlayer = document.getElementById('audio-player');
             const playPauseBtn = document.getElementById('play-pause-btn');
@@ -280,51 +395,45 @@
             const volumeSlider = document.getElementById('volume-slider');
             const playerCoverArt = document.getElementById('player-cover-art');
             const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
-            
+             
             let currentSongIndex = 0;
             let isPlaying = false;
 
             const secretSong = {
-                title: "hey, big guy said im an easter egg",
-                artist: "i heard, if u put /secret at the end of the link",
+                title: "SECRET",
+                artist: "Easter Egg Found",
                 src: "clock.mp3",
                 cover: "handofpeace.jpg"
             };
 
             function loadSong(songIndex) {
                 const song = (songIndex === -1) ? secretSong : playlist[songIndex];
-                if (!song || !song.src || !song.cover) {
-                    skipSong(true); 
-                    return;
-                }
-                
+                if (!song) { skipSong(true); return; }
+                 
                 audioPlayer.src = song.src; 
                 playerInfoContainer.title = `${song.title} - ${song.artist}`; 
                 playerTitleEl.textContent = song.title;
                 playerArtistEl.textContent = song.artist;
-                playerCoverArt.src = song.cover;
-                playPauseBtn.textContent = '[>]';
+                playerCoverArt.src = song.cover || placeholderCover;
+                playPauseBtn.textContent = '>';
                 isPlaying = false;
             }
 
             function playSong() {
                 if (!audioPlayer.src) { return; }
                 audioPlayer.volume = volumeSlider.value; 
-                
                 const playPromise = audioPlayer.play();
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
-                        playPauseBtn.textContent = '[||]';
+                        playPauseBtn.textContent = '||';
                         isPlaying = true;
-                    }).catch(error => {
-                        console.warn("Auto-play blocked", error);
-                    });
+                    }).catch(e => console.warn("Auto-play blocked", e));
                 }
             }
 
             function pauseSong() {
                 audioPlayer.pause();
-                playPauseBtn.textContent = '[>]';
+                playPauseBtn.textContent = '>';
                 isPlaying = false;
             }
 
@@ -347,45 +456,33 @@
                 loadSong(currentSongIndex);
                 if (audioPlayer.src) { playSong(); }
             }
-            
-            // --- STORAGE SAVE/LOAD ---
+             
+            // Save/Load State
             window.addEventListener('beforeunload', () => {
                 if (audioPlayer.currentTime > 0) {
-                    const musicState = {
-                        currentSongIndex: currentSongIndex,
-                        currentTime: audioPlayer.currentTime,
-                        volume: audioPlayer.volume,
-                        isPlaying: isPlaying
-                    };
-                    sessionStorage.setItem('musicPlayerState', JSON.stringify(musicState));
+                    sessionStorage.setItem('musicPlayerState', JSON.stringify({
+                        currentSongIndex, currentTime: audioPlayer.currentTime, volume: audioPlayer.volume
+                    }));
                 }
             });
-            
+             
             function loadInitialState() {
                 const savedStateJSON = sessionStorage.getItem('musicPlayerState');
-                let savedState = null;
                 if (savedStateJSON) {
-                    try { savedState = JSON.parse(savedStateJSON); } 
-                    catch (e) { sessionStorage.removeItem('musicPlayerState'); }
-                }
-
-                if (savedState) {
-                    currentSongIndex = savedState.currentSongIndex;
+                    const s = JSON.parse(savedStateJSON);
+                    currentSongIndex = s.currentSongIndex;
                     loadSong(currentSongIndex);
-                    volumeSlider.value = savedState.volume || 1;
-                    audioPlayer.volume = savedState.volume || 1;
+                    volumeSlider.value = s.volume || 1;
+                    audioPlayer.volume = s.volume || 1;
                     audioPlayer.addEventListener('loadedmetadata', () => {
-                        audioPlayer.currentTime = savedState.currentTime || 0;
-                        if (savedState.isPlaying) { playSong(); }
-                    }, { once: true }); 
+                        audioPlayer.currentTime = s.currentTime || 0;
+                    }, { once: true });
                 } else {
-                    const rareSongChance = Math.floor(Math.random() * 50);
-                    currentSongIndex = (rareSongChance === 0) ? -1 : Math.floor(Math.random() * playlist.length);
+                    currentSongIndex = Math.floor(Math.random() * playlist.length);
                     loadSong(currentSongIndex);
-                    audioPlayer.volume = volumeSlider.value;
                 }
             }
-            
+             
             playPauseBtn.addEventListener('click', togglePlayPause);
             skipBtn.addEventListener('click', () => skipSong(false));
             rewindBtn.addEventListener('click', rewindSong);
@@ -394,10 +491,8 @@
             playerCoverArt.addEventListener('error', () => { playerCoverArt.src = placeholderCover; });
 
             loadInitialState();
-            
-        } catch (e) {
-            console.error("Script error:", e);
-        }
+             
+        } catch (e) { console.error("Script error:", e); }
     });
 </script>
 </body>
