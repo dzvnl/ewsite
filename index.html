@@ -3,273 +3,268 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Starbreeze Archive</title>
+    <title>Enclave / Starbreeze Style</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-    /* --- RESET & BASIC SETUP --- */
-    html, body { 
-        height: 100%; 
-        margin: 0;
-        padding: 0;
-        background-color: #000000;
-        color: #b0b0b0;
-        font-family: Verdana, sans-serif; /* Matches the original screenshot font */
-        font-size: 11px;
+    /* --- GLOBAL RESET --- */
+    * { box-sizing: border-box; }
+    body {
+        margin: 0; padding: 0;
+        background-color: #000;
+        color: #aaa;
+        font-family: 'Roboto Condensed', sans-serif; /* Clean industrial font */
+        overflow-x: hidden;
     }
 
-    a { text-decoration: none; color: inherit; transition: color 0.2s; }
-    a:hover { color: #ffffff; }
+    a { text-decoration: none; transition: 0.2s; }
 
-    /* --- LAYOUT CONTAINER (The Frame) --- */
-    .main-container {
-        width: 800px;
-        margin: 0 auto;
-        padding-top: 20px;
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* --- HEADER (Simulated Skull/Logo Bar) --- */
-    .header-bar {
-        width: 100%;
-        height: 120px;
-        background: #111;
-        border: 2px solid #333;
-        border-bottom: none;
-        margin-bottom: 10px;
+    /* --- LAYOUT GRID --- */
+    .interface-container {
         position: relative;
-        background-image: repeating-linear-gradient(45deg, #1a1a1a 0, #1a1a1a 1px, #000 0, #000 50%);
-        background-size: 10px 10px;
+        width: 900px;
+        margin: 40px auto;
+        min-height: 800px;
+        display: grid;
+        grid-template-columns: 220px 1fr; /* Left Menu | Right Content */
+        grid-template-rows: 140px auto;   /* Top Header | Main Content */
+    }
+
+    /* --- THE SKULL & HEADER (Top Left & Top Right) --- */
+    .header-branding {
+        grid-column: 2 / 3;
+        grid-row: 1 / 2;
+        background: #111;
+        border: 2px solid #4a4a4a;
+        border-radius: 20px; /* Rounded industrial edges */
+        margin-left: -40px; /* Pull left behind the skull */
+        margin-top: 30px;
+        height: 80px;
         display: flex;
         align-items: center;
         justify-content: center;
-    }
-    
-    .header-title {
-        font-family: 'Courier New', monospace;
-        font-size: 2rem;
-        color: #444;
-        text-shadow: 1px 1px 0 #000;
-        letter-spacing: 4px;
-        font-weight: bold;
+        background: linear-gradient(180deg, #2a2a2a 0%, #111 50%, #000 100%);
+        box-shadow: inset 0 0 10px #000;
+        position: relative;
+        z-index: 1;
     }
 
-    /* --- CONTENT WRAPPER --- */
-    .content-wrapper {
-        display: flex;
-        gap: 15px;
-    }
-
-    /* --- SIDEBAR (Left Menu) --- */
-    .sidebar {
-        width: 160px;
-        flex-shrink: 0;
-        background: #0a0a0a;
-        border: 2px solid #444;
-        border-right: 4px solid #222;
-        border-bottom: 4px solid #222;
-        padding: 10px 0;
-        text-align: center;
-        /* Simulating the metal plate look */
-        background-image: linear-gradient(to right, #1a1a1a, #000);
-    }
-
-    .nav-item {
-        display: block;
-        padding: 8px 0;
-        color: #666;
-        font-weight: bold;
-        font-size: 12px;
+    .header-text {
+        font-family: 'Cinzel', serif;
+        font-size: 2.5rem;
+        color: #4a4a4a;
+        text-shadow: 1px 1px 0 #666;
+        letter-spacing: 0.2em;
         text-transform: uppercase;
-        border-bottom: 1px solid #222;
-        letter-spacing: 1px;
-    }
-    .nav-item:hover {
-        color: #d4d4d4;
-        text-shadow: 0 0 5px rgba(255,255,255,0.3);
-    }
-    .nav-item.active { color: #888; }
-
-    /* --- MAIN NEWS AREA (Right Side) --- */
-    .main-content {
-        flex-grow: 1;
-        border: 1px solid #444;
-        border-top: 4px solid #444; /* Top heavy bar */
-        border-bottom: 4px solid #444;
-        background-color: #000;
-        padding: 20px;
-        min-height: 500px;
     }
 
-    /* --- TEXT STYLES FROM IMAGE --- */
-    .news-header {
-        color: #ff8800; /* The Starbreeze Orange */
-        font-weight: bold;
-        font-size: 13px;
-        margin-bottom: 4px;
+    /* THE SKULL ZONE (Absolute Positioned over the corner) */
+    .skull-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 280px;
+        height: 250px;
+        z-index: 10;
+        pointer-events: none; /* Let clicks pass through if needed */
+        
+        /* PLACEHOLDER STYLING - REPLACE URL WITH YOUR REAL SKULL IMAGE */
+        background-image: url('https://placehold.co/250x250/000000/FFF?text=SKULL+PNG&font=roboto'); 
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
     }
 
-    .news-date {
-        color: #666;
-        font-size: 10px;
-        margin-bottom: 8px;
-        display: block;
-    }
-
-    .news-body {
-        line-height: 1.4;
-        margin-bottom: 25px;
-        color: #ccc;
-    }
-
-    .news-link {
-        color: #ff8800;
-        text-decoration: underline;
-    }
-    .news-link:hover { color: #fff; }
-
-    .separator {
-        border-bottom: 1px dotted #444;
-        margin: 15px 0;
-        display: block;
-    }
-
-    /* --- SPLASH TEXT (Firebase Integration) --- */
-    /* We style the user's splash text to look like a news headline */
-    .alert-mode {
-        color: #ff0000 !important;
-        text-shadow: 0 0 5px #ff0000;
-    }
-
-    /* --- MUSIC PLAYER (Updated to match theme) --- */
-    #music-player-widget {
-        position: fixed;
-        bottom: 20px; 
-        right: 20px;
-        z-index: 50;
-        width: 300px; 
-        background-color: #0a0a0a;
-        border: 1px solid #444;
-        border-top: 3px solid #ff8800; /* Orange Accent */
-        padding: 10px;
+    /* --- THE SPINE MENU (Left Column) --- */
+    .spine-menu {
+        grid-column: 1 / 2;
+        grid-row: 2 / 3;
+        padding-top: 50px; /* Space for skull to hang */
         display: flex;
-        align-items: center;
-        font-family: 'VT323', monospace; /* Keeping pixel font only for player */
-        box-shadow: 0 0 10px rgba(0,0,0,0.8);
+        flex-direction: column;
+        align-items: flex-end; /* Align right to touch the content */
+        padding-right: 10px;
     }
-    #player-cover-art {
-        width: 50px;
-        height: 50px;
-        border: 1px solid #333; 
-        margin-right: 10px;
-    }
-    #player-info-container { overflow: hidden; }
-    #player-title { color: #ff8800; font-size: 1.2rem; white-space: nowrap; }
-    #player-artist { color: #666; font-size: 0.9rem; }
-    
-    .player-controls-row { margin-top: 5px; display: flex; align-items: center; }
-    .player-controls-row button {
+
+    /* The "Metal Plate" Links */
+    .spine-link {
+        display: block;
+        width: 140px;
+        height: 35px;
+        margin-bottom: 8px;
+        background: linear-gradient(90deg, #111, #333, #111);
+        border: 1px solid #555;
+        border-right: none; /* Connects to nothing on right */
         color: #888;
-        background: none; border: none;
-        cursor: pointer; font-size: 1.2rem;
-        margin-right: 5px;
-    }
-    .player-controls-row button:hover { color: #ff8800; }
-    
-    #volume-slider {
-        width: 80px;
-        height: 4px;
-        background: #333;
-        -webkit-appearance: none;
-    }
-    #volume-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 10px; height: 10px;
-        background: #ff8800;
+        font-family: 'Cinzel', serif;
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        line-height: 33px;
+        text-transform: uppercase;
+        position: relative;
+        clip-path: polygon(10% 0, 100% 0, 100% 100%, 10% 100%, 0% 50%); /* Pointed left edge */
         cursor: pointer;
     }
+    
+    /* Wires/Connectors decoration */
+    .spine-link::before {
+        content: '';
+        position: absolute;
+        right: -10px;
+        top: 50%;
+        width: 10px;
+        height: 2px;
+        background: #555;
+    }
+
+    .spine-link:hover {
+        background: #222;
+        color: #d2691e; /* Rusty Orange */
+        text-shadow: 0 0 5px #d2691e;
+        width: 150px; /* Pop out effect */
+    }
+
+    /* --- CONTENT FRAME (Right Column) --- */
+    .main-display {
+        grid-column: 2 / 3;
+        grid-row: 2 / 3;
+        border-top: 4px solid #333;
+        border-bottom: 4px solid #333;
+        background: rgba(0,0,0,0.5);
+        padding: 0 40px;
+        position: relative;
+    }
+
+    /* The "Pillars" on the sides of the content */
+    .main-display::before, .main-display::after {
+        content: '';
+        position: absolute;
+        top: 0; bottom: 0;
+        width: 4px;
+        background: #333;
+        background-image: repeating-linear-gradient(0deg, #333 0, #333 5px, #000 5px, #000 10px);
+    }
+    .main-display::before { left: 0; }
+    .main-display::after { right: 0; }
+
+    /* --- TEXT STYLING (Orange Theme) --- */
+    .news-block {
+        margin-bottom: 30px;
+        border-bottom: 1px dashed #333;
+        padding-bottom: 20px;
+    }
+    .news-title {
+        color: #e67e22; /* Matches the Orange in screenshot */
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+        font-family: 'Arial', sans-serif;
+    }
+    .news-date {
+        color: #666;
+        font-size: 0.8rem;
+        margin-bottom: 10px;
+    }
+    .news-content {
+        color: #ccc;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    .news-link {
+        color: #e67e22;
+        text-decoration: underline;
+    }
+
+    /* SPLASH / ALERT STYLES */
+    .alert-mode {
+        color: #ef4444 !important;
+        text-shadow: 0 0 8px #ef4444;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+    /* --- PLAYER CSS (Your original retro player, adjusted slightly) --- */
+    #music-player-widget {
+        position: fixed;
+        bottom: 1rem; right: 1rem; z-index: 100;
+        width: 320px; 
+        background-color: #000;
+        border: 2px solid #555;
+        padding: 10px;
+        display: flex; align-items: center;
+        font-family: 'VT323', monospace; /* Keep the pixel font for the tech feel */
+    }
+    #player-cover-art { width: 50px; height: 50px; margin-right: 10px; border: 1px solid #333; }
+    #player-main { flex-grow: 1; overflow: hidden; }
+    #player-title { color: #e67e22; font-size: 1.1rem; white-space: nowrap; }
+    #player-artist { color: #888; font-size: 0.9rem; }
+    .player-controls-row button { background: none; border: none; color: #e67e22; cursor: pointer; font-size: 1.2rem; margin-right: 5px; }
+    #volume-slider { width: 80px; height: 5px; accent-color: #e67e22; }
 
 </style>
 </head>
 <body>
 
-<div class="main-container">
-    <div class="header-bar">
-        <div class="header-title">STARBREEZE STUDIOS</div>
+<div class="interface-container">
+
+    <div class="skull-overlay" title="Place your skull.png here"></div>
+
+    <div class="header-branding">
+        <div class="header-text">STARBREEZE STUDIOS</div>
     </div>
 
-    <div class="content-wrapper">
-        <aside class="sidebar">
-            <div style="border-bottom: 1px solid #444; margin-bottom: 10px; padding-bottom: 5px; color:#444;">MENU</div>
-            <a href="index.html" class="nav-item">NEWS</a>
-            <a href="list.html" class="nav-item">PROJECTS</a>
-            <a href="chat.html" class="nav-item">COMPANY</a>
-            <a href="#" class="nav-item">JOBS</a>
-            <a href="#" class="nav-item">HISTORY</a>
-            <a href="settings.html" class="nav-item">DOWNLOADS</a>
-            <a href="account.html" class="nav-item">LINKS</a>
-        </aside>
+    <nav class="spine-menu">
+        <a href="index.html" class="spine-link">NEWS</a>
+        <a href="list.html" class="spine-link">PROJECTS</a>
+        <a href="chat.html" class="spine-link">COMPANY</a>
+        <a href="#" class="spine-link">JOBS</a>
+        <a href="#" class="spine-link">HISTORY</a>
+        <a href="settings.html" class="spine-link">DOWNLOADS</a>
+        <a href="account.html" class="spine-link">LINKS</a>
+    </nav>
 
-        <main class="main-content">
-            
-            <div id="latest-update">
-                <div class="news-header">Latest Transmission</div>
-                <div class="news-date">LIVE FEED</div>
-                <div class="news-body">
-                    <span id="splash-text" style="font-size: 1.1em;">Loading data stream...</span>
-                    <br><br>
-                    <span id="welcome-message" style="color: #666;">Identifying user...</span>
-                </div>
-                <div class="separator"></div>
+    <main class="main-display">
+        
+        <div class="news-block" style="margin-top: 20px;">
+            <div class="news-title">System Announcement</div>
+            <div class="news-date">LIVE FEED</div>
+            <div class="news-content">
+                <p id="splash-text" style="font-size: 1.2em;">Connecting to server...</p>
+                <br>
+                <p id="welcome-message" style="color:#666; font-size: 0.8em;">Identifying user...</p>
             </div>
+        </div>
 
-            <div class="news-item">
-                <div class="news-header">Octagon Entertainment and Starbreeze looking for publishers for Enclave</div>
-                <div class="news-date">21 March 2000</div>
-                <div class="news-body">
-                    Starbreeze Studios have entered into an international marketing agreement with <a href="#" class="news-link">Octagon Entertainment</a>. Octagon Entertainment, in conjunction with Starbreeze, is now looking for publishers for Enclave. Enclave is a next-generation first-person shooter for the PC. The title is due for release Q3 2001.
-                </div>
-                <div class="separator"></div>
+        <div class="news-block">
+            <div class="news-title">Starbreeze unveils Enclave</div>
+            <div class="news-date">20 March 2000</div>
+            <div class="news-content">
+                We're proud to announce our new game, Enclave, which is scheduled for release in mid-2001. Enclave is a first-person shooter set in an evolved fantasy world. Visit the <a href="#" class="news-link">Enclave site</a> for more details.
             </div>
+        </div>
 
-            <div class="news-item">
-                <div class="news-header">Enclave movie</div>
-                <div class="news-date">20 March 2000</div>
-                <div class="news-body">
-                    The new Enclave <a href="#" class="news-link">movie</a> just went online.
-                </div>
-                <div class="separator"></div>
+        <div class="news-block">
+            <div class="news-title">Sorcery terminated</div>
+            <div class="news-date">19 January 2000</div>
+            <div class="news-content">
+                We regret to inform everyone waiting for Sorcery that the project has been terminated. Read more about it <a href="#" class="news-link">here</a>.
             </div>
+        </div>
 
-            <div class="news-item">
-                <div class="news-header">Starbreeze unveils Enclave</div>
-                <div class="news-date">20 March 2000</div>
-                <div class="news-body">
-                    We're proud to announce our new game, Enclave, which is scheduled for release in mid-2001. Enclave is a first-person shooter set in an evolved fantasy world. Visit the <a href="#" class="news-link">Enclave site</a> for more details.
-                </div>
-                <div class="separator"></div>
-            </div>
+        <div style="text-align: right;">
+            <a href="#" class="news-link" style="font-size: 0.8rem;">[ Archived News ]</a>
+        </div>
 
-            <div class="news-item">
-                <div class="news-header">Sorcery terminated</div>
-                <div class="news-date">19 January 2000</div>
-                <div class="news-body">
-                    We regret to inform everyone waiting for Sorcery that the project has been terminated. Read more about it <a href="#" class="news-link">here</a>.
-                </div>
-            </div>
+    </main>
 
-            <br><br>
-            <a href="#" class="news-link" style="font-size: 10px;">Archived news</a>
-
-        </main>
-    </div>
 </div>
 
 <audio id="audio-player"></audio>
 <div id="music-player-widget">
-    <img id="player-cover-art" src="https://placehold.co/64x64/000000/333333?text=...&font=vt323" alt="Art">
+    <img id="player-cover-art" src="https://placehold.co/64x64/000000/333333?text=...&font=vt323" alt="Album Cover">
     <div id="player-main">
         <div id="player-info-container" title="...">
             <div id="player-title">...</div>
@@ -278,8 +273,8 @@
         <div class="player-controls-row">
             <button id="rewind-btn" title="Previous">&lt;&lt;</button>
             <button id="play-pause-btn" title="Play/Pause">&gt;</button>
-            <button id="skip-btn" title="Next">&gt;&gt;</button>
-            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+            <button id="skip-btn" title="Next (Shuffle)">&gt;&gt;</button>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" title="Volume">
         </div>
     </div>
 </div>
@@ -301,9 +296,10 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // --- SPLASH LOGIC ---
     const splashEl = document.getElementById('splash-text');
-     
-    // Fallback Splashes
+    
+    // Fallback Sprashes
     const randomSplashes = [
         "blacked out like an lv sandal", "son", "bbq chicken alert", 
         "trick or treat.. smell my.. donuts..", "100 perkaholic or pounded by a margwa",
@@ -313,16 +309,19 @@
         "WE yes WE are brainless and failing", "updates soon.. -nl", "no super seniors", "considering a chat board"
     ];
 
+    // Listen to Admin Announcement
     const announcementRef = ref(db, 'admin/announcement');
 
     onValue(announcementRef, (snapshot) => {
         const data = snapshot.val();
         if (data && data.text) {
+            // ADMIN MODE
             splashEl.innerText =` ${data.text.toLowerCase()} `;
             splashEl.classList.add('alert-mode');
         } else {
+            // NORMAL MODE
             splashEl.classList.remove('alert-mode');
-            if (splashEl.innerText.includes("ALERT") || splashEl.innerText === "Loading data stream...") {
+            if (splashEl.innerText.includes("ALERT") || splashEl.innerText === "Connecting to server...") {
                 splashEl.innerText = randomSplashes[Math.floor(Math.random() * randomSplashes.length)];
             }
         }
@@ -372,20 +371,21 @@
     document.addEventListener('DOMContentLoaded', () => {
         const playerTitleEl = document.getElementById('player-title');
         const playerArtistEl = document.getElementById('player-artist');
-         
+        
         try {
-            // --- UI ---
+            // --- USER UI ---
             const welcomeMessage = document.getElementById('welcome-message');
+            
             function updateUI() {
                 let username = localStorage.getItem('username');
                 if (username) {
-                    welcomeMessage.textContent = `Logged in as: ${username}`;
+                    welcomeMessage.textContent = `User: ${username}`;
                 } else {
-                    welcomeMessage.textContent = 'Guest Access Granted.';
+                    welcomeMessage.textContent = 'User: Guest';
                 }
             }
             updateUI();
-             
+            
             // --- MUSIC PLAYER LOGIC ---
             const audioPlayer = document.getElementById('audio-player');
             const playPauseBtn = document.getElementById('play-pause-btn');
@@ -395,26 +395,29 @@
             const volumeSlider = document.getElementById('volume-slider');
             const playerCoverArt = document.getElementById('player-cover-art');
             const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
-             
+            
             let currentSongIndex = 0;
             let isPlaying = false;
 
             const secretSong = {
-                title: "SECRET",
-                artist: "Easter Egg Found",
+                title: "hey, big guy said im an easter egg",
+                artist: "i heard, if u put /secret at the end of the link",
                 src: "clock.mp3",
                 cover: "handofpeace.jpg"
             };
 
             function loadSong(songIndex) {
                 const song = (songIndex === -1) ? secretSong : playlist[songIndex];
-                if (!song) { skipSong(true); return; }
-                 
+                if (!song || !song.src || !song.cover) {
+                    skipSong(true); 
+                    return;
+                }
+                
                 audioPlayer.src = song.src; 
                 playerInfoContainer.title = `${song.title} - ${song.artist}`; 
                 playerTitleEl.textContent = song.title;
                 playerArtistEl.textContent = song.artist;
-                playerCoverArt.src = song.cover || placeholderCover;
+                playerCoverArt.src = song.cover;
                 playPauseBtn.textContent = '>';
                 isPlaying = false;
             }
@@ -422,12 +425,15 @@
             function playSong() {
                 if (!audioPlayer.src) { return; }
                 audioPlayer.volume = volumeSlider.value; 
+                
                 const playPromise = audioPlayer.play();
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
                         playPauseBtn.textContent = '||';
                         isPlaying = true;
-                    }).catch(e => console.warn("Auto-play blocked", e));
+                    }).catch(error => {
+                        console.warn("Auto-play blocked", error);
+                    });
                 }
             }
 
@@ -456,33 +462,45 @@
                 loadSong(currentSongIndex);
                 if (audioPlayer.src) { playSong(); }
             }
-             
-            // Save/Load State
+            
+            // --- STORAGE SAVE/LOAD ---
             window.addEventListener('beforeunload', () => {
                 if (audioPlayer.currentTime > 0) {
-                    sessionStorage.setItem('musicPlayerState', JSON.stringify({
-                        currentSongIndex, currentTime: audioPlayer.currentTime, volume: audioPlayer.volume
-                    }));
+                    const musicState = {
+                        currentSongIndex: currentSongIndex,
+                        currentTime: audioPlayer.currentTime,
+                        volume: audioPlayer.volume,
+                        isPlaying: isPlaying
+                    };
+                    sessionStorage.setItem('musicPlayerState', JSON.stringify(musicState));
                 }
             });
-             
+            
             function loadInitialState() {
                 const savedStateJSON = sessionStorage.getItem('musicPlayerState');
+                let savedState = null;
                 if (savedStateJSON) {
-                    const s = JSON.parse(savedStateJSON);
-                    currentSongIndex = s.currentSongIndex;
+                    try { savedState = JSON.parse(savedStateJSON); } 
+                    catch (e) { sessionStorage.removeItem('musicPlayerState'); }
+                }
+
+                if (savedState) {
+                    currentSongIndex = savedState.currentSongIndex;
                     loadSong(currentSongIndex);
-                    volumeSlider.value = s.volume || 1;
-                    audioPlayer.volume = s.volume || 1;
+                    volumeSlider.value = savedState.volume || 1;
+                    audioPlayer.volume = savedState.volume || 1;
                     audioPlayer.addEventListener('loadedmetadata', () => {
-                        audioPlayer.currentTime = s.currentTime || 0;
-                    }, { once: true });
+                        audioPlayer.currentTime = savedState.currentTime || 0;
+                        if (savedState.isPlaying) { playSong(); }
+                    }, { once: true }); 
                 } else {
-                    currentSongIndex = Math.floor(Math.random() * playlist.length);
+                    const rareSongChance = Math.floor(Math.random() * 50);
+                    currentSongIndex = (rareSongChance === 0) ? -1 : Math.floor(Math.random() * playlist.length);
                     loadSong(currentSongIndex);
+                    audioPlayer.volume = volumeSlider.value;
                 }
             }
-             
+            
             playPauseBtn.addEventListener('click', togglePlayPause);
             skipBtn.addEventListener('click', () => skipSong(false));
             rewindBtn.addEventListener('click', rewindSong);
@@ -491,8 +509,10 @@
             playerCoverArt.addEventListener('error', () => { playerCoverArt.src = placeholderCover; });
 
             loadInitialState();
-             
-        } catch (e) { console.error("Script error:", e); }
+            
+        } catch (e) {
+            console.error("Script error:", e);
+        }
     });
 </script>
 </body>
