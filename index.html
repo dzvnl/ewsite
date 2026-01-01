@@ -6,584 +6,206 @@
     <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-
-<style>
-    /* --- RESET & BASICS --- */
-    * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; /* Prevent body scroll, window scrolls internally */ }
-    
-    body {
-        font-family: 'VT323', monospace;
-        color: #e5e5e5;
-        background-color: #000000; 
-        background-image: url('IMG_4928.jpeg'); /* JS will override */
-        background-size: cover;
-        background-attachment: fixed;
-        background-position: center;
-        /* Flex needed to center the taskbar */
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        align-items: center;
-    }
-
-    /* --- OS WINDOW CONTAINER --- */
-    #os-window {
-        position: absolute;
-        top: 10vh; /* Initial Position */
-        left: 10vw;
-        width: 850px;
-        height: 600px;
-        background-color: #000;
-        border: 2px solid #333;
-        box-shadow: 10px 10px 30px rgba(0,0,0,0.8);
-        display: flex;
-        flex-direction: column;
-        z-index: 50;
+    <script src="playlist.js"></script> 
+    <style>
+        body {
+            font-family: 'VT323', monospace;
+            background-color: #000;
+            color: #ccc;
+            background-image: url('IMG_4928.jpeg'); /* Placeholder for your BG */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        /* The container style from your image */
+        .main-container {
+            background-color: rgba(0, 0, 0, 0.95);
+            border: 2px solid white;
+            box-shadow: 0 0 15px rgba(255,255,255,0.2);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        /* Specific borders */
+        .box-border { border: 2px solid white; margin-bottom: 10px; background: #000; }
+        .dashed-border { border: 2px dashed #555; padding: 10px; }
+        .double-border { border: 4px double white; }
         
-        /* MAGIC SAUCE FOR STRETCHING */
-        resize: both; 
-        overflow: hidden; 
-        min-width: 400px;
-        min-height: 300px;
-    }
-
-    /* --- WINDOW HEADER (DRAGGABLE AREA) --- */
-    #window-header {
-        height: 35px;
-        background: #b91c1c; /* Red header for contrast */
-        border-bottom: 2px solid #333;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 10px;
-        cursor: grab;
-        user-select: none;
-    }
-    #window-header:active { cursor: grabbing; }
-
-    #window-title { font-size: 18px; color: #fff; font-weight: bold; letter-spacing: 1px; }
-    
-    .window-controls { display: flex; gap: 5px; }
-    .win-btn {
-        width: 20px; height: 20px;
-        background: #000;
-        border: 1px solid #fff;
-        color: #fff;
-        font-size: 14px;
-        line-height: 16px;
-        text-align: center;
-        cursor: pointer;
-    }
-    .win-btn:hover { background: #fff; color: #000; }
-    .close-btn:hover { background: red; border-color: red; color: white; }
-
-    /* --- CONTENT AREA (SCROLLABLE INSIDE WINDOW) --- */
-    #window-content {
-        flex-grow: 1;
-        overflow-y: auto; /* Scroll inside the window */
-        background-color: rgba(0, 0, 0, 0.95);
-        position: relative;
-    }
-
-    /* --- MODIFIED SITE WRAPPER --- */
-    #site-wrapper {
-        width: 100%; /* Changed from 960px to fit window */
-        margin: 0 auto;
-        min-height: 100%;
-        display: flex;
-        flex-direction: column;
-        border: none; /* Removed border as window handles it */
-        box-shadow: none;
-    }
-
-    /* --- TASKBAR (BOTTOM BUTTON) --- */
-    #taskbar {
-        width: 100%;
-        height: 50px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        pointer-events: none; /* Let clicks pass through empty space */
-        z-index: 10;
-        margin-bottom: 20px;
-    }
-    #restore-btn {
-        pointer-events: auto;
-        background: #000;
-        color: #facc15;
-        border: 2px solid #facc15;
-        font-family: 'VT323', monospace;
-        font-size: 24px;
-        padding: 5px 20px;
-        cursor: pointer;
-        text-transform: uppercase;
-        box-shadow: 0 0 15px #facc15;
-        transition: all 0.2s;
-        text-shadow: 0 0 5px #facc15;
-    }
-    #restore-btn:hover {
-        background: #facc15;
-        color: #000;
-        transform: translateY(-2px);
-    }
-
-    /* --- PREVIOUS CSS (Unchanged mostly) --- */
-    #top-bar { height: 25px; background: #000; border-bottom: 1px solid #333; display: flex; justify-content: flex-end; align-items: center; padding: 0 10px; font-size: 14px; color: #888; }
-    #top-bar a { color: #888; margin-left: 15px; text-decoration: none; }
-    #top-bar a:hover { color: #fff; }
-    #header { height: 100px; background: linear-gradient(to bottom, #450a0a, #000); display: flex; align-items: center; justify-content: center; border-bottom: 2px solid #b91c1c; position: relative; }
-    #header h1 { font-size: 60px; color: #fff; text-shadow: 0 0 10px #b91c1c; margin: 0; line-height: 1; }
-    #nav { background: #000; border-bottom: 1px solid #333; display: flex; justify-content: center; gap: 40px; padding: 10px 0; }
-    .nav-link { color: #ccc; font-size: 24px; text-decoration: none; text-transform: uppercase; cursor: pointer; }
-    .nav-link:hover { color: #b91c1c; text-shadow: 0 0 5px #b91c1c; }
-    .dropdown { position: relative; display: inline-block; }
-    .dropdown-content { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background-color: #111; min-width: 260px; border: 2px solid #b91c1c; padding: 15px; z-index: 100; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,1); }
-    .dropdown:hover .dropdown-content { display: block; }
-    .player-btn { background: none; border: none; color: #facc15; font-size: 22px; cursor: pointer; margin: 0 5px; }
-    .player-btn:hover { color: #fff; }
-    #volume-slider { width: 100%; margin-top: 10px; accent-color: #b91c1c; cursor: pointer; }
-    #content { padding: 20px; flex-grow: 1; }
-    #hero { width: 100%; height: 220px; border: 2px solid #333; background: radial-gradient(circle, #222, #000); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; position: relative; }
-    #splash-text { font-size: 32px; color: #facc15; text-align: center; padding: 20px; }
-    
-    /* Grid adjustments for responsive window */
-    .grid-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Auto-fit columns */
-        gap: 20px;
-        min-height: 400px;
-    }
-
-    .col { display: flex; flex-direction: column; gap: 20px; height: 100%; }
-    .box { border: 2px solid #333; background: #0a0a0a; position: relative; overflow: hidden; transition: border-color 0.2s; display: flex; flex-direction: column; justify-content: center; align-items: center; text-decoration: none; min-height: 150px; }
-    .box:hover { border-color: #b91c1c; }
-    .h-full { height: 100%; }
-    .h-half { height: 50%; }
-    .box h2 { color: #fff; font-size: 32px; margin: 0; z-index: 2; }
-    .box p { color: #888; font-size: 18px; margin: 0; z-index: 2; }
-    .bg-img { position: absolute; inset: 0; opacity: 0.3; background-size: cover; background-position: center; z-index: 1; transition: opacity 0.3s; }
-    .box:hover .bg-img { opacity: 0.5; }
-    .alert-mode { color: #ef4444 !important; text-shadow: 0 0 10px #ef4444; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-</style>
+        /* Typography matches */
+        h1, h2, h3 { color: white; text-transform: uppercase; }
+        a { color: #ccc; text-decoration: none; display: block; }
+        a:hover { color: white; background-color: #333; }
+        
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .grid-layout { grid-template-columns: 1fr !important; }
+            .hide-mobile { display: none; }
+        }
+    </style>
 </head>
-<body>
+<body class="p-2 md:p-8 min-h-screen">
 
-<div id="os-window">
-    <div id="window-header">
-        <div id="window-title"></div>
-        <div class="window-controls">
-            <div class="win-btn" onclick="minimizeWindow()">_</div>
-            <div class="win-btn" onclick="toggleFullscreen()">[]</div>
-            <div class="win-btn close-btn" onclick="closeWindow()">X</div>
-        </div>
-    </div>
+    <div class="main-container p-2">
+        
+        <header class="box-border h-40 relative overflow-hidden flex items-end justify-end p-4">
+            <img src="https://placehold.co/800x200/222/fff?text=BANNER+IMAGE" class="absolute inset-0 w-full h-full object-cover opacity-50">
+            <h1 class="relative z-10 text-5xl bg-black px-2 border border-white">WEBAN3E1@@</h1>
+        </header>
 
-    <div id="window-content">
-        <div id="site-wrapper">
-            
-            <div id="top-bar">
-                <span id="welcome-message">welcome, ?</span>
-                <a href="account.html">(my account)</a>
-            </div>
+        <div class="grid-layout grid grid-cols-4 gap-4">
 
-            <div id="header">
-                <h1>ews</h1>
-            </div>
-
-            <div id="nav">
-                <a href="index.html" class="nav-link">home</a>
-                <a href="list.html" class="nav-link">list</a>
+            <aside class="col-span-1">
                 
-                <div class="dropdown">
-                    <span class="nav-link" style="color: #facc15;">music ▼</span>
-                    <div class="dropdown-content">
-                        <div style="color: #fff; margin-bottom: 10px; font-size: 18px;"></div>
-                        <button id="rewind-btn" class="player-btn">[&lt;&lt;]</button>
-                        <button id="play-pause-btn" class="player-btn">[&gt;]</button>
-                        <button id="skip-btn" class="player-btn">[&gt;&gt;]</button>
-                        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+                <div class="box-border p-2">
+                    <h2 class="border-b border-white mb-2 text-xl font-bold">:: ABOUT ANGEL ::</h2>
+                    <nav class="text-lg leading-relaxed">
+                        <a href="index.html">home</a>
+                        <a href="list.html">list</a> <a href="register.html">📷 REGISTER</a> <a href="#">📷 DIARY</a>
+                    </nav>
+                </div>
+
+                <div class="box-border p-2">
+                    <h2 class="border-b border-white mb-2 text-xl font-bold">:: WEEB SHIT ::</h2>
+                    <ul class="list-disc pl-4 text-gray-400">
+                        <li>yaoi</li>
+                        <li>yaoi</li>
+                        <li>yaoi</li>
+                        <li>yaoi</li>
+                    </ul>
+                </div>
+
+                <div class="box-border hide-mobile">
+                    <img src="https://placehold.co/150x400/111/fff?text=Tall+Char" class="w-full h-full object-cover grayscale">
+                </div>
+            </aside>
+
+            <main class="col-span-2">
+                
+                <div class="box-border p-1">
+                    <div class="bg-gray-900 border border-gray-600 p-4">
+                        <h2 class="text-3xl text-center border-b-2 border-dashed border-gray-600 mb-4 font-bold">PR3P4R3 4 D3ATH</h2>
+                        <div class="flex gap-3">
+                            <img src="https://placehold.co/80x80/000/fff?text=PFP" class="border border-white w-20 h-20">
+                            <p class="text-lg leading-tight text-gray-400">
+
+                            </p>
+                        </div>
                     </div>
                 </div>
 
-                <a href="chat.html" class="nav-link">chat</a>
-                <a href="settings.html" class="nav-link">settings</a>
-            </div>
-
-            <div id="content">
-                
-                <div id="hero">
-                    <div class="bg-img" style="background-image: url('https://placehold.co/960x250/111/000?text=.');"></div>
-                    <p id="splash-text">loading</p>
+                <div class="box-border p-4 min-h-[150px]">
+                    <h3 class="bg-white text-black inline-block px-1 mb-2">UPDATES</h3>
+                    <div class="text-sm font-mono text-gray-400">
+                        <p>6.10.2025 🕷 website now online</p>
+                        <p>...</p>
+                    </div>
                 </div>
 
-                <div class="grid-container">
-                    
-                    <div class="col">
-                        <a href="chat.html" class="box h-full">
-                            <div class="bg-img" style="background-image: url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcHJhZ2Z0bnZ4eGp3eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L20mbc7yRRFja/giphy.gif');"></div>
-                            <h2>chat</h2>
-                            <p>open</p>
-                        </a>
+                <div class="box-border p-1 bg-gray-800">
+                    <div class="bg-black border border-gray-600 h-40 flex items-center justify-center">
+                        <span class="animate-pulse text-red-600">VIDEO_PLAYER_ERROR</span>
                     </div>
+                </div>
 
-                    <div class="col">
-                        <a href="list.html" class="box h-half">
-                            <div class="bg-img" style="background-image: url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0bnZ4eGp3eXF6eXF6eXF6eXF6eXF6eXF6eXF6eXF6eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o6vXVzKWtk4JC6bcU/giphy.gif');"></div>
-                            <h2>list</h2>
-                            <p>View</p>
-                        </a>
-                        
-                        <div class="box h-half" style="border-color: #555;">
-                            <div style="z-index: 2; text-align: center; padding: 10px;">
-                                <img id="player-cover-art" src="" style="width: 60px; height: 60px; border: 1px solid #fff; margin: 0 auto 10px;">
-                                <div style="font-size: 14px; color: #b91c1c;">playing:</div>
-                                <div id="player-title" style="color: #fff; font-size: 18px;">...</div>
-                                <div id="player-artist" style="color: #888; font-size: 14px;">Loading...</div>
+            </main>
+
+            <aside class="col-span-1">
+                
+                <div class="box-border p-2">
+                    <h2 class="border-b border-white mb-2 text-center bg-gray-200 text-black font-bold">TODO LIST</h2>
+                    <div class="flex flex-col gap-1 text-sm">
+                        <label><input type="checkbox" disabled checked> finish whole site</label>
+                        <label><input type="checkbox" disabled> sleep</label>
+                    </div>
+                </div>
+
+                <div class="box-border bg-gray-300 p-1 text-black">
+                    <div class="bg-gray-200 border border-gray-400 p-2">
+                        <div class="flex justify-between bg-blue-800 text-white px-1 text-xs mb-1">
+                            <span>WEB DECK player</span>
+                            <span>_ [] X</span>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <div id="song-title" class="bg-black text-green-500 text-xs px-1 overflow-hidden whitespace-nowrap">NO DISC</div>
+                            <div class="flex justify-between mt-1">
+                                <button onclick="prevSong()" class="border border-black bg-gray-100 px-1 hover:bg-white">|&lt;</button>
+                                <button onclick="togglePlay()" id="play-btn" class="border border-black bg-gray-100 px-2 hover:bg-white">></button>
+                                <button onclick="nextSong()" class="border border-black bg-gray-100 px-1 hover:bg-white">&gt;|</button>
                             </div>
                         </div>
                     </div>
-
-                    <div class="col">
-                        <a href="settings.html" class="box h-half">
-                            <div class="bg-img" style="background-image: url('https://placehold.co/300x200/222/000?text=.');"></div>
-                            <h2>settings</h2>
-                            <p>config</p>
-                        </a>
-                        
-                        <div class="box h-half">
-                            <div style="z-index: 2; text-align: center;">
-                                <h2 style="font-size: 24px;">2.0</h2>
-                                <p></p>
-                                <a href="chat.html" style="color: #b91c1c; font-size: 14px; margin-top: 5px;">updates</a>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
-            </div>
-        </div>
+
+                <div class="box-border p-2 text-center">
+                    <h2 class="border-b border-gray-600 mb-2">WEBRING</h2>
+                    <div class="flex justify-center gap-2 text-red-600">
+                        <a href="#">&lt;&lt;</a>
+                        <span>☠️</span>
+                        <a href="#">&gt;&gt;</a>
+                    </div>
+                </div>
+
+            </aside>
+
+        </div> <footer class="mt-4 border-t border-dashed border-gray-600 pt-4 flex justify-center gap-2 flex-wrap">
+            <img src="https://placehold.co/88x31/333/fff?text=neocities">
+            <img src="https://placehold.co/88x31/333/fff?text=html5">
+            <img src="https://placehold.co/88x31/333/fff?text=css3">
+        </footer>
+
     </div>
-</div>
 
-<div id="taskbar">
-    <button id="restore-btn" onclick="restoreWindow()"></button>
-</div>
+    <audio id="audio" src=""></audio>
+    <script>
+        // Simple logic to use your existing playlist.js
+        // Assumes playlist.js has a variable named 'playlist' or 'songs'
+        // If not, edit the variable name below.
+        
+        let trackList = [];
+        // Attempt to find the array from your file
+        if (typeof playlist !== 'undefined') trackList = playlist;
+        else if (typeof songs !== 'undefined') trackList = songs;
 
-<audio id="audio-player"></audio>
-<div id="player-info-container" style="display:none;"></div>
+        let currentIdx = 0;
+        const audio = document.getElementById('audio');
+        const titleDisplay = document.getElementById('song-title');
+        const playBtn = document.getElementById('play-btn');
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
-        authDomain: "ewsitechat.firebaseapp.com",
-        databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
-        projectId: "ewsitechat",
-        storageBucket: "ewsitechat.firebasestorage.app",
-        messagingSenderId: "282495574514",
-        appId: "1:282495574514:web:e2781da630d93fc1ce8b6b"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    // --- SPLASH LOGIC ---
-    const splashEl = document.getElementById('splash-text');
-    const randomSplashes = [
-        "blacked out like an lv sandal", "son", "bbq chicken alert", 
-        "trick or treat.. smell my.. donuts..", "100 perkaholic or pounded by a margwa",
-        "considering a page", "long live futtbucker", "six seven", "oh brother..",
-        "are you even an ew student?", "i bet ur failing", "get the bawlls!!",
-        "six one", "add jiggletip on clash", "new stuff soon",
-        "WE yes WE are brainless and failing", "updates soon.. -nl", "no super seniors", "merry christmas, and happy update day"
-    ];
-
-    const announcementRef = ref(db, 'admin/announcement');
-    onValue(announcementRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data && data.text) {
-            splashEl.innerText =` ${data.text.toLowerCase()} `;
-            splashEl.classList.add('alert-mode');
-        } else {
-            splashEl.classList.remove('alert-mode');
-            if (splashEl.innerText.includes("announcement") || splashEl.innerText === "loading...") {
-                splashEl.innerText = randomSplashes[Math.floor(Math.random() * randomSplashes.length)];
+        function loadTrack(index) {
+            if (trackList.length > 0) {
+                const track = trackList[index];
+                // Checks for 'src' or 'file' property
+                audio.src = track.src || track.file || track.url; 
+                // Checks for 'title' or 'name' property
+                titleDisplay.innerText = (track.title || track.name) + " - " + (track.artist || "");
             }
         }
-    });
-</script>
 
-<script>
-    // --- WINDOW LOGIC ---
-    const osWindow = document.getElementById("os-window");
-    const header = document.getElementById("window-header");
-
-    let isFullscreen = true;
-    let preFullscreenStyle = {};
-
-    function closeWindow() {
-        osWindow.style.display = "none";
-    }
-    
-    function minimizeWindow() {
-        osWindow.style.display = "none";
-    }
-
-    function restoreWindow() {
-        osWindow.style.display = "flex";
-    }
-
-    function toggleFullscreen() {
-        if (!isFullscreen) {
-            // Save current state
-            preFullscreenStyle = {
-                top: osWindow.style.top,
-                left: osWindow.style.left,
-                width: osWindow.style.width,
-                height: osWindow.style.height
-            };
-            // Go Full
-            osWindow.style.top = "0";
-            osWindow.style.left = "0";
-            osWindow.style.width = "100vw";
-            osWindow.style.height = "100vh";
-            isFullscreen = true;
-        } else {
-            // Restore
-            osWindow.style.top = preFullscreenStyle.top || "10vh";
-            osWindow.style.left = preFullscreenStyle.left || "10vw";
-            osWindow.style.width = preFullscreenStyle.width || "850px";
-            osWindow.style.height = preFullscreenStyle.height || "600px";
-            isFullscreen = false;
+        function togglePlay() {
+            if (audio.paused) {
+                audio.play();
+                playBtn.innerText = "||";
+            } else {
+                audio.pause();
+                playBtn.innerText = ">";
+            }
         }
-    }
 
-    // Draggable Logic
-    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-    header.onmousedown = dragMouseDown;
-
-    function dragMouseDown(e) {
-        if(isFullscreen) return; // Don't drag if fullscreen
-        e = e || window.event;
-        e.preventDefault();
-        pos3 = e.clientX;
-        pos4 = e.clientY;
-        document.onmouseup = closeDragElement;
-        document.onmousemove = elementDrag;
-    }
-
-    function elementDrag(e) {
-        e = e || window.event;
-        e.preventDefault();
-        pos1 = pos3 - e.clientX;
-        pos2 = pos4 - e.clientY;
-        pos3 = e.clientX;
-        pos4 = e.clientY;
-        osWindow.style.top = (osWindow.offsetTop - pos2) + "px";
-        osWindow.style.left = (osWindow.offsetLeft - pos1) + "px";
-    }
-
-    function closeDragElement() {
-        document.onmouseup = null;
-        document.onmousemove = null;
-    }
-
-    // --- ORIGINAL PLAYER LOGIC ---
-    const baseURL = "https://ewsmusic1.netlify.app/"; 
-    const playlist = [
-        { title: "Xtal", artist: "Aphex Twin", src: baseURL + "xtal.mp3", cover: baseURL + "aphex.jpg" },
-        { title: "I Don't Wanna Be Me", artist: "Type O Negative", src: baseURL + "idontwannabeme.mp3", cover: baseURL + "ton.jpg" },
-        { title: "Life Is Killing Me", artist: "Type O Negative", src: baseURL + "lifeiskilling.mp3", cover: baseURL + "ton.jpg" },
-        { title: "Exit Music (For a Film)", artist: "Radiohead", src: baseURL + "exitmusic.mp3", cover: baseURL + "radiohead.jpg" },
-        { title: "Alternative Outro", artist: "LUCKI", src: baseURL + "alternativeoutro.mp3", cover: baseURL + "lucki.jpg" },
-        { title: "Bite My Lip", artist: "fakemink", src: baseURL + "bitemylip.mp3", cover: baseURL + "fakemink.jpg" },
-        { title: "Ambilux", artist: "fakemink", src: baseURL + "ambilux.mp3", cover: baseURL + "fakemink3.jpg" },
-        { title: "I'm Like Why", artist: "xaviersobased", src: baseURL + "imlikewhy.mp3", cover: baseURL + "xav.jpg" },
-        { title: "Love Hate", artist: "xaviersobased", src: baseURL + "lovehate.mp3", cover: baseURL + "xav2.jpg" },
-        { title: "Foamposite Interlude", artist: "smokedope2016", src: baseURL + "foamposite.mp3", cover: baseURL + "smokedope2016.jpg" },
-        { title: "Abysmal Depths Are Flooded", artist: "Xasthur", src: baseURL + "abysmaldepthsareflooded.mp3", cover: baseURL + "xasthur.jpg" },
-        { title: "Diamonds", artist: "Chris Travis", src: baseURL + "diamonds.mp3", cover: baseURL + "christravis.jpg" },
-        { title: "Black Magic", artist: "Ethel Wulf", src: baseURL + "blackmagic.mp3", cover: baseURL + "ethel.jpg" },
-        { title: "4 Raws", artist: "EsDeeKid", src: baseURL + "4raws.mp3", cover: baseURL + "esdee.jpg" },
-        { title: "Fever", artist: "fakemink/buckshot", src: baseURL + "fever.mp3", cover: baseURL + "buckshot.jpg" },
-        { title: "Stalks", artist: "Ghost Mountain", src: baseURL + "stalks.mp3", cover: baseURL + "ghostmountain.jpg" },
-        { title: "MIA", artist: "feng", src: baseURL + "mia.mp3", cover: baseURL + "feng.jpg" },
-        { title: "head in the ceiling fan", artist: "Title Fight", src: baseURL + "titlefight.mp3", cover: baseURL + "title-fih.jpg" },
-        { title: "Turn Me Loose", artist: "limpbizkit/eminem", src: baseURL + "turnmeloose.mp3", cover: baseURL + "limp.jpg" },
-        { title: "black beetles", artist: "esdeekid", src: baseURL + "bbr.mp3", cover: baseURL + "esdee2.jpg" },
-        { title: "apathy", artist: "esdeekid", src: baseURL + "apathy.mp3", cover: baseURL + "esdee3.jpg" },
-        { title: "bring it back", artist: "chris travis", src: baseURL + "bib.mp3", cover: baseURL + "chris2.jpg" },
-        { title: "die til you live", artist: "fakemink", src: baseURL + "dtyl.mp3", cover: baseURL + "fakemink5.jpg" },
-        { title: "worthit", artist: "xaviersobased", src: baseURL + "worthit.mp3", cover: baseURL + "81853ABB-FB87-4A20-9303-9624B777245B.jpeg" },
-        { title: "in da party", artist: "smokedope2016", src: baseURL + "indaparty.mp3", cover: baseURL + "smokedope4.jpg" },
-        { title: "say it aint dro", artist: "smokedope2016", src: baseURL + "dro.mp3", cover: baseURL + "smokedope3.jpg" },
-        { title: "blunts on my mind", artist: "ethel wulf", src: baseURL + "bluntsomm.mp3", cover: baseURL + "ethel2.jpg" },
-        { title: "luper", artist: "earl sweatshirt", src: baseURL + "luper.mp3", cover: baseURL + "earl.jpg" },
-        { title: "frat", artist: "smokedope2016", src: baseURL + "frat.mp3", cover: baseURL + "smokedope2.jpg" },
-        { title: "hit the home", artist: "the hand of peace", src: baseURL + "clock.mp3", cover: baseURL + "handofpeace.jpg" },
-        { title: "blow me", artist: "fakemink", src: baseURL + "blowme.mp3", cover: baseURL + "fakeminkk.jpg" },
-        { title: "minerva", artist: "deftones", src: baseURL + "minerva.mp3", cover: baseURL + "deftones.jpg" },
-        { title: "hold on", artist: "limpbizkit", src: baseURL + "holdon.mp3", cover: baseURL + "limpbizkit.jpg" },
-        { title: "my way", artist: "limpbizkit", src: baseURL + "myway.mp3", cover: baseURL + "limpbizkit.jpg" },
-        { title: "new update soon", artist: "-nl", src: baseURL + "xtal.mp3", cover: baseURL + "aphextwin.jpg" }
-    ];
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const playerTitleEl = document.getElementById('player-title');
-        const playerArtistEl = document.getElementById('player-artist');
-        const playerCoverArt = document.getElementById('player-cover-art');
-        const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
-
-        try {
-            // --- BACKGROUND LOGIC ---
-            const specialBg = '81853ABB-FB87-4A20-9303-9624B777245B.jpeg';
-            const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg', 'IMG_5264.jpeg', 'IMG_4945.jpeg'];
-            const chance = Math.floor(Math.random() * 100); 
-            let chosenBg = (chance === 0) ? specialBg : normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
-            document.body.style.backgroundImage = `url('${chosenBg}')`;
-
-            // --- USER UI ---
-            const welcomeMessage = document.getElementById('welcome-message');
-
-            function updateUI() {
-                let username = localStorage.getItem('username');
-                if (username) {
-                    welcomeMessage.textContent = `Welcome, ${username}`;
-                } else {
-                    welcomeMessage.textContent = 'Welcome, ?';
-                }
-            }
-            updateUI();
-
-            // --- MUSIC PLAYER LOGIC ---
-            const audioPlayer = document.getElementById('audio-player');
-            const playPauseBtn = document.getElementById('play-pause-btn');
-            const rewindBtn = document.getElementById('rewind-btn');
-            const skipBtn = document.getElementById('skip-btn');
-            const volumeSlider = document.getElementById('volume-slider');
-            
-            let currentSongIndex = 0;
-            let isPlaying = false;
-
-            const secretSong = {
-                title: "hey, big guy said im an easter egg",
-                artist: "i heard, if u put /secret at the end of the link",
-                src: "clock.mp3",
-                cover: "handofpeace.jpg"
-            };
-
-            function loadSong(songIndex) {
-                const song = (songIndex === -1) ? secretSong : playlist[songIndex];
-                if (!song || !song.src || !song.cover) {
-                    skipSong(true); 
-                    return;
-                }
-
-                audioPlayer.src = song.src; 
-                playerTitleEl.textContent = song.title;
-                playerArtistEl.textContent = song.artist;
-                playerCoverArt.src = song.cover;
-                playPauseBtn.textContent = '[>]';
-                isPlaying = false;
-            }
-
-            function playSong() {
-                if (!audioPlayer.src) { return; }
-                audioPlayer.volume = volumeSlider.value; 
-
-                const playPromise = audioPlayer.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        playPauseBtn.textContent = '[||]';
-                        isPlaying = true;
-                    }).catch(error => {
-                        console.warn("Auto-play blocked", error);
-                    });
-                }
-            }
-
-            function pauseSong() {
-                audioPlayer.pause();
-                playPauseBtn.textContent = '[>]';
-                isPlaying = false;
-            }
-
-            function togglePlayPause() {
-                if (isPlaying) { pauseSong(); } else { playSong(); }
-            }
-
-            function skipSong(skipOnly = false) {
-                let nextSongIndex = Math.floor(Math.random() * playlist.length);
-                if (nextSongIndex === currentSongIndex && playlist.length > 1) {
-                    nextSongIndex = (nextSongIndex + 1) % playlist.length; 
-                }
-                currentSongIndex = nextSongIndex;
-                loadSong(currentSongIndex);
-                if (audioPlayer.src && !skipOnly) { playSong(); }
-            }
-
-            function rewindSong() {
-                currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
-                loadSong(currentSongIndex);
-                if (audioPlayer.src) { playSong(); }
-            }
-
-            // --- STORAGE SAVE/LOAD ---
-            window.addEventListener('beforeunload', () => {
-                if (audioPlayer.currentTime > 0) {
-                    const musicState = {
-                        currentSongIndex: currentSongIndex,
-                        currentTime: audioPlayer.currentTime,
-                        volume: audioPlayer.volume,
-                        isPlaying: isPlaying
-                    };
-                    sessionStorage.setItem('musicPlayerState', JSON.stringify(musicState));
-                }
-            });
-
-            function loadInitialState() {
-                const savedStateJSON = sessionStorage.getItem('musicPlayerState');
-                let savedState = null;
-                if (savedStateJSON) {
-                    try { savedState = JSON.parse(savedStateJSON); } 
-                    catch (e) { sessionStorage.removeItem('musicPlayerState'); }
-                }
-
-                if (savedState) {
-                    currentSongIndex = savedState.currentSongIndex;
-                    loadSong(currentSongIndex);
-                    volumeSlider.value = savedState.volume || 1;
-                    audioPlayer.volume = savedState.volume || 1;
-                    audioPlayer.addEventListener('loadedmetadata', () => {
-                        audioPlayer.currentTime = savedState.currentTime || 0;
-                        if (savedState.isPlaying) { playSong(); }
-                    }, { once: true }); 
-                } else {
-                    const rareSongChance = Math.floor(Math.random() * 50);
-                    currentSongIndex = (rareSongChance === 0) ? -1 : Math.floor(Math.random() * playlist.length);
-                    loadSong(currentSongIndex);
-                    audioPlayer.volume = volumeSlider.value;
-                }
-            }
-
-            playPauseBtn.addEventListener('click', togglePlayPause);
-            skipBtn.addEventListener('click', () => skipSong(false));
-            rewindBtn.addEventListener('click', rewindSong);
-            volumeSlider.addEventListener('input', (e) => { audioPlayer.volume = e.target.value; });
-            audioPlayer.addEventListener('ended', () => skipSong(false));
-            playerCoverArt.addEventListener('error', () => { playerCoverArt.src = placeholderCover; });
-
-            loadInitialState();
-
-        } catch (e) {
-            console.error("Script error:", e);
+        function nextSong() {
+            currentIdx = (currentIdx + 1) % trackList.length;
+            loadTrack(currentIdx);
+            audio.play();
+            playBtn.innerText = "||";
         }
-    });
-</script>
+
+        function prevSong() {
+            currentIdx = (currentIdx - 1 + trackList.length) % trackList.length;
+            loadTrack(currentIdx);
+            audio.play();
+            playBtn.innerText = "||";
+        }
+
+        // Init
+        if(trackList.length > 0) loadTrack(0);
+    </script>
 </body>
 </html>
