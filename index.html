@@ -2,186 +2,257 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SYSTEM_ROOT</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <script src="playlist.js"></script>
     <style>
+        :root {
+            --bg-color: #050505;
+            --border-color: #ffffff;
+            --accent-color: #d4d4d4;
+        }
+        
         body {
             font-family: 'VT323', monospace;
             background-color: #000;
-            color: #d4d4d4;
-            height: 100vh; /* LOCKS HEIGHT */
+            color: var(--accent-color);
+            height: 100vh;
             width: 100vw;
-            overflow: hidden; /* DISABLES PAGE SCROLL */
+            overflow: hidden; /* STRICT NO PAGE SCROLL */
             display: flex;
-            flex-direction: column;
-            padding: 1rem;
-            box-sizing: border-box;
+            align-items: center;
+            justify-content: center;
             background-image: url('IMG_4928.jpeg'); /* Your BG */
             background-size: cover;
             background-position: center;
         }
 
-        /* The Glass/Container Effect */
-        .glass-panel {
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid #333;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        /* The Mainframe Container */
+        .mainframe {
+            background-color: #000;
+            border: 3px double white; /* The Retro Double Border */
+            width: 100%;
+            max-width: 1100px;
+            height: 95vh; /* Leaves a tiny gap on edges */
             display: flex;
             flex-direction: column;
+            padding: 4px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            position: relative;
         }
 
-        .crt-border { border: 1px solid #555; }
-        
-        /* Internal Scrolling for specific boxes only */
-        .scroll-box {
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: #444 #111;
+        /* Inner Boxes */
+        .section-box {
+            border: 1px solid white;
+            background: #080808;
+            padding: 8px;
+            overflow-y: auto; /* Internal scroll only */
         }
         
-        h1, h2, h3 { color: #facc15; text-transform: uppercase; letter-spacing: 1px; }
-        a { color: #888; text-decoration: none; transition: 0.2s; display: block; }
-        a:hover { color: #facc15; background: #111; padding-left: 5px; }
+        .section-header {
+            background: white;
+            color: black;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
 
-        /* Mobile specific adjustments */
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #fff; }
+
+        /* Links */
+        a { text-decoration: none; color: #888; display: block; border-bottom: 1px dashed #333; }
+        a:hover { color: #fff; background: #222; padding-left: 4px; }
+
+        /* Mobile Tab System (Hidden on Desktop) */
+        .mobile-tabs { display: none; }
+
+        /* RESPONSIVE LAYOUT */
         @media (max-width: 768px) {
-            body { overflow-y: auto; height: auto; } /* Allow scroll on mobile only */
-            .desktop-grid { display: flex; flex-direction: column; }
+            .mainframe { height: 100vh; border: none; padding: 0; }
+            
+            /* Hide all columns by default on mobile */
+            .col-left, .col-center, .col-right {
+                display: none;
+                height: calc(100vh - 120px); /* Leave room for header/tabs */
+                overflow-y: auto;
+                padding: 10px;
+            }
+
+            /* Show active tab */
+            .active-tab { display: block !important; }
+
+            .mobile-tabs {
+                display: flex;
+                height: 50px;
+                border-top: 2px solid white;
+                background: #000;
+            }
+            .tab-btn {
+                flex: 1;
+                border-right: 1px solid #333;
+                background: #000;
+                color: #888;
+                font-family: 'VT323';
+                font-size: 1.2rem;
+            }
+            .tab-btn.active { background: white; color: black; }
         }
     </style>
 </head>
-<body class="gap-4">
+<body>
 
-    <header class="glass-panel w-full h-24 shrink-0 flex items-center justify-between px-6 relative overflow-hidden">
-        <div class="z-10">
-            <h1 class="text-5xl">SYSTEM_ROOT</h1>
-            <p class="text-gray-500 text-sm">>> WELCOME BACK_</p>
+    <div class="mainframe">
+        
+        <header class="h-24 border-b-2 border-white mb-2 relative shrink-0 overflow-hidden bg-gray-900">
+            <img src="https://placehold.co/800x200/000/fff?text=HEADER_IMG" class="absolute w-full h-full object-cover opacity-50">
+            <div class="absolute bottom-2 right-2 bg-black px-2 border border-white">
+                <h1 class="text-4xl text-white tracking-widest">SYSTEM_ROOT</h1>
+            </div>
+        </header>
+
+        <div class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-2 overflow-hidden">
+            
+            <aside id="tab-nav" class="col-left col-span-1 flex flex-col gap-2">
+                <div class="section-box flex-shrink-0">
+                    <div class="section-header">:: NAVIGATION ::</div>
+                    <nav class="text-xl space-y-1">
+                        <a href="index.html">> HOME_ROOT</a>
+                        <a href="list.html">> GAMES_DB</a>
+                        <a href="register.html">> LOGIN_SYS</a>
+                        <a href="#">> DIARY_LOG</a>
+                    </nav>
+                </div>
+                
+                <div class="section-box flex-1 p-0 border border-white relative overflow-hidden hidden md:block">
+                     <img src="https://placehold.co/200x400/111/fff?text=SIDE_IMG" class="absolute w-full h-full object-cover grayscale opacity-60">
+                </div>
+            </aside>
+
+            <main id="tab-main" class="col-center active-tab col-span-2 flex flex-col gap-2">
+                
+                <div class="section-box flex-shrink-0">
+                    <div class="section-header">:: USER_STATUS ::</div>
+                    <div class="flex gap-4">
+                        <img src="https://placehold.co/100x100/000/fff?text=PFP" class="border border-white w-24 h-24 flex-shrink-0">
+                        <div class="overflow-y-auto h-24 text-lg leading-tight pr-2">
+                            <p>hiii i'm a 16 year old loser with unrestricted internet access. i've been coding since i was like 13. welcome to the system.</p>
+                            <p class="mt-2 text-gray-500">// status: online</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-box flex-1 relative">
+                    <div class="section-header">:: UPDATES_LOG ::</div>
+                    <div class="absolute inset-x-2 bottom-2 top-10 overflow-y-auto font-mono text-sm text-green-500 space-y-2">
+                        <p>> [06.10.25] System initialization complete.</p>
+                        <p>> [06.09.25] Audio driver installed (playlist.js).</p>
+                        <p>> [06.08.25] CSS layout re-calibrated.</p>
+                        <p>> [06.07.25] Kernel panic resolved.</p>
+                    </div>
+                </div>
+                
+                <div class="h-10 flex justify-center gap-2 items-center hidden md:flex">
+                    <span class="text-xs text-gray-600">[ EST. 2025 ]</span>
+                </div>
+            </main>
+
+            <aside id="tab-widgets" class="col-right col-span-1 flex flex-col gap-2">
+                
+                <div class="section-box">
+                    <div class="section-header">:: TASKS ::</div>
+                    <ul class="text-sm space-y-1">
+                        <li>[x] Build layout</li>
+                        <li>[ ] Fix mobile view</li>
+                        <li>[ ] Sleep</li>
+                    </ul>
+                </div>
+
+                <div class="section-box bg-gray-200 text-black">
+                    <div class="bg-gray-300 border border-gray-500 p-1">
+                        <div class="flex justify-between bg-blue-800 text-white px-1 text-xs mb-1">
+                            <span>WINAMP_CLONE</span>
+                            <button>_</button>
+                        </div>
+                        <div class="bg-black text-green-500 font-mono text-xs p-1 mb-1 h-6 overflow-hidden whitespace-nowrap">
+                            <marquee id="track-display">NO DISC INSERTED...</marquee>
+                        </div>
+                        <div class="flex gap-1">
+                            <button onclick="controlAudio('prev')" class="bg-gray-100 border border-gray-600 px-2 text-xs">|&lt;</button>
+                            <button onclick="controlAudio('play')" id="play-btn" class="bg-gray-100 border border-gray-600 px-3 text-xs">></button>
+                            <button onclick="controlAudio('next')" class="bg-gray-100 border border-gray-600 px-2 text-xs">&gt;|</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-box text-center">
+                    <div class="border-b border-gray-700 mb-1 text-xs">WEBRING</div>
+                    <div class="flex justify-center gap-2 text-red-500 font-bold">
+                        <a href="#" class="inline border-none">&lt;</a>
+                        <span>X</span>
+                        <a href="#" class="inline border-none">&gt;</a>
+                    </div>
+                </div>
+
+            </aside>
         </div>
-        <img src="https://placehold.co/800x200/111/fff?text=HEADER+IMG" class="absolute inset-0 w-full h-full object-cover opacity-20">
-    </header>
 
-    <div class="desktop-grid flex-1 grid grid-cols-4 gap-4 min-h-0">
-
-        <aside class="col-span-1 flex flex-col gap-4 h-full">
-            <div class="glass-panel p-4 flex-1">
-                <h2 class="border-b border-gray-700 mb-2">NAVIGATION</h2>
-                <nav class="space-y-2 text-xl">
-                    <a href="index.html">/HOME</a>
-                    <a href="list.html">/GAMES</a>
-                    <a href="register.html">/REGISTER</a>
-                    <a href="#">/DIARY</a>
-                </nav>
-            </div>
-            
-            <div class="glass-panel flex-1 overflow-hidden relative border border-gray-700">
-                <img src="https://placehold.co/200x300/000/333?text=IMG" class="absolute w-full h-full object-cover opacity-80">
-            </div>
-        </aside>
-
-        <main class="col-span-2 flex flex-col gap-4 h-full">
-            
-            <div class="glass-panel p-4 shrink-0">
-                <h2 class="text-2xl mb-2 text-center border-b border-gray-700 pb-1">STATUS</h2>
-                <div class="flex gap-4 items-start">
-                    <img src="https://placehold.co/100x100/222/facc15?text=PFP" class="border border-gray-600">
-                    <p class="text-gray-400 leading-tight">
-                        hiii i'm a 16 year old loser with unrestricted internet access. i've been coding since i was like 13.
-                    </p>
-                </div>
-            </div>
-
-            <div class="glass-panel flex-1 p-2 relative">
-                <h3 class="bg-gray-800 text-white px-2 py-1 text-sm absolute top-0 left-0 w-full">UPDATES_LOG</h3>
-                <div class="scroll-box mt-8 h-full p-2 font-mono text-sm text-green-600">
-                    <p>> [06/10/25] system online...</p>
-                    <p>> [06/09/25] added music player...</p>
-                    <p>> [06/08/25] layout fixed...</p>
-                    </div>
-            </div>
-
-        </main>
-
-        <aside class="col-span-1 flex flex-col gap-4 h-full">
-            
-            <div class="glass-panel p-2 shrink-0 bg-gray-900">
-                <div class="border border-gray-600 p-2">
-                    <div class="flex justify-between text-xs text-gray-500 mb-1">
-                        <span>AUDIO_OUT</span>
-                        <span>[ON]</span>
-                    </div>
-                    <div class="bg-black border border-gray-700 h-8 flex items-center px-2 mb-2">
-                        <marquee id="track-name" class="text-green-500 text-sm">NO_DISC_INSERTED</marquee>
-                    </div>
-                    <div class="flex justify-between gap-1">
-                        <button onclick="controlPlayer('prev')" class="bg-gray-800 text-white w-full border border-gray-600 hover:bg-gray-700"><</button>
-                        <button onclick="controlPlayer('play')" id="play-btn" class="bg-gray-800 text-white w-full border border-gray-600 hover:bg-gray-700">></button>
-                        <button onclick="controlPlayer('next')" class="bg-gray-800 text-white w-full border border-gray-600 hover:bg-gray-700">></button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="glass-panel p-4 flex-1">
-                <h2 class="border-b border-gray-700 mb-2">TASKS</h2>
-                <ul class="text-sm space-y-2 text-gray-500">
-                    <li>[x] start site</li>
-                    <li>[ ] finish css</li>
-                    <li>[ ] sleep</li>
-                </ul>
-            </div>
-
-            <div class="glass-panel p-2 text-center h-20 justify-center">
-                <div class="flex justify-center gap-4 text-gray-400">
-                    <a href="#" class="inline hover:text-white">< PREV</a>
-                    <span>*</span>
-                    <a href="#" class="inline hover:text-white">NEXT ></a>
-                </div>
-            </div>
-
-        </aside>
+        <div class="mobile-tabs">
+            <button class="tab-btn" onclick="switchTab('tab-nav')">NAV</button>
+            <button class="tab-btn active" onclick="switchTab('tab-main')">HOME</button>
+            <button class="tab-btn" onclick="switchTab('tab-widgets')">EXTRA</button>
+        </div>
 
     </div>
 
-    <audio id="bgm"></audio>
+    <audio id="player"></audio>
     <script>
-        const audio = document.getElementById('bgm');
-        const trackName = document.getElementById('track-name');
+        // Tab Switcher Logic
+        function switchTab(tabId) {
+            // Hide all cols
+            document.querySelectorAll('.col-left, .col-center, .col-right').forEach(el => {
+                el.classList.remove('active-tab');
+            });
+            // Show selected
+            document.getElementById(tabId).classList.add('active-tab');
+            
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // Audio Logic
+        const audio = document.getElementById('player');
+        const display = document.getElementById('track-display');
         const playBtn = document.getElementById('play-btn');
         let currentIdx = 0;
-        let isPlaying = false;
 
-        // Uses your playlist.js file
-        function initPlayer() {
-            if(typeof playlist !== 'undefined' && playlist.length > 0) {
-                loadSong(0);
+        function loadSong(idx) {
+            if(typeof playlist !== 'undefined' && playlist[idx]) {
+                audio.src = playlist[idx].src;
+                display.innerText = (playlist[idx].title || "Unknown") + " - " + (playlist[idx].artist || "Unknown");
             }
         }
 
-        function loadSong(index) {
-            const song = playlist[index];
-            audio.src = song.src;
-            trackName.innerText = song.title; // Adjust key based on your playlist.js
-        }
+        window.controlAudio = (action) => {
+            if(typeof playlist === 'undefined') return;
 
-        window.controlPlayer = (action) => {
-            if(!playlist) return;
-            
             if(action === 'play') {
-                if(audio.paused) {
-                    audio.play();
-                    playBtn.innerText = "||";
-                } else {
-                    audio.pause();
-                    playBtn.innerText = ">";
-                }
-            } else if(action === 'next') {
+                if(audio.paused) { audio.play(); playBtn.innerText = "||"; }
+                else { audio.pause(); playBtn.innerText = ">"; }
+            }
+            if(action === 'next') {
                 currentIdx = (currentIdx + 1) % playlist.length;
                 loadSong(currentIdx);
                 audio.play();
                 playBtn.innerText = "||";
-            } else if(action === 'prev') {
+            }
+            if(action === 'prev') {
                 currentIdx = (currentIdx - 1 + playlist.length) % playlist.length;
                 loadSong(currentIdx);
                 audio.play();
@@ -189,7 +260,10 @@
             }
         }
 
-        window.onload = initPlayer;
+        // Init
+        window.addEventListener('DOMContentLoaded', () => {
+            if(typeof playlist !== 'undefined' && playlist.length > 0) loadSong(0);
+        });
     </script>
 </body>
 </html>
