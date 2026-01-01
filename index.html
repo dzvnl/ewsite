@@ -6,206 +6,190 @@
     <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <script src="playlist.js"></script> 
+    <script src="playlist.js"></script>
     <style>
         body {
             font-family: 'VT323', monospace;
             background-color: #000;
-            color: #ccc;
-            background-image: url('IMG_4928.jpeg'); /* Placeholder for your BG */
+            color: #d4d4d4;
+            height: 100vh; /* LOCKS HEIGHT */
+            width: 100vw;
+            overflow: hidden; /* DISABLES PAGE SCROLL */
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            box-sizing: border-box;
+            background-image: url('IMG_4928.jpeg'); /* Your BG */
             background-size: cover;
             background-position: center;
-            background-attachment: fixed;
         }
-        /* The container style from your image */
-        .main-container {
-            background-color: rgba(0, 0, 0, 0.95);
-            border: 2px solid white;
-            box-shadow: 0 0 15px rgba(255,255,255,0.2);
-            max-width: 1000px;
-            margin: 0 auto;
+
+        /* The Glass/Container Effect */
+        .glass-panel {
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #333;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
         }
-        /* Specific borders */
-        .box-border { border: 2px solid white; margin-bottom: 10px; background: #000; }
-        .dashed-border { border: 2px dashed #555; padding: 10px; }
-        .double-border { border: 4px double white; }
+
+        .crt-border { border: 1px solid #555; }
         
-        /* Typography matches */
-        h1, h2, h3 { color: white; text-transform: uppercase; }
-        a { color: #ccc; text-decoration: none; display: block; }
-        a:hover { color: white; background-color: #333; }
+        /* Internal Scrolling for specific boxes only */
+        .scroll-box {
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #444 #111;
+        }
         
-        /* Mobile adjustments */
+        h1, h2, h3 { color: #facc15; text-transform: uppercase; letter-spacing: 1px; }
+        a { color: #888; text-decoration: none; transition: 0.2s; display: block; }
+        a:hover { color: #facc15; background: #111; padding-left: 5px; }
+
+        /* Mobile specific adjustments */
         @media (max-width: 768px) {
-            .grid-layout { grid-template-columns: 1fr !important; }
-            .hide-mobile { display: none; }
+            body { overflow-y: auto; height: auto; } /* Allow scroll on mobile only */
+            .desktop-grid { display: flex; flex-direction: column; }
         }
     </style>
 </head>
-<body class="p-2 md:p-8 min-h-screen">
+<body class="gap-4">
 
-    <div class="main-container p-2">
-        
-        <header class="box-border h-40 relative overflow-hidden flex items-end justify-end p-4">
-            <img src="https://placehold.co/800x200/222/fff?text=BANNER+IMAGE" class="absolute inset-0 w-full h-full object-cover opacity-50">
-            <h1 class="relative z-10 text-5xl bg-black px-2 border border-white">WEBAN3E1@@</h1>
-        </header>
+    <header class="glass-panel w-full h-24 shrink-0 flex items-center justify-between px-6 relative overflow-hidden">
+        <div class="z-10">
+            <h1 class="text-5xl">SYSTEM_ROOT</h1>
+            <p class="text-gray-500 text-sm">>> WELCOME BACK_</p>
+        </div>
+        <img src="https://placehold.co/800x200/111/fff?text=HEADER+IMG" class="absolute inset-0 w-full h-full object-cover opacity-20">
+    </header>
 
-        <div class="grid-layout grid grid-cols-4 gap-4">
+    <div class="desktop-grid flex-1 grid grid-cols-4 gap-4 min-h-0">
 
-            <aside class="col-span-1">
-                
-                <div class="box-border p-2">
-                    <h2 class="border-b border-white mb-2 text-xl font-bold">:: ABOUT ANGEL ::</h2>
-                    <nav class="text-lg leading-relaxed">
-                        <a href="index.html">home</a>
-                        <a href="list.html">list</a> <a href="register.html">📷 REGISTER</a> <a href="#">📷 DIARY</a>
-                    </nav>
+        <aside class="col-span-1 flex flex-col gap-4 h-full">
+            <div class="glass-panel p-4 flex-1">
+                <h2 class="border-b border-gray-700 mb-2">NAVIGATION</h2>
+                <nav class="space-y-2 text-xl">
+                    <a href="index.html">/HOME</a>
+                    <a href="list.html">/GAMES</a>
+                    <a href="register.html">/REGISTER</a>
+                    <a href="#">/DIARY</a>
+                </nav>
+            </div>
+            
+            <div class="glass-panel flex-1 overflow-hidden relative border border-gray-700">
+                <img src="https://placehold.co/200x300/000/333?text=IMG" class="absolute w-full h-full object-cover opacity-80">
+            </div>
+        </aside>
+
+        <main class="col-span-2 flex flex-col gap-4 h-full">
+            
+            <div class="glass-panel p-4 shrink-0">
+                <h2 class="text-2xl mb-2 text-center border-b border-gray-700 pb-1">STATUS</h2>
+                <div class="flex gap-4 items-start">
+                    <img src="https://placehold.co/100x100/222/facc15?text=PFP" class="border border-gray-600">
+                    <p class="text-gray-400 leading-tight">
+                        hiii i'm a 16 year old loser with unrestricted internet access. i've been coding since i was like 13.
+                    </p>
                 </div>
+            </div>
 
-                <div class="box-border p-2">
-                    <h2 class="border-b border-white mb-2 text-xl font-bold">:: WEEB SHIT ::</h2>
-                    <ul class="list-disc pl-4 text-gray-400">
-                        <li>yaoi</li>
-                        <li>yaoi</li>
-                        <li>yaoi</li>
-                        <li>yaoi</li>
-                    </ul>
-                </div>
+            <div class="glass-panel flex-1 p-2 relative">
+                <h3 class="bg-gray-800 text-white px-2 py-1 text-sm absolute top-0 left-0 w-full">UPDATES_LOG</h3>
+                <div class="scroll-box mt-8 h-full p-2 font-mono text-sm text-green-600">
+                    <p>> [06/10/25] system online...</p>
+                    <p>> [06/09/25] added music player...</p>
+                    <p>> [06/08/25] layout fixed...</p>
+                    </div>
+            </div>
 
-                <div class="box-border hide-mobile">
-                    <img src="https://placehold.co/150x400/111/fff?text=Tall+Char" class="w-full h-full object-cover grayscale">
-                </div>
-            </aside>
+        </main>
 
-            <main class="col-span-2">
-                
-                <div class="box-border p-1">
-                    <div class="bg-gray-900 border border-gray-600 p-4">
-                        <h2 class="text-3xl text-center border-b-2 border-dashed border-gray-600 mb-4 font-bold">PR3P4R3 4 D3ATH</h2>
-                        <div class="flex gap-3">
-                            <img src="https://placehold.co/80x80/000/fff?text=PFP" class="border border-white w-20 h-20">
-                            <p class="text-lg leading-tight text-gray-400">
-
-                            </p>
-                        </div>
+        <aside class="col-span-1 flex flex-col gap-4 h-full">
+            
+            <div class="glass-panel p-2 shrink-0 bg-gray-900">
+                <div class="border border-gray-600 p-2">
+                    <div class="flex justify-between text-xs text-gray-500 mb-1">
+                        <span>AUDIO_OUT</span>
+                        <span>[ON]</span>
+                    </div>
+                    <div class="bg-black border border-gray-700 h-8 flex items-center px-2 mb-2">
+                        <marquee id="track-name" class="text-green-500 text-sm">NO_DISC_INSERTED</marquee>
+                    </div>
+                    <div class="flex justify-between gap-1">
+                        <button onclick="controlPlayer('prev')" class="bg-gray-800 text-white w-full border border-gray-600 hover:bg-gray-700"><</button>
+                        <button onclick="controlPlayer('play')" id="play-btn" class="bg-gray-800 text-white w-full border border-gray-600 hover:bg-gray-700">></button>
+                        <button onclick="controlPlayer('next')" class="bg-gray-800 text-white w-full border border-gray-600 hover:bg-gray-700">></button>
                     </div>
                 </div>
+            </div>
 
-                <div class="box-border p-4 min-h-[150px]">
-                    <h3 class="bg-white text-black inline-block px-1 mb-2">UPDATES</h3>
-                    <div class="text-sm font-mono text-gray-400">
-                        <p>6.10.2025 🕷 website now online</p>
-                        <p>...</p>
-                    </div>
+            <div class="glass-panel p-4 flex-1">
+                <h2 class="border-b border-gray-700 mb-2">TASKS</h2>
+                <ul class="text-sm space-y-2 text-gray-500">
+                    <li>[x] start site</li>
+                    <li>[ ] finish css</li>
+                    <li>[ ] sleep</li>
+                </ul>
+            </div>
+
+            <div class="glass-panel p-2 text-center h-20 justify-center">
+                <div class="flex justify-center gap-4 text-gray-400">
+                    <a href="#" class="inline hover:text-white">< PREV</a>
+                    <span>*</span>
+                    <a href="#" class="inline hover:text-white">NEXT ></a>
                 </div>
+            </div>
 
-                <div class="box-border p-1 bg-gray-800">
-                    <div class="bg-black border border-gray-600 h-40 flex items-center justify-center">
-                        <span class="animate-pulse text-red-600">VIDEO_PLAYER_ERROR</span>
-                    </div>
-                </div>
-
-            </main>
-
-            <aside class="col-span-1">
-                
-                <div class="box-border p-2">
-                    <h2 class="border-b border-white mb-2 text-center bg-gray-200 text-black font-bold">TODO LIST</h2>
-                    <div class="flex flex-col gap-1 text-sm">
-                        <label><input type="checkbox" disabled checked> finish whole site</label>
-                        <label><input type="checkbox" disabled> sleep</label>
-                    </div>
-                </div>
-
-                <div class="box-border bg-gray-300 p-1 text-black">
-                    <div class="bg-gray-200 border border-gray-400 p-2">
-                        <div class="flex justify-between bg-blue-800 text-white px-1 text-xs mb-1">
-                            <span>WEB DECK player</span>
-                            <span>_ [] X</span>
-                        </div>
-                        <div class="flex flex-col gap-1">
-                            <div id="song-title" class="bg-black text-green-500 text-xs px-1 overflow-hidden whitespace-nowrap">NO DISC</div>
-                            <div class="flex justify-between mt-1">
-                                <button onclick="prevSong()" class="border border-black bg-gray-100 px-1 hover:bg-white">|&lt;</button>
-                                <button onclick="togglePlay()" id="play-btn" class="border border-black bg-gray-100 px-2 hover:bg-white">></button>
-                                <button onclick="nextSong()" class="border border-black bg-gray-100 px-1 hover:bg-white">&gt;|</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="box-border p-2 text-center">
-                    <h2 class="border-b border-gray-600 mb-2">WEBRING</h2>
-                    <div class="flex justify-center gap-2 text-red-600">
-                        <a href="#">&lt;&lt;</a>
-                        <span>☠️</span>
-                        <a href="#">&gt;&gt;</a>
-                    </div>
-                </div>
-
-            </aside>
-
-        </div> <footer class="mt-4 border-t border-dashed border-gray-600 pt-4 flex justify-center gap-2 flex-wrap">
-            <img src="https://placehold.co/88x31/333/fff?text=neocities">
-            <img src="https://placehold.co/88x31/333/fff?text=html5">
-            <img src="https://placehold.co/88x31/333/fff?text=css3">
-        </footer>
+        </aside>
 
     </div>
 
-    <audio id="audio" src=""></audio>
+    <audio id="bgm"></audio>
     <script>
-        // Simple logic to use your existing playlist.js
-        // Assumes playlist.js has a variable named 'playlist' or 'songs'
-        // If not, edit the variable name below.
-        
-        let trackList = [];
-        // Attempt to find the array from your file
-        if (typeof playlist !== 'undefined') trackList = playlist;
-        else if (typeof songs !== 'undefined') trackList = songs;
-
-        let currentIdx = 0;
-        const audio = document.getElementById('audio');
-        const titleDisplay = document.getElementById('song-title');
+        const audio = document.getElementById('bgm');
+        const trackName = document.getElementById('track-name');
         const playBtn = document.getElementById('play-btn');
+        let currentIdx = 0;
+        let isPlaying = false;
 
-        function loadTrack(index) {
-            if (trackList.length > 0) {
-                const track = trackList[index];
-                // Checks for 'src' or 'file' property
-                audio.src = track.src || track.file || track.url; 
-                // Checks for 'title' or 'name' property
-                titleDisplay.innerText = (track.title || track.name) + " - " + (track.artist || "");
+        // Uses your playlist.js file
+        function initPlayer() {
+            if(typeof playlist !== 'undefined' && playlist.length > 0) {
+                loadSong(0);
             }
         }
 
-        function togglePlay() {
-            if (audio.paused) {
+        function loadSong(index) {
+            const song = playlist[index];
+            audio.src = song.src;
+            trackName.innerText = song.title; // Adjust key based on your playlist.js
+        }
+
+        window.controlPlayer = (action) => {
+            if(!playlist) return;
+            
+            if(action === 'play') {
+                if(audio.paused) {
+                    audio.play();
+                    playBtn.innerText = "||";
+                } else {
+                    audio.pause();
+                    playBtn.innerText = ">";
+                }
+            } else if(action === 'next') {
+                currentIdx = (currentIdx + 1) % playlist.length;
+                loadSong(currentIdx);
                 audio.play();
                 playBtn.innerText = "||";
-            } else {
-                audio.pause();
-                playBtn.innerText = ">";
+            } else if(action === 'prev') {
+                currentIdx = (currentIdx - 1 + playlist.length) % playlist.length;
+                loadSong(currentIdx);
+                audio.play();
+                playBtn.innerText = "||";
             }
         }
 
-        function nextSong() {
-            currentIdx = (currentIdx + 1) % trackList.length;
-            loadTrack(currentIdx);
-            audio.play();
-            playBtn.innerText = "||";
-        }
-
-        function prevSong() {
-            currentIdx = (currentIdx - 1 + trackList.length) % trackList.length;
-            loadTrack(currentIdx);
-            audio.play();
-            playBtn.innerText = "||";
-        }
-
-        // Init
-        if(trackList.length > 0) loadTrack(0);
+        window.onload = initPlayer;
     </script>
 </body>
 </html>
