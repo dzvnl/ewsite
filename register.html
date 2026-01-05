@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>uplink // register</title>
+    <title>register</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -16,7 +16,7 @@
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            background-image: url('IMG_4928.jpeg'); /* Make sure this image exists or remove this line */
+            background-image: url('IMG_4928.jpeg'); 
             background-size: cover;
             background-position: center;
         }
@@ -86,8 +86,8 @@
 <body>
 
     <div class="register-card">
-        <h1>NEW_NODE</h1>
-        <p>initialize connection</p>
+        <h1>.</h1>
+        <p>start</p>
 
         <div id="error-display" class="error-msg"></div>
 
@@ -106,7 +106,7 @@
             <input type="password" id="reg-confirm" placeholder="Repeat password...">
         </div>
 
-        <button onclick="handleRegister()">INITIALIZE</button>
+        <button onclick="handleRegister()">continue</button>
 
         <a href="login.html" class="login-link">return to login >></a>
     </div>
@@ -139,28 +139,27 @@
                 errorBox.style.display = 'block';
             };
 
-            // 1. Basic Validation
+            // 1. Local Validation
             if (!username || !password) return showError("FIELDS REQUIRED.");
             if (password !== confirm) return showError("PASSWORDS DO NOT MATCH.");
             if (username.length < 3) return showError("USERNAME TOO SHORT.");
             
-            // 2. Firebase Key Validation (Cannot contain . # $ [ ])
+            // 2. Character Safety (Firebase doesn't like paths with . # $ [ ] )
             const invalidChars = /[.#$/\[\]]/;
             if (invalidChars.test(username)) return showError("INVALID CHARACTERS IN NAME.");
 
             try {
-                // 3. Check if user already exists
+                // 3. DATABASE CHECK: Does this name exist?
                 const userRef = ref(db, 'users/' + username);
                 const snapshot = await get(userRef);
 
                 if (snapshot.exists()) {
+                    // CRITICAL: Prevent overwrite
                     showError("USERNAME ALREADY TAKEN.");
                     return;
                 }
 
                 // 4. Create User
-                // We are saving the password in the DB. 
-                // Note: In a real bank app, we'd hash this. For a chat app, this is okay.
                 await set(userRef, {
                     username: username,
                     password: password, 
@@ -170,7 +169,7 @@
                     pfp: "" 
                 });
 
-                // 5. Login Success
+                // 5. Success
                 localStorage.setItem('username', username);
                 window.location.href = 'index.html';
 
