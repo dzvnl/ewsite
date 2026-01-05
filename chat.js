@@ -1,14 +1,13 @@
-/* * GLOBAL_NET CHAT LOGIC (DOUBLE-SEND FIX)
+/* * GLOBAL_NET CHAT LOGIC
  * Target: chat.html
  */
 
-// Using Stable Firebase v9.23.0
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove, set, onDisconnect } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 console.log("System: Global_Net Online.");
 
-// --- FIREBASE CONFIG ---
+// --- FIREBASE CONFIG (Must match account.html) ---
 const firebaseConfig = {
     apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
     authDomain: "ewsitechat.firebaseapp.com",
@@ -25,7 +24,9 @@ const db = getDatabase(app);
 
 // --- STATE ---
 const ADMINS = ['root', 'fb67'];
-const currentUser = localStorage.getItem('username') || 'Guest-' + Math.floor(Math.random()*1000);
+// We use the LocalStorage values set by account.html
+const currentUser = localStorage.getItem('username') || 'Guest';
+const currentUuid = localStorage.getItem('account_uuid'); // Hidden ID
 const isAdmin = ADMINS.includes(currentUser);
 
 const dom = {
@@ -37,13 +38,14 @@ const dom = {
 
 if(dom.userDisplay) dom.userDisplay.innerText = currentUser;
 
-// --- CSS ---
+// --- CSS INJECTION (Updated for colors) ---
 const style = document.createElement('style');
 style.textContent = `
-    .msg { margin-bottom: 8px; line-height: 1.2; word-wrap: break-word; }
-    .msg-meta { font-size: 0.8rem; color: #ccc; margin-right: 6px; }
-    .msg-user { color: #facc15; font-weight: bold; cursor: pointer; text-shadow: 1px 1px 2px black; }
-    .msg-user.admin { color: #ef4444; }
+    .msg { margin-bottom: 8px; line-height: 1.2; word-wrap: break-word; display: flex; align-items: flex-start; }
+    .msg-content { flex: 1; }
+    .msg-meta { font-size: 0.75rem; color: #666; margin-right: 8px; vertical-align: bottom; }
+    .msg-user { font-weight: bold; cursor: pointer; text-shadow: 1px 1px 2px black; margin-right: 5px;}
+    .msg-user.admin { color: #ef4444 !important; }
     .msg-text { color: #fff; text-shadow: 1px 1px 2px black; }
     .admin-action { color: #ef4444; cursor: pointer; font-size: 0.7rem; margin-left: 5px; background:rgba(0,0,0,0.5); padding: 0 4px; }
 `;
@@ -53,30 +55,32 @@ document.head.appendChild(style);
 
 async function sendMessage() {
     const text = dom.input.value.trim();
-    if (!text) return; // Stop if empty
+    if (!text) return; 
 
-    // Clear input immediately to prevent accidental double-clicks
+    // Capture current profile state at moment of sending
+    const userColor = localStorage.getItem('user_color') || '#facc15';
+    
+    // Clear input
     const textToSend = text; 
     dom.input.value = '';
     dom.input.focus();
 
     try {
         await push(ref(db, 'messages'), {
-            user: currentUser,
+            user: localStorage.getItem('username') || 'Guest', // Always pull fresh name
+            uuid: currentUuid, // Use for identification later if needed
             text: textToSend.substring(0, 300),
+            color: userColor, // Send the chosen color
             time: Date.now()
         });
     } catch (e) {
         console.error("Send Error:", e);
-        alert("Failed to send.");
-        dom.input.value = textToSend; // Restore text if failed
+        dom.input.value = textToSend; 
     }
 }
 
-// Attach ONLY to window for HTML button (prevents double firing)
 window.send = sendMessage;
 
-// Listen for Enter key
 dom.input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
 });
@@ -106,11 +110,16 @@ onValue(ref(db, 'messages'), (snapshot) => {
 
         const time = new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         
+        // Use saved color or default yellow
+        const nameColor = msg.color || '#facc15';
+
         el.innerHTML = `
-            <span class="msg-meta">${time}</span>
-            <span class="msg-user ${ADMINS.includes(msg.user) ? 'admin' : ''}">${escapeHtml(msg.user)}:</span>
-            <span class="msg-text">${escapeHtml(msg.text)}</span>
-            ${adminControls}
+            <div class="msg-content">
+                <span class="msg-meta">${time}</span>
+                <span class="msg-user ${ADMINS.includes(msg.user) ? 'admin' : ''}" style="color: ${nameColor}">${escapeHtml(msg.user)}:</span>
+                <span class="msg-text">${escapeHtml(msg.text)}</span>
+                ${adminControls}
+            </div>
         `;
         dom.messages.appendChild(el);
     });
@@ -127,7 +136,10 @@ onValue(connectedRef, (snap) => {
     if (snap.val() === true) {
         const con = push(connectionsRef);
         onDisconnect(con).remove();
-        set(con, { user: currentUser, time: Date.now() });
+        set(con, { 
+            user: currentUser, 
+            time: Date.now() 
+        });
     }
 });
 
