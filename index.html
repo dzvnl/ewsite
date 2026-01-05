@@ -14,7 +14,7 @@
             color: #e5e5e5;
             background-color: #000000; 
             /* Fallback */
-            background-image: url('IMG_4928jpeg'); 
+            background-image: url('IMG_4928.jpeg'); 
             background-size: cover;
             background-repeat: no-repeat;
             background-attachment: fixed;
@@ -140,7 +140,6 @@
     </div>
 
     <script>
-
         const baseURL = "https://ewsmusic1.netlify.app/"; 
         const playlist = [
             { title: "Xtal", artist: "Aphex Twin", src: baseURL + "xtal.mp3", cover: baseURL + "aphex.jpg" },
@@ -178,7 +177,6 @@
             { title: "hold on", artist: "limpbizkit", src: baseURL + "holdon.mp3", cover: baseURL + "limpbizkit.jpg" },
             { title: "my way", artist: "limpbizkit", src: baseURL + "myway.mp3", cover: baseURL + "limpbizkit.jpg" },
             { title: "new update soon", artist: "-nl", src: baseURL + "xtal.mp3", cover: baseURL + "aphextwin.jpg" }
-
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -188,7 +186,11 @@
             try {
                 // --- BACKGROUND LOGIC (1/100 Chance) ---
                 const specialBg = '81853ABB-FB87-4A20-9303-9624B777245B.jpeg';
-                const normalBackgrounds = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg' ,IMG_5264.jpeg',  'IMG_4945.jpeg'];
+                // FIXED: Added missing quote in array below on 'IMG_5264.jpeg'
+                const normalBackgrounds = [
+                    'IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 
+                    'IMG_5262.jpeg', 'IMG_5263.jpeg', 'IMG_5264.jpeg', 'IMG_4945.jpeg'
+                ];
                 const chance = Math.floor(Math.random() * 100); 
                 let chosenBg = (chance === 0) ? specialBg : normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
                 document.body.style.backgroundImage = `url('${chosenBg}')`;
@@ -209,6 +211,7 @@
                 
                 const welcomeMessage = document.getElementById('welcome-message');
                 const authLink = document.getElementById('auth-link');
+                
                 function updateUI() {
                     let username = localStorage.getItem('username');
                     if (username) {
@@ -223,7 +226,7 @@
                 }
                 function signIn(e) {
                     e.preventDefault();
-                    const name = prompt('Enter yourname:');
+                    const name = prompt('Enter your name:');
                     if (name && name.trim() !== '') {
                         localStorage.setItem('username', name.trim());
                         updateUI();
