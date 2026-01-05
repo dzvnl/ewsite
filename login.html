@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas</title>
+    <title>uplink // login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 
 <style>
     html, body { 
         height: 100%; 
-        margin: 0;
+        margin: 0; 
         overflow: hidden;
     }
     body {
@@ -21,64 +21,56 @@
         background-repeat: no-repeat;
         background-attachment: fixed;
         background-position: center;
-    }
-    .pixel-font {
-        font-family: 'VT323', monospace;
-        font-smooth: never;
-        -webkit-font-smoothing: none;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .login-container {
-        background-color: rgba(0, 0, 0, 0.85);
-        border: 2px solid #969696;
-        padding: 2rem;
+        background-color: rgba(10, 10, 10, 0.9);
+        border: 1px solid #444;
+        padding: 2.5rem;
         max-width: 400px;
         width: 90%;
+        box-shadow: 0 0 40px rgba(0,0,0,0.8);
     }
     
     .input-field {
         background-color: rgba(20, 20, 20, 0.9);
-        border: 2px solid #969696;
+        border: 1px solid #444;
         color: #e5e5e5;
         padding: 0.75rem;
         width: 100%;
         font-family: 'VT323', monospace;
         font-size: 1.25rem;
         margin-bottom: 1rem;
+        outline: none;
     }
     
-    .input-field:focus {
-        outline: none;
-        border-color: #facc15;
-    }
+    .input-field:focus { border-color: #facc15; }
     
     .btn {
-        background-color: rgba(250, 204, 21, 0.2);
+        background-color: rgba(250, 204, 21, 0.1);
         border: 2px solid #facc15;
         color: #facc15;
-        padding: 0.75rem 2rem;
+        padding: 0.75rem;
         font-family: 'VT323', monospace;
         font-size: 1.5rem;
         cursor: pointer;
-        transition: all 0.2s;
         width: 100%;
-        margin-bottom: 0.5rem;
+        margin-top: 10px;
+        transition: all 0.2s;
     }
     
-    .btn:hover {
-        background-color: #facc15;
-        color: #000;
-    }
+    .btn:hover { background-color: #facc15; color: #000; }
     
     .error-message {
         color: #ef4444;
         font-size: 1.125rem;
         margin-bottom: 1rem;
         display: none;
-        border: 1px solid #ef4444;
-        background: rgba(20,0,0,0.5);
-        padding: 5px;
+        border-left: 3px solid #ef4444;
+        padding-left: 10px;
     }
     
     .success-message {
@@ -88,68 +80,32 @@
         display: none;
     }
     
-    .toggle-text {
-        color: #969696;
-        font-size: 1.125rem;
-        cursor: pointer;
+    .link-text {
+        color: #666;
+        font-size: 1.1rem;
         text-decoration: underline;
+        cursor: pointer;
     }
-    
-    .toggle-text:hover {
-        color: #facc15;
-    }
+    .link-text:hover { color: #facc15; }
 </style>
-
 </head>
 <body>
-    <div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10">
-        <p>2.0</p>
-    </div>
 
-<div class="flex items-center justify-center min-h-screen p-4">
-    <div class="login-container pixel-font">
-        <h1 class="text-4xl text-yellow-400 mb-6 text-center" id="form-title">SIGN IN</h1>
+<div class="login-container">
+    <h1 class="text-4xl text-yellow-400 mb-6 text-center">ACCESS_CONTROL</h1>
+    
+    <div class="error-message" id="error-message"></div>
+    <div class="success-message" id="success-message"></div>
+    
+    <form id="auth-form">
+        <input type="text" id="username" class="input-field" placeholder="username" required autocomplete="username">
+        <input type="password" id="password" class="input-field" placeholder="password" required autocomplete="current-password">
         
-        <div class="error-message" id="error-message"></div>
-        <div class="success-message" id="success-message"></div>
-        
-        <form id="auth-form">
-            <input 
-                type="text" 
-                id="username" 
-                class="input-field" 
-                placeholder="username" 
-                required
-                autocomplete="username"
-            >
-            
-            <input 
-                type="password" 
-                id="password" 
-                class="input-field" 
-                placeholder="password" 
-                required
-                autocomplete="current-password"
-            >
-            
-            <button type="submit" class="btn" id="submit-btn">
-               
-            </button>
-        </form>
-        
-        <div class="text-center mt-4">
-            <span style="color:#666">?</span>
-            <br>
-            <a href="register.html" class="toggle-text">
-                create
-            </a>
-        </div>
-        
-        <div class="text-center mt-4">
-            <a href="index.html" class="toggle-text">
-             home
-            </a>
-        </div>
+        <button type="submit" class="btn">LOGIN</button>
+    </form>
+    
+    <div class="text-center mt-6">
+        <a href="register.html" class="link-text">create new node >></a>
     </div>
 </div>
 
@@ -157,7 +113,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
         authDomain: "ewsitechat.firebaseapp.com",
@@ -171,81 +126,58 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // --- BACKGROUND SETUP ---
-    const normalBackgrounds = [
-        'IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 
-        'IMG_4943.jpeg', 'IMG_5262.jpeg', 'IMG_5263.jpeg', 
-        'IMG_5264.jpeg', 'IMG_4945.jpeg'
-    ];
-    const chosenBg = normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
+    // Random Background Logic
+    const bgs = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_5262.jpeg'];
+    // Default to a dark color if image fails, or pick random
+    const chosenBg = bgs[Math.floor(Math.random() * bgs.length)];
     document.body.style.backgroundImage = `url('${chosenBg}')`;
 
-    // --- CHECK LOGIN STATUS ---
-    // If already logged in, kick them to index
-    const existingUser = localStorage.getItem('username');
-    if (existingUser) {
+    // Check if already logged in
+    if (localStorage.getItem('username')) {
         window.location.href = 'index.html';
     }
 
-    // --- FORM LOGIC ---
     const authForm = document.getElementById('auth-form');
-    const usernameInput = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
-    const errorMessage = document.getElementById('error-message');
-    const successMessage = document.getElementById('success-message');
+    const errorMsg = document.getElementById('error-message');
+    const successMsg = document.getElementById('success-message');
 
-    function showError(msg) {
-        errorMessage.innerText = ">> " + msg;
-        errorMessage.style.display = 'block';
-        successMessage.style.display = 'none';
-    }
-
-    function showSuccess(msg) {
-        successMessage.innerText = ">> " + msg;
-        successMessage.style.display = 'block';
-        errorMessage.style.display = 'none';
-    }
-
-    // Handle Login
     authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const username = usernameInput.value.trim();
-        const password = passwordInput.value;
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
 
-        if (!username || !password) {
-            showError("cant be empty man");
-            return;
-        }
-
-        showSuccess("AUTHENTICATING...");
+        errorMsg.style.display = 'none';
+        successMsg.innerText = ">> ESTABLISHING CONNECTION...";
+        successMsg.style.display = 'block';
 
         try {
-            // Check Firebase for this user
-            const userRef = ref(db, 'users/' + username);
-            const snapshot = await get(userRef);
+            const snapshot = await get(ref(db, 'users/' + username));
 
             if (snapshot.exists()) {
-                const userData = snapshot.val();
+                const data = snapshot.val();
                 
-                // Check Password
-                if (userData.password === password) {
-                    // SUCCESS
+                // CHECK PASSWORD
+                if (data.password === password) {
+                    successMsg.innerText = ">> ACCESS GRANTED.";
                     localStorage.setItem('username', username);
-                    showSuccess("come on in.");
-                    
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1000);
+                    // Add a small delay so user sees "Access Granted"
+                    setTimeout(() => window.location.href = 'index.html', 800);
                 } else {
-                    showError("wrong password.. awkward...");
+                    successMsg.style.display = 'none';
+                    errorMsg.innerText = ">> ACCESS DENIED: INVALID PASSWORD";
+                    errorMsg.style.display = 'block';
                 }
             } else {
-                showError("nobody with that name...");
+                successMsg.style.display = 'none';
+                errorMsg.innerText = ">> USER NOT FOUND";
+                errorMsg.style.display = 'block';
             }
         } catch (error) {
             console.error(error);
-            showError("try again...");
+            successMsg.style.display = 'none';
+            errorMsg.innerText = ">> NETWORK ERROR";
+            errorMsg.style.display = 'block';
         }
     });
 </script>
