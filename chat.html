@@ -135,8 +135,7 @@
             </button>
             <div id="user-dropdown" class="dropdown">
                 <a href="#" id="display-name" style="color:#fff; pointer-events:none;"></a>
-                <a href="/account">account</a>
-                <a href="/settings">settings</a>
+                <a href="account.html">account</a>
                 <a href="#" onclick="logout()">logout</a>
             </div>
         </div>
@@ -162,7 +161,8 @@
         }
         function logout() {
             localStorage.removeItem('username');
-            window.location.href = 'login.html';
+            // REDIRECT TO INDEX.HTML
+            window.location.href = 'index.html';
         }
     </script>
 </body>
