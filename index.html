@@ -240,7 +240,7 @@
                     let username = localStorage.getItem('username');
                     if (username) {
                         welcomeMessage.textContent = `Welcome, ${username}`;
-                        authLink.textContent = '(account / settings)';
+                        authLink.textContent = 'settings';
                         authLink.href = 'account.html';
                     } else {
                         welcomeMessage.textContent = 'Welcome, ?';
