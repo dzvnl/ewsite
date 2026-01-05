@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas - account</title>
+    <title>canvas - uplink</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -11,6 +11,7 @@
             font-family: 'VT323', monospace;
             color: #e5e5e5;
             background-color: #000;
+            /* Using the same background as index */
             background-image: url('IMG_4928.jpeg');
             background-size: cover;
             background-position: center;
@@ -18,155 +19,301 @@
             min-height: 100vh;
             margin: 0;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 20px;
         }
 
-        .account-box {
-            background: rgba(0, 0, 0, 0.85);
-            border: 2px solid #969696;
-            padding: 2rem;
+        /* Glassmorphism Panel */
+        .uplink-terminal {
             width: 100%;
-            max-width: 400px;
-            text-align: center;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-        }
-
-        h1 {
-            color: #facc15;
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            text-transform: uppercase;
-            text-shadow: 2px 2px 0px #000;
-        }
-
-        .input-group {
-            margin-bottom: 1.5rem;
-            text-align: left;
-        }
-
-        label {
-            display: block;
-            color: #969696;
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            background: #111;
+            max-width: 900px;
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(8px);
             border: 1px solid #444;
-            color: #fff;
-            padding: 0.75rem;
-            font-family: 'VT323', monospace;
-            font-size: 1.25rem;
-            outline: none;
-        }
-
-        input[type="text"]:focus {
-            border-color: #facc15;
-        }
-
-        .btn {
-            display: inline-block;
-            width: 100%;
-            padding: 0.75rem;
-            margin-top: 0.5rem;
-            font-family: 'VT323', monospace;
-            font-size: 1.5rem;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background-color: #facc15;
-            color: #000;
-            border: 2px solid #facc15;
-        }
-        .btn-primary:hover {
-            background-color: transparent;
-            color: #facc15;
-        }
-
-        .btn-secondary {
-            background-color: transparent;
-            color: #969696;
-            border: 1px solid #444;
-            margin-top: 1rem;
-            font-size: 1.2rem;
-        }
-        .btn-secondary:hover {
-            border-color: #fff;
-            color: #fff;
-        }
-
-        .nav-links {
-            margin-top: 1.5rem;
+            box-shadow: 0 0 30px rgba(0,0,0,0.9);
             display: flex;
-            justify-content: space-between;
+            flex-direction: column; /* Mobile first */
+            overflow: hidden;
+            position: relative;
         }
         
-        .nav-links a {
-            color: #4ade80;
-            text-decoration: none;
-            font-size: 1.2rem;
+        @media(min-width: 768px) {
+            .uplink-terminal { flex-direction: row; height: 600px; }
         }
-        .nav-links a:hover {
-            text-decoration: underline;
+
+        /* Sidebar / Preview */
+        .preview-section {
+            background: rgba(0,0,0,0.5);
+            padding: 20px;
+            border-bottom: 1px solid #444;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        @media(min-width: 768px) {
+            .preview-section { border-bottom: none; border-right: 1px solid #444; width: 40%; }
+        }
+
+        /* Avatar Styling */
+        .avatar-preview {
+            width: 120px;
+            height: 120px;
+            border: 2px dashed #666;
+            margin-bottom: 15px;
+            background-size: cover;
+            background-position: center;
+            image-rendering: pixelated;
+        }
+
+        /* Edit Form */
+        .edit-section {
+            padding: 30px;
+            flex: 1.5;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        h2 { color: #facc15; font-size: 2rem; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+
+        label { color: #999; font-size: 1.1rem; display: block; margin-bottom: 4px; }
+        
+        input[type="text"], textarea, select {
+            width: 100%;
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px;
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus, textarea:focus, select:focus { border-color: #facc15; }
+        
+        /* Buttons */
+        .action-row { display: flex; gap: 10px; margin-top: 20px; }
+        
+        .btn {
+            flex: 1;
+            padding: 12px;
+            font-family: 'VT323', monospace;
+            font-size: 1.3rem;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            border: 1px solid transparent;
+        }
+        .btn-save { background: #facc15; color: #000; font-weight: bold; }
+        .btn-save:hover { background: #eab308; }
+        
+        .btn-cancel { background: transparent; border: 1px solid #666; color: #ccc; }
+        .btn-cancel:hover { border-color: #fff; color: #fff; }
+
+        /* Fake Chat Message for Preview */
+        .msg-preview-box {
+            background: rgba(0,0,0,0.6);
+            padding: 10px;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 1.1rem;
         }
     </style>
 </head>
 <body>
 
-    <div class="account-box">
-        <h1>Identity</h1>
+    <div class="uplink-terminal">
         
-        <div class="input-group">
-            <label for="username-input">Display Name:</label>
-            <input type="text" id="username-input" placeholder="Enter name..." maxlength="15">
+        <div class="preview-section">
+            <h3 class="text-gray-400 mb-4">ID CARD PREVIEW</h3>
+            
+            <div id="p-avatar" class="avatar-preview" style="background-image: url('https://placehold.co/120x120/000000/333333?text=NO+IMG');"></div>
+            
+            <div class="msg-preview-box">
+                <span style="color:#666; font-size:0.9rem;">12:00 PM</span>
+                <span id="p-name" style="color: #facc15; font-weight: bold;">Guest</span>:
+                <span style="color: #fff;">This is how you appear in chat.</span>
+            </div>
+            
+            <div id="p-bio" class="text-center mt-4 text-gray-500 italic text-sm">
+                "No bio set..."
+            </div>
         </div>
 
-        <button class="btn btn-primary" onclick="saveAccount()">[ SAVE CHANGE ]</button>
-        
-        <div class="nav-links">
-            <a href="index.html"><< Home</a>
-            <a href="chat.html">Global_Net >></a>
+        <div class="edit-section">
+            <h2>ACCOUNT_CONFIG</h2>
+
+            <div>
+                <label>DISPLAY NAME</label>
+                <input type="text" id="inp-name" maxlength="15" placeholder="Enter alias...">
+            </div>
+
+            <div>
+                <label>AVATAR IMAGE (URL)</label>
+                <input type="text" id="inp-avatar" placeholder="https://example.com/image.jpg">
+                <small class="text-gray-600">Paste a link to an image (gif/jpg/png)</small>
+            </div>
+
+            <div>
+                <label>NAME COLOR</label>
+                <select id="inp-color">
+                    <option value="#facc15">Standard Yellow</option>
+                    <option value="#4ade80">Terminal Green</option>
+                    <option value="#60a5fa">System Blue</option>
+                    <option value="#f472b6">Neon Pink</option>
+                    <option value="#a78bfa">Deep Purple</option>
+                    <option value="#ef4444">Alert Red</option>
+                </select>
+            </div>
+
+            <div>
+                <label>BIO / STATUS</label>
+                <textarea id="inp-bio" rows="3" maxlength="60" placeholder="Short status..."></textarea>
+            </div>
+
+            <div class="action-row">
+                <a href="index.html" class="btn btn-cancel">BACK</a>
+                <button onclick="saveProfile()" class="btn btn-save" id="save-btn">[ SAVE CHANGES ]</button>
+            </div>
+            
+            <div id="status-msg" class="text-center text-green-400 mt-2 h-6"></div>
         </div>
-        
-        <button class="btn btn-secondary" onclick="logout()">Sign Out / Reset</button>
     </div>
 
-    <script>
-        const input = document.getElementById('username-input');
+    <script type="module">
+        // --- FIREBASE SETUP (Same as chat.js) ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-        // Load existing name
-        const currentName = localStorage.getItem('username');
-        if (currentName) {
-            input.value = currentName;
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
+            authDomain: "ewsitechat.firebaseapp.com",
+            databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
+            projectId: "ewsitechat",
+            storageBucket: "ewsitechat.firebasestorage.app",
+            messagingSenderId: "282495574514",
+            appId: "1:282495574514:web:e2781da630d93fc1ce8b6b",
+            measurementId: "G-GTN3TL1P2K"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // --- USER ID LOGIC ---
+        // We generate a UUID once and store it. This creates a permanent "Account" on this device.
+        let userId = localStorage.getItem('account_uuid');
+        if (!userId) {
+            userId = 'user_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+            localStorage.setItem('account_uuid', userId);
         }
 
-        function saveAccount() {
-            const newName = input.value.trim();
-            if (newName) {
-                localStorage.setItem('username', newName);
-                alert('Identity Updated.');
-                // Optional: Redirect
-                // window.location.href = 'index.html'; 
-            } else {
-                alert('Name cannot be empty.');
+        // --- DOM ELEMENTS ---
+        const els = {
+            name: document.getElementById('inp-name'),
+            avatar: document.getElementById('inp-avatar'),
+            color: document.getElementById('inp-color'),
+            bio: document.getElementById('inp-bio'),
+            
+            pName: document.getElementById('p-name'),
+            pAvatar: document.getElementById('p-avatar'),
+            pBio: document.getElementById('p-bio'),
+            status: document.getElementById('status-msg'),
+            saveBtn: document.getElementById('save-btn')
+        };
+
+        // --- LOAD DATA ---
+        async function loadProfile() {
+            els.status.innerText = "Connecting to Satellite...";
+            try {
+                const snapshot = await get(child(ref(db), `users/${userId}`));
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    els.name.value = data.username || '';
+                    els.avatar.value = data.avatar || '';
+                    els.bio.value = data.bio || '';
+                    els.color.value = data.color || '#facc15';
+                    updatePreview();
+                } else {
+                    // Pre-fill from localstorage if only old system exists
+                    els.name.value = localStorage.getItem('username') || '';
+                    updatePreview();
+                }
+                els.status.innerText = "";
+            } catch (error) {
+                console.error(error);
+                els.status.innerText = "Connection Error (Offline Mode)";
             }
         }
 
-        function logout() {
-            localStorage.removeItem('username');
-            input.value = '';
-            alert('Signed out.');
-            window.location.href = 'index.html';
-        }
-    </script>
+        // --- SAVE DATA ---
+        window.saveProfile = async function() {
+            const username = els.name.value.trim() || 'Guest';
+            const avatar = els.avatar.value.trim();
+            const bio = els.bio.value.trim();
+            const color = els.color.value;
 
+            els.saveBtn.innerText = "UPLOADING...";
+            
+            try {
+                // 1. Save to Firebase (The Real Account)
+                await set(ref(db, 'users/' + userId), {
+                    username: username,
+                    avatar: avatar,
+                    bio: bio,
+                    color: color,
+                    lastUpdated: Date.now()
+                });
+
+                // 2. Save to LocalStorage (For immediate chat.js access / backwards compatibility)
+                localStorage.setItem('username', username);
+                localStorage.setItem('user_color', color); // New
+                localStorage.setItem('user_avatar', avatar); // New
+
+                els.status.innerText = "PROFILE UPDATED SUCCESSFULLY";
+                els.saveBtn.innerText = "[ SAVE CHANGES ]";
+                
+                // Optional: clear success msg after 2s
+                setTimeout(() => els.status.innerText = "", 2000);
+
+            } catch (e) {
+                console.error(e);
+                els.status.innerText = "UPLOAD FAILED";
+                els.saveBtn.innerText = "[ RETRY ]";
+            }
+        };
+
+        // --- LIVE PREVIEW LOGIC ---
+        function updatePreview() {
+            const n = els.name.value || 'Guest';
+            const a = els.avatar.value;
+            const b = els.bio.value || '"No bio set..."';
+            const c = els.color.value;
+
+            els.pName.innerText = n;
+            els.pName.style.color = c;
+            els.pBio.innerText = `"${b}"`;
+
+            if(a) {
+                els.pAvatar.style.backgroundImage = `url('${a}')`;
+            } else {
+                els.pAvatar.style.backgroundImage = `url('https://placehold.co/120x120/000000/333333?text=NO+IMG')`;
+            }
+        }
+
+        // Attach listeners for live preview
+        ['keyup', 'change'].forEach(evt => {
+            els.name.addEventListener(evt, updatePreview);
+            els.avatar.addEventListener(evt, updatePreview);
+            els.bio.addEventListener(evt, updatePreview);
+            els.color.addEventListener(evt, updatePreview);
+        });
+
+        // Init
+        loadProfile();
+    </script>
 </body>
 </html>
