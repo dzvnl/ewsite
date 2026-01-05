@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas - uplink</title>
+    <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -129,55 +129,55 @@
     <div class="uplink-terminal">
         
         <div class="preview-section">
-            <h3 class="text-gray-400 mb-4">ID CARD PREVIEW</h3>
+            <h3 class="text-gray-400 mb-4">preview</h3>
             
             <div id="p-avatar" class="avatar-preview" style="background-image: url('https://placehold.co/120x120/000000/333333?text=NO+IMG');"></div>
             
             <div class="msg-preview-box">
                 <span style="color:#666; font-size:0.9rem;">12:00 PM</span>
-                <span id="p-name" style="color: #facc15; font-weight: bold;">Guest</span>:
-                <span style="color: #fff;">This is how you appear in chat.</span>
+                <span id="p-name" style="color: #facc15; font-weight: bold;"></span>:
+                <span style="color: #fff;">your look</span>
             </div>
             
             <div id="p-bio" class="text-center mt-4 text-gray-500 italic text-sm">
-                "No bio set..."
+                ""
             </div>
         </div>
 
         <div class="edit-section">
-            <h2>ACCOUNT_CONFIG</h2>
+            <h2>settings</h2>
 
             <div>
-                <label>DISPLAY NAME</label>
+                <label>name</label>
                 <input type="text" id="inp-name" maxlength="15" placeholder="Enter alias...">
             </div>
 
             <div>
-                <label>AVATAR IMAGE (URL)</label>
+                <label>url image</label>
                 <input type="text" id="inp-avatar" placeholder="https://example.com/image.jpg">
-                <small class="text-gray-600">Paste a link to an image (gif/jpg/png)</small>
+                <small class="text-gray-600">paste image link</small>
             </div>
 
             <div>
-                <label>NAME COLOR</label>
+                <label>color</label>
                 <select id="inp-color">
-                    <option value="#facc15">Standard Yellow</option>
-                    <option value="#4ade80">Terminal Green</option>
-                    <option value="#60a5fa">System Blue</option>
-                    <option value="#f472b6">Neon Pink</option>
-                    <option value="#a78bfa">Deep Purple</option>
-                    <option value="#ef4444">Alert Red</option>
+                    <option value="#facc15">yellow</option>
+                    <option value="#4ade80">green</option>
+                    <option value="#60a5fa">blue</option>
+                    <option value="#f472b6">pink</option>
+                    <option value="#a78bfa">purple</option>
+                    <option value="#ef4444">red</option>
                 </select>
             </div>
 
             <div>
-                <label>BIO / STATUS</label>
+                <label>bio</label>
                 <textarea id="inp-bio" rows="3" maxlength="60" placeholder="Short status..."></textarea>
             </div>
 
             <div class="action-row">
-                <a href="index.html" class="btn btn-cancel">BACK</a>
-                <button onclick="saveProfile()" class="btn btn-save" id="save-btn">[ SAVE CHANGES ]</button>
+                <a href="index.html" class="btn btn-cancel">back</a>
+                <button onclick="saveProfile()" class="btn btn-save" id="save-btn">save</button>
             </div>
             
             <div id="status-msg" class="text-center text-green-400 mt-2 h-6"></div>
@@ -273,8 +273,8 @@
                 localStorage.setItem('user_color', color); // New
                 localStorage.setItem('user_avatar', avatar); // New
 
-                els.status.innerText = "PROFILE UPDATED SUCCESSFULLY";
-                els.saveBtn.innerText = "[ SAVE CHANGES ]";
+                els.status.innerText = "success";
+                els.saveBtn.innerText = "[ save ]";
                 
                 // Optional: clear success msg after 2s
                 setTimeout(() => els.status.innerText = "", 2000);
