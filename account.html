@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas</title>
+    <title>canvas - account</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -11,6 +11,7 @@
             font-family: 'VT323', monospace;
             color: #e5e5e5;
             background-color: #000;
+            background-image: url('IMG_4928.jpeg');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -18,381 +19,154 @@
             margin: 0;
             display: flex;
             flex-direction: column;
+            justify-content: center;
             align-items: center;
             padding: 20px;
         }
 
-        /* --- SEARCH BAR --- */
-        .search-container {
+        .account-box {
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #969696;
+            padding: 2rem;
             width: 100%;
-            max-width: 450px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
-        .search-input {
-            flex-grow: 1;
-            background: rgba(0,0,0,0.8);
-            border: 1px solid #444;
+
+        h1 {
             color: #facc15;
-            padding: 8px;
-            font-family: 'VT323', monospace;
-            font-size: 1.2rem;
-        }
-        .search-btn {
-            background: #333;
-            color: #fff;
-            border: 1px solid #555;
-            padding: 0 15px;
-            cursor: pointer;
-            font-family: 'VT323', monospace;
-            font-size: 1.2rem;
-        }
-        .search-btn:hover { background: #facc15; color: #000; }
-
-        /* --- PROFILE CARD --- */
-        .profile-card {
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid #333;
-            padding: 30px;
-            width: 100%;
-            max-width: 450px;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,1);
-            backdrop-filter: blur(5px);
-        }
-
-        .pfp-main {
-            width: 150px;
-            height: 150px;
-            border: 2px solid #facc15;
-            image-rendering: pixelated;
-            object-fit: cover;
-            margin-bottom: 20px;
-            background: #111;
-        }
-
-        .username {
-            font-size: 3rem;
-            color: #facc15;
-            line-height: 1;
-            margin-bottom: 5px;
-        }
-
-        .bio {
-            color: #969696;
-            font-size: 1.2rem;
-            margin-bottom: 25px;
-            border-left: 2px solid #333;
-            padding-left: 10px;
-            min-height: 40px;
-        }
-
-        /* --- BADGES --- */
-        .role-badge {
-            font-size: 1.2rem;
-            letter-spacing: 2px;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
             text-transform: uppercase;
-            font-weight: bold;
-            display: none; /* Hidden by default */
-            margin-bottom: 5px;
+            text-shadow: 2px 2px 0px #000;
         }
 
-        .admin-tag { color: #ef4444; text-shadow: 0 0 5px #7f1d1d; }
-        
-        /* NEW: Founder Style (Purple/Gold) */
-        .founder-tag { 
-            color: #c084fc; /* Light Purple */
-            text-shadow: 0 0 8px #581c87;
-            border: 1px solid #c084fc;
-            display: inline-block;
-            padding: 0 5px;
-            margin-bottom: 8px;
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
         }
 
-        /* --- ACTIONS (FRIEND/BLOCK) --- */
-        .actions-corner {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            text-align: right;
-        }
-
-        .action-btn {
-            font-family: 'VT323', monospace;
-            font-size: 1.1rem;
-            background: transparent;
-            border: 1px solid #444;
+        label {
+            display: block;
             color: #969696;
-            padding: 2px 10px;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            background: #111;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 0.75rem;
+            font-family: 'VT323', monospace;
+            font-size: 1.25rem;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: #facc15;
+        }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            font-family: 'VT323', monospace;
+            font-size: 1.5rem;
             cursor: pointer;
+            border: 2px solid transparent;
             transition: all 0.2s;
         }
-        .action-btn:hover { border-color: #facc15; color: #facc15; }
-        .action-btn.block-btn:hover { border-color: #ef4444; color: #ef4444; }
-        .action-btn.active { background: #facc15; color: #000; }
 
-        .nav-back {
-            margin-top: 20px;
-            color: #444;
-            text-decoration: none;
-            display: inline-block;
+        .btn-primary {
+            background-color: #facc15;
+            color: #000;
+            border: 2px solid #facc15;
+        }
+        .btn-primary:hover {
+            background-color: transparent;
+            color: #facc15;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: #969696;
+            border: 1px solid #444;
+            margin-top: 1rem;
             font-size: 1.2rem;
         }
-        .nav-back:hover { color: #facc15; }
-
-        /* --- ADMIN PANEL --- */
-        #admin-panel {
-            display: none; 
-            margin-top: 30px;
-            width: 100%;
-            max-width: 450px;
-            border: 1px solid #ef4444;
-            background: rgba(20, 0, 0, 0.9);
-            padding: 15px;
+        .btn-secondary:hover {
+            border-color: #fff;
+            color: #fff;
         }
-        .admin-header { color: #ef4444; border-bottom: 1px solid #ef4444; margin-bottom: 10px; }
-        .admin-input { width: 100%; background: #000; color: #ef4444; border: 1px solid #555; margin-bottom: 5px; }
-        .admin-btn { background: #ef4444; color: #000; border: none; cursor: pointer; padding: 2px 8px; font-family: 'VT323'; margin-right: 5px;}
+
+        .nav-links {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .nav-links a {
+            color: #4ade80;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
 
-    <div class="search-container">
-        <input type="text" id="search-input" class="search-input" placeholder="Search user ID..." onkeypress="handleEnter(event)">
-        <button class="search-btn" onclick="performSearch()">search</button>
-    </div>
-
-    <div class="profile-card">
+    <div class="account-box">
+        <h1>Identity</h1>
         
-        <div class="actions-corner" id="action-buttons"></div>
-
-        <img id="profilePicture" class="pfp-main" src="https://placehold.co/300x300/111/facc15?text=?">
-        
-        <div id="founderStatus" class="role-badge founder-tag">founder</div>
-        <div id="adminStatus" class="role-badge admin-tag"></div>
-        
-        <h1 class="username" id="usernameDisplay">loading..</h1>
-        
-        <div class="bio" id="userBio">fetching</div>
-
-        <div style="display: flex; gap: 20px; color: #555; font-size: 1.1rem;">
-            <span>FRIENDS: <span id="friendCount" style="color:#969696">0</span></span>
+        <div class="input-group">
+            <label for="username-input">Display Name:</label>
+            <input type="text" id="username-input" placeholder="Enter name..." maxlength="15">
         </div>
 
-        <a href="index.html" class="nav-back"><< RETURN_HOME</a>
+        <button class="btn btn-primary" onclick="saveAccount()">[ SAVE CHANGE ]</button>
+        
+        <div class="nav-links">
+            <a href="index.html"><< Home</a>
+            <a href="chat.html">Global_Net >></a>
+        </div>
+        
+        <button class="btn btn-secondary" onclick="logout()">Sign Out / Reset</button>
     </div>
 
-    <div id="admin-panel">
-        <div class="admin-header">abuse me</div>
-        
-        <p style="margin:5px 0; color:#ccc;">Set Global Announcement:</p>
-        <input type="text" id="announce-input" class="admin-input" placeholder="Enter alert text...">
-        <button class="admin-btn" onclick="setAnnouncement()">BROADCAST</button>
-        <button class="admin-btn" style="background:#444;" onclick="clearAnnouncement()">CLEAR</button>
-        
-        <hr style="border-color:#333; margin: 15px 0;">
+    <script>
+        const input = document.getElementById('username-input');
 
-        <p style="margin:5px 0; color:#ccc;">Ban Current User:</p>
-        <button class="admin-btn" onclick="banCurrentUser()">EXECUTE BAN</button>
-    </div>
+        // Load existing name
+        const currentName = localStorage.getItem('username');
+        if (currentName) {
+            input.value = currentName;
+        }
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, get, set, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
-        // --- CONFIG ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
-            authDomain: "ewsitechat.firebaseapp.com",
-            databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
-            projectId: "ewsitechat",
-            storageBucket: "ewsitechat.firebasestorage.app",
-            messagingSenderId: "282495574514",
-            appId: "1:282495574514:web:e2781da630d93fc1ce8b6b"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        // --- ROLES SETUP ---
-        // !!! CHANGE THIS: Add your co-founder's name inside the quotes !!!
-        const FOUNDERS = ['root', '-nl', 'futtbucker67']; 
-        
-        const ADMINS = ['root', 'fb67', '-nl'];
-        
-        const myUsername = localStorage.getItem('username');
-        
-        // Determine who we are viewing (URL param ?user=xyz OR myself)
-        const urlParams = new URLSearchParams(window.location.search);
-        const viewUser = urlParams.get('user') || myUsername;
-        
-        const isMe = (myUsername === viewUser);
-        const amIAdmin = ADMINS.includes(myUsername) || FOUNDERS.includes(myUsername);
-
-        // DOM Elements
-        const dom = {
-            name: document.getElementById('usernameDisplay'),
-            bio: document.getElementById('userBio'),
-            pfp: document.getElementById('profilePicture'),
-            adminTag: document.getElementById('adminStatus'),
-            founderTag: document.getElementById('founderStatus'),
-            actions: document.getElementById('action-buttons'),
-            friendCount: document.getElementById('friendCount'),
-            adminPanel: document.getElementById('admin-panel')
-        };
-
-        // --- INIT ---
-        if (!myUsername) window.location.href = 'login.html';
-        
-        const bgs = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg'];
-        document.body.style.backgroundImage = `url('${bgs[Math.floor(Math.random()*bgs.length)]}')`;
-
-        loadProfile();
-
-        // --- FUNCTIONS ---
-        async function loadProfile() {
-            dom.name.innerText = `@${viewUser}`;
-            
-            // Fetch User Data
-            const userRef = ref(db, 'users/' + viewUser);
-            const snapshot = await get(userRef);
-            const data = snapshot.val() || {};
-
-            dom.bio.innerText = data.bio || "User has not established a bio.";
-            if (data.pfp) dom.pfp.src = data.pfp;
-
-            const friends = data.friends ? Object.keys(data.friends).length : 0;
-            dom.friendCount.innerText = friends;
-
-            // --- SHOW TAGS ---
-            // Hide both first
-            dom.adminTag.style.display = 'none';
-            dom.founderTag.style.display = 'none';
-
-            // Check Founder First (Overrides Admin visual usually, or shows alongside)
-            if (FOUNDERS.includes(viewUser)) {
-                dom.founderTag.style.display = 'block';
-            } else if (ADMINS.includes(viewUser)) {
-                // Only show Admin if they aren't a founder
-                dom.adminTag.style.display = 'block';
-            }
-
-            renderButtons();
-
-            if (amIAdmin) {
-                dom.adminPanel.style.display = 'block';
+        function saveAccount() {
+            const newName = input.value.trim();
+            if (newName) {
+                localStorage.setItem('username', newName);
+                alert('Identity Updated.');
+                // Optional: Redirect
+                // window.location.href = 'index.html'; 
+            } else {
+                alert('Name cannot be empty.');
             }
         }
 
-        async function renderButtons() {
-            dom.actions.innerHTML = ''; 
-
-            if (isMe) {
-                dom.actions.innerHTML = `<button class="action-btn" onclick="location.href='settings.html'">[ EDIT PROFILE ]</button>`;
-                return;
-            }
-
-            const friendRef = ref(db, `users/${myUsername}/friends/${viewUser}`);
-            const friendSnap = await get(friendRef);
-            const isFriend = friendSnap.exists();
-
-            const blockRef = ref(db, `users/${myUsername}/blocked/${viewUser}`);
-            const blockSnap = await get(blockRef);
-            const isBlocked = blockSnap.exists();
-
-            const friendBtn = document.createElement('button');
-            friendBtn.className = isFriend ? 'action-btn active' : 'action-btn';
-            friendBtn.innerText = isFriend ? '- UNFRIEND' : '+ FRIEND';
-            friendBtn.onclick = () => toggleFriend(isFriend);
-            
-            const blockBtn = document.createElement('button');
-            blockBtn.className = 'action-btn block-btn';
-            blockBtn.innerText = isBlocked ? '[ UNBLOCK ]' : '[ BLOCK ]';
-            blockBtn.onclick = () => toggleBlock(isBlocked);
-
-            dom.actions.appendChild(friendBtn);
-            dom.actions.appendChild(blockBtn);
+        function logout() {
+            localStorage.removeItem('username');
+            input.value = '';
+            alert('Signed out.');
+            window.location.href = 'index.html';
         }
-
-        // --- ACTIONS ---
-        window.toggleFriend = async (currentlyFriends) => {
-            const myFriendRef = ref(db, `users/${myUsername}/friends/${viewUser}`);
-            const theirFriendRef = ref(db, `users/${viewUser}/friends/${myUsername}`);
-            
-            if (currentlyFriends) {
-                if(!confirm(`Remove ${viewUser} from friends?`)) return;
-                await remove(myFriendRef);
-                await remove(theirFriendRef); 
-            } else {
-                await set(myFriendRef, { since: Date.now() });
-                await set(theirFriendRef, { since: Date.now() }); 
-            }
-            renderButtons();
-            loadProfile(); 
-        };
-
-        window.toggleBlock = async (currentlyBlocked) => {
-            const blockRef = ref(db, `users/${myUsername}/blocked/${viewUser}`);
-            
-            if (currentlyBlocked) {
-                await remove(blockRef);
-                alert(`${viewUser} unblocked.`);
-            } else {
-                if(!confirm(`Block ${viewUser}?`)) return;
-                await set(blockRef, { since: Date.now() });
-                await remove(ref(db, `users/${myUsername}/friends/${viewUser}`));
-                await remove(ref(db, `users/${viewUser}/friends/${myUsername}`));
-            }
-            renderButtons();
-        };
-
-        window.handleEnter = (e) => {
-            if (e.key === 'Enter') performSearch();
-        };
-
-        window.performSearch = () => {
-            const query = document.getElementById('search-input').value.trim();
-            if (query) {
-                window.location.href = `account.html?user=${query}`;
-            }
-        };
-
-        // --- ADMIN FUNCTIONS ---
-        window.setAnnouncement = async () => {
-            if (!amIAdmin) return;
-            const text = document.getElementById('announce-input').value;
-            if(!text) return;
-            
-            await set(ref(db, 'admin/announcement'), {
-                text: text,
-                author: myUsername,
-                time: Date.now()
-            });
-            alert("Announcement Broadcasted.");
-        };
-
-        window.clearAnnouncement = async () => {
-            if (!amIAdmin) return;
-            await remove(ref(db, 'admin/announcement'));
-            alert("Announcement Cleared.");
-        };
-
-        window.banCurrentUser = async () => {
-            if (!amIAdmin) return;
-            if (viewUser === myUsername) return alert("?");
-            
-            if(confirm(`genuinely ban ${viewUser}?`)) {
-                await set(ref(db, `banned/${viewUser}`), {
-                    reason: "Admin Action",
-                    by: myUsername,
-                    time: Date.now()
-                });
-                alert("User has been banned.");
-            }
-        };
     </script>
+
 </body>
 </html>
