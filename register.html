@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas</title>
+    <title>uplink // register</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -16,34 +16,25 @@
             align-items: center;
             justify-content: center;
             flex-direction: column;
+            background-image: url('IMG_4928.jpeg'); /* Make sure this image exists or remove this line */
             background-size: cover;
             background-position: center;
-            /* Optional: Add a background image if you have one */
-            /* background-image: url('IMG_4928.jpeg'); */
         }
 
         .register-card {
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid #333;
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid #444;
             padding: 40px;
             width: 100%;
             max-width: 400px;
             text-align: center;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
-            position: relative;
+            box-shadow: 0 0 30px rgba(0,0,0,0.9);
         }
 
-        h1 {
-            color: #facc15;
-            font-size: 2.5rem;
-            margin-bottom: 5px;
-            letter-spacing: 2px;
-        }
-
+        h1 { color: #facc15; font-size: 2.5rem; margin-bottom: 5px; letter-spacing: 2px; }
         p { color: #666; margin-bottom: 25px; }
 
         .input-group { margin-bottom: 15px; text-align: left; }
-        
         label { color: #888; font-size: 1.1rem; }
 
         input {
@@ -57,11 +48,7 @@
             outline: none;
             transition: 0.2s;
         }
-
-        input:focus {
-            border-color: #facc15;
-            background: #000;
-        }
+        input:focus { border-color: #facc15; background: #000; }
 
         button {
             width: 100%;
@@ -75,7 +62,6 @@
             margin-top: 10px;
             font-weight: bold;
         }
-
         button:hover { background: #fff; }
 
         .error-msg {
@@ -84,7 +70,7 @@
             background: rgba(239, 68, 68, 0.1);
             padding: 10px;
             margin-bottom: 20px;
-            display: none; /* Hidden by default */
+            display: none;
         }
 
         .login-link {
@@ -100,36 +86,35 @@
 <body>
 
     <div class="register-card">
-        <h1></h1>
-        <p>sign up</p>
+        <h1>NEW_NODE</h1>
+        <p>initialize connection</p>
 
         <div id="error-display" class="error-msg"></div>
 
         <div class="input-group">
             <label>username</label>
-            <input type="text" id="reg-username" placeholder="Enter username..." autocomplete="off">
+            <input type="text" id="reg-username" placeholder="Enter alias..." autocomplete="off">
         </div>
 
         <div class="input-group">
             <label>password</label>
-            <input type="password" id="reg-password" placeholder="Create password...">
+            <input type="password" id="reg-password" placeholder="Set password...">
         </div>
 
         <div class="input-group">
-            <label>say that again..</label>
+            <label>confirm</label>
             <input type="password" id="reg-confirm" placeholder="Repeat password...">
         </div>
 
-        <button onclick="handleRegister()">sign up</button>
+        <button onclick="handleRegister()">INITIALIZE</button>
 
-        <a href="login.html" class="login-link">login >></a>
+        <a href="login.html" class="login-link">return to login >></a>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-        // --- CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
             authDomain: "ewsitechat.firebaseapp.com",
@@ -139,58 +124,59 @@
             messagingSenderId: "282495574514",
             appId: "1:282495574514:web:e2781da630d93fc1ce8b6b"
         };
+        
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- REGISTRATION FUNCTION ---
         window.handleRegister = async () => {
             const username = document.getElementById('reg-username').value.trim();
             const password = document.getElementById('reg-password').value;
             const confirm = document.getElementById('reg-confirm').value;
             const errorBox = document.getElementById('error-display');
 
-            // helper to show errors
             const showError = (msg) => {
                 errorBox.innerText = ">> ERROR: " + msg;
                 errorBox.style.display = 'block';
             };
 
-            // 1. Validation
-            if (!username || !password) return showError("FIELDS CANNOT BE EMPTY.");
+            // 1. Basic Validation
+            if (!username || !password) return showError("FIELDS REQUIRED.");
             if (password !== confirm) return showError("PASSWORDS DO NOT MATCH.");
+            if (username.length < 3) return showError("USERNAME TOO SHORT.");
             
-            // Prevent dangerous characters in username (Firebase doesn't like . $ # [ ] /)
+            // 2. Firebase Key Validation (Cannot contain . # $ [ ])
             const invalidChars = /[.#$/\[\]]/;
-            if (invalidChars.test(username)) return showError("USERNAME CONTAINS INVALID CHARACTERS.");
+            if (invalidChars.test(username)) return showError("INVALID CHARACTERS IN NAME.");
 
             try {
-                // 2. Check if user already exists
+                // 3. Check if user already exists
                 const userRef = ref(db, 'users/' + username);
                 const snapshot = await get(userRef);
 
                 if (snapshot.exists()) {
-                    showError("try again");
+                    showError("USERNAME ALREADY TAKEN.");
                     return;
                 }
 
-                // 3. CREATE THE USER IN DATABASE
-                // This is the part that saves the password
+                // 4. Create User
+                // We are saving the password in the DB. 
+                // Note: In a real bank app, we'd hash this. For a chat app, this is okay.
                 await set(userRef, {
-                    password: password,
+                    username: username,
+                    password: password, 
                     joined: Date.now(),
                     bio: "new user.",
-                    pfp: "https://placehold.co/150x150/111/facc15?text=" + username.charAt(0).toUpperCase()
+                    color: "#facc15",
+                    pfp: "" 
                 });
 
-                // 4. Auto-Login (Save to LocalStorage)
+                // 5. Login Success
                 localStorage.setItem('username', username);
-
-                // 5. Success
                 window.location.href = 'index.html';
 
             } catch (err) {
                 console.error(err);
-                showError("DATABASE ERROR: " + err.message);
+                showError("CONNECTION FAILED.");
             }
         };
     </script>
