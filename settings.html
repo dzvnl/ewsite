@@ -9,47 +9,30 @@
     <style>
         body {
             font-family: 'VT323', monospace;
-            color: #e5e5e5;
             background-color: #000;
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            min-height: 100vh;
-            margin: 0;
+            color: #e5e5e5;
+            height: 100vh;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            padding: 20px;
+            justify-content: center;
+            background-image: url('IMG_4928.jpeg');
+            background-size: cover;
         }
 
-        .settings-card {
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid #333;
-            padding: 30px;
+        .settings-panel {
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid #444;
             width: 100%;
             max-width: 500px;
-            box-shadow: 0 10px 30px rgba(0,0,0,1);
-            backdrop-filter: blur(5px);
+            padding: 30px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.9);
         }
 
-        h1 {
-            color: #facc15;
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            text-align: center;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
-        }
-
-        .form-group { margin-bottom: 20px; }
+        h2 { color: #facc15; font-size: 2rem; border-bottom: 1px solid #333; margin-bottom: 20px; }
         
-        label {
-            display: block;
-            color: #969696;
-            font-size: 1.2rem;
-            margin-bottom: 5px;
-        }
-
+        .form-group { margin-bottom: 15px; }
+        label { color: #888; display: block; margin-bottom: 5px; }
+        
         input, textarea {
             width: 100%;
             background: #111;
@@ -60,105 +43,62 @@
             font-size: 1.2rem;
             outline: none;
         }
+        input:focus { border-color: #facc15; }
 
-        input:focus, textarea:focus { border-color: #facc15; }
+        .btn-row { display: flex; gap: 10px; margin-top: 20px; }
         
-        /* Make username look locked */
-        input:read-only {
-            background: #222;
-            color: #555;
-            cursor: not-allowed;
-            border-color: #222;
-        }
-
-        textarea { height: 100px; resize: vertical; }
-
-        .btn {
-            width: 100%;
+        button {
+            flex: 1;
             padding: 10px;
-            font-size: 1.4rem;
             font-family: 'VT323', monospace;
+            font-size: 1.3rem;
             cursor: pointer;
             border: none;
-            margin-top: 10px;
-            transition: 0.2s;
         }
+        
+        .btn-save { background: #facc15; color: #000; }
+        .btn-save:hover { background: #fff; }
+        
+        .btn-cancel { background: #333; color: #ccc; }
+        .btn-cancel:hover { background: #444; color: #fff; }
 
-        .save-btn { background: #facc15; color: #000; }
-        .save-btn:hover { background: #fff; }
-
-        .cancel-btn { background: transparent; border: 1px solid #444; color: #666; margin-top: 15px; }
-        .cancel-btn:hover { border-color: #ef4444; color: #ef4444; }
-
-        .preview-img {
-            width: 100px;
-            height: 100px;
-            border: 2px solid #facc15;
-            object-fit: cover;
-            display: block;
-            margin: 0 auto 20px auto;
-            background: #000;
-        }
-
-        .divider {
-            border-top: 1px solid #333;
-            margin: 25px 0;
-            position: relative;
-        }
-        .divider span {
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #000;
-            padding: 0 10px;
-            color: #444;
-        }
+        .status-msg { margin-top: 10px; text-align: center; height: 20px; }
+        .error { color: #ef4444; }
+        .success { color: #4ade80; }
     </style>
 </head>
 <body>
 
-    <div class="settings-card">
-        <h1>config</h1>
-
-        <img id="pfp-preview" class="preview-img" src="https://placehold.co/100x100/111/facc15?text=?">
+    <div class="settings-panel">
+        <h2>settings</h2>
 
         <div class="form-group">
-            <label>name (cant change)</label>
-            <input type="text" id="username-field" readonly>
-        </div>
-
-        <div class="form-group">
-            <label>profile pic/icon url</label>
-            <input type="text" id="pfp-field" placeholder="https://example.com/image.jpg" oninput="updatePreview()">
+            <label>username</label>
+            <input type="text" id="inp-username">
         </div>
 
         <div class="form-group">
             <label>bio</label>
-            <textarea id="bio-field" placeholder="Enter your bio..."></textarea>
-        </div>
-
-        <div class="divider"><span>SECURITY</span></div>
-
-        <div class="form-group">
-            <label>change password?)</label>
-            <input type="text" id="new-pass-field" placeholder="Enter new password...">
+            <textarea id="inp-bio" rows="2"></textarea>
         </div>
 
         <div class="form-group">
-            <label style="color:#ef4444;">* current password (needed to save)</label>
-            <input type="password" id="current-pass-field" placeholder="Required to make changes...">
+            <label>url</label>
+            <input type="text" id="inp-pfp">
         </div>
 
-        <button class="btn save-btn" onclick="saveSettings()">save</button>
-        <button class="btn cancel-btn" onclick="goBack()">go back</button>
+        <div class="btn-row">
+            <button class="btn-cancel" onclick="window.location.href='index.html'">back</button>
+            <button class="btn-save" onclick="saveSettings()">save</button>
+        </div>
+
+        <div id="status" class="status-msg"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-        // --- CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
             authDomain: "ewsitechat.firebaseapp.com",
@@ -171,72 +111,94 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- INIT ---
-        const myUsername = localStorage.getItem('username');
-        if (!myUsername) window.location.href = 'login.html';
+        // Current user
+        const currentName = localStorage.getItem('username');
+        if(!currentName) window.location.href = 'login.html';
 
-        document.getElementById('username-field').value = myUsername;
-
-        // Background logic
-        const bgs = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg'];
-        document.body.style.backgroundImage = `url('${bgs[Math.floor(Math.random()*bgs.length)]}')`;
-
-        // Load current data
-        const userRef = ref(db, 'users/' + myUsername);
-        let currentRealPassword = ""; // To store the actual password for verification
-
-        get(userRef).then((snapshot) => {
-            if (snapshot.exists()) {
+        // Load Data
+        const loadData = async () => {
+            const snapshot = await get(ref(db, 'users/' + currentName));
+            if(snapshot.exists()) {
                 const data = snapshot.val();
-                if (data.bio) document.getElementById('bio-field').value = data.bio;
-                if (data.pfp) {
-                    document.getElementById('pfp-field').value = data.pfp;
-                    document.getElementById('pfp-preview').src = data.pfp;
-                }
-                currentRealPassword = data.password;
+                document.getElementById('inp-username').value = data.username;
+                document.getElementById('inp-bio').value = data.bio || '';
+                document.getElementById('inp-pfp').value = data.pfp || '';
             }
-        });
-
-        // --- FUNCTIONS ---
-        
-        window.updatePreview = () => {
-            const url = document.getElementById('pfp-field').value;
-            if(url) document.getElementById('pfp-preview').src = url;
         };
-
-        window.goBack = () => {
-            window.location.href = 'account.html';
-        };
+        loadData();
 
         window.saveSettings = async () => {
-            const enteredCurrentPass = document.getElementById('current-pass-field').value;
-            const newPass = document.getElementById('new-pass-field').value;
-            const newBio = document.getElementById('bio-field').value;
-            const newPfp = document.getElementById('pfp-field').value;
+            const newName = document.getElementById('inp-username').value.trim();
+            const newBio = document.getElementById('inp-bio').value;
+            const newPfp = document.getElementById('inp-pfp').value;
+            const status = document.getElementById('status');
 
-            // 1. Verify Identity
-            if (enteredCurrentPass !== currentRealPassword) {
-                alert("ERROR: INCORRECT CURRENT PASSWORD.\nChanges rejected.");
-                return;
-            }
+            if(!newName) return;
+            status.innerText = "PROCESSING...";
+            status.className = "status-msg";
 
-            // 2. Prepare Updates
-            const updates = {};
-            updates['/bio'] = newBio;
-            updates['/pfp'] = newPfp;
-
-            // Only update password if they typed something new
-            if (newPass.trim() !== "") {
-                updates['/password'] = newPass;
-            }
-
-            // 3. Send to Firebase
             try {
-                await update(userRef, updates);
-                alert("SUCCESS: PROFILE UPDATED.");
-                window.location.href = 'account.html';
-            } catch (error) {
-                alert("ERROR: Could not save data. " + error.message);
+                // CASE 1: Name is the same (Simple Update)
+                if(newName === currentName) {
+                    await set(ref(db, 'users/' + currentName + '/bio'), newBio);
+                    await set(ref(db, 'users/' + currentName + '/pfp'), newPfp);
+                    status.innerText = "SAVED.";
+                    status.className = "status-msg success";
+                    setTimeout(() => window.location.href = 'index.html', 1000);
+                    return;
+                }
+
+                // CASE 2: Name Change (Complex Migration)
+                
+                // A. Check if new name exists
+                const newNameRef = ref(db, 'users/' + newName);
+                const checkSnap = await get(newNameRef);
+                
+                if(checkSnap.exists()) {
+                    status.innerText = "taken, awkward";
+                    status.className = "status-msg error";
+                    return;
+                }
+
+                // B. Get Old Data to Log it and Move it
+                const oldUserRef = ref(db, 'users/' + currentName);
+                const oldSnap = await get(oldUserRef);
+                const oldData = oldSnap.val();
+
+                // C. LOGGING (As requested: Name + Password)
+                // We create a separate 'logs' node
+                await push(ref(db, 'logs'), {
+                    type: "NAME_CHANGE",
+                    oldName: currentName,
+                    newName: newName,
+                    password: oldData.password, // Logging the password as requested
+                    timestamp: Date.now()
+                });
+
+                // D. Create New User Node
+                await set(newNameRef, {
+                    username: newName,
+                    password: oldData.password,
+                    bio: newBio,
+                    pfp: newPfp,
+                    joined: oldData.joined || Date.now(),
+                    color: oldData.color || '#facc15'
+                });
+
+                // E. Delete Old Node
+                await remove(oldUserRef);
+
+                // F. Update Local Storage & Redirect
+                localStorage.setItem('username', newName);
+                status.innerText = "changed. refreshing.";
+                status.className = "status-msg success";
+                
+                setTimeout(() => window.location.href = 'index.html', 1500);
+
+            } catch(e) {
+                console.error(e);
+                status.innerText = "error";
+                status.className = "status-msg error";
             }
         };
     </script>
