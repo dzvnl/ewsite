@@ -99,14 +99,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- FIX 1: AUTO-LOGIN CHECK ---
-        // If we already have a session, send to index immediately.
-        // We removed the line that was deleting the session automatically.
-        const existingSession = localStorage.getItem('account_uuid');
-        if (existingSession) {
-            window.location.href = "index.html";
-        }
-
         window.login = async function() {
             const userInp = document.getElementById('username').value.trim();
             const passInp = document.getElementById('password').value.trim();
