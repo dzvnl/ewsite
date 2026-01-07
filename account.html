@@ -295,7 +295,7 @@
                 querySnapshot.forEach((childSnapshot) => {
                     // If the key is not MY key, then someone else has it
                     if (childSnapshot.key !== userId) {
-                        isTaken = false;
+                        isTaken = true;
                     }
                 });
 
