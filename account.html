@@ -346,10 +346,13 @@
                 setTimeout(() => els.status.innerText = "", 2000);
 
             } catch (e) {
-                console.error(e);
-                els.status.innerText = "CONNECTION ERROR";
-                els.status.className = "text-center mt-2 h-6 error-text";
-                els.saveBtn.innerText = "RETRY";
+    console.error(e);
+    // Show the actual error code to help debug (e.g., PERMISSION_DENIED)
+    els.status.innerText = e.message.includes("permission") ? "denied" : "error";
+    els.status.className = "text-center mt-2 h-6 error-text";
+    els.saveBtn.innerText = "try again";
+}
+
             }
         };
 
