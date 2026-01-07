@@ -11,7 +11,8 @@
             font-family: 'VT323', monospace;
             color: #e5e5e5;
             background-color: #000;
-            background-image: url('IMG_4928.jpeg');
+            /* Ensure this image exists in your folder or the background will be black */
+            background-image: url('IMG_4928.jpeg'); 
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -256,6 +257,7 @@
         }
 
         // --- SAVE DATA (WITH SECURITY) ---
+        // Attached to window so the HTML onclick works
         window.saveProfile = async function() {
             const username = els.name.value.trim();
             const avatar = els.avatar.value.trim();
@@ -309,21 +311,20 @@
                 const oldSnap = await get(userRef);
                 const oldData = oldSnap.val() || {};
 
-                // If name changed, log it with the password
+                // If name changed, log it
                 if (oldData.username && oldData.username !== username) {
                     await push(ref(db, 'logs'), {
                         type: "NAME_CHANGE",
                         userId: userId,
                         oldName: oldData.username,
                         newName: username,
-                        // We capture the hidden password from DB here
-                        password: oldData.password || "UNKNOWN", 
+                        // Removed password logging for security
+                        // password: oldData.password || "UNKNOWN", 
                         timestamp: Date.now()
                     });
                 }
 
                 // 4. SAVE TO DATABASE
-                // We use ...oldData to ensure we don't accidentally delete the password
                 await set(userRef, {
                     ...oldData, 
                     username: username,
@@ -346,14 +347,13 @@
                 setTimeout(() => els.status.innerText = "", 2000);
 
             } catch (e) {
-    console.error(e);
-    // Show the actual error code to help debug (e.g., PERMISSION_DENIED)
-    els.status.innerText = e.message.includes("permission") ? "denied" : "error";
-    els.status.className = "text-center mt-2 h-6 error-text";
-    els.saveBtn.innerText = "try again";
-}
-
+                console.error(e);
+                // Show the actual error code to help debug (e.g., PERMISSION_DENIED)
+                els.status.innerText = e.message.includes("permission") ? "denied" : "error";
+                els.status.className = "text-center mt-2 h-6 error-text";
+                els.saveBtn.innerText = "try again";
             }
+        };
 
         // --- LIVE PREVIEW LOGIC ---
         function updatePreview() {
@@ -366,7 +366,7 @@
             els.pName.style.color = c;
             els.pBio.innerText = `"${b}"`;
 
-            if(a) {
+            if(a && a.startsWith('http')) {
                 els.pAvatar.style.backgroundImage = `url('${a}')`;
             } else {
                 els.pAvatar.style.backgroundImage = `url('https://placehold.co/120x120/000000/333333?text=NO+IMG')`;
