@@ -140,13 +140,13 @@
             };
 
             // 1. Local Validation
-            if (!username || !password) return showError(".");
-            if (password !== confirm) return showError(".");
-            if (username.length < 3) return showError(".");
+            if (!username || !password) return showError("whats ur name?");
+            if (password !== confirm) return showError("confirm it");
+            if (username.length < 3) return showError("its only 3 dude");
             
             // 2. Character Safety (Firebase doesn't like paths with . # $ [ ] )
             const invalidChars = /[.#$/\[\]]/;
-            if (invalidChars.test(username)) return showError(".");
+            if (invalidChars.test(username)) return showError("invalid characters.");
 
             try {
                 // 3. DATABASE CHECK: Does this name exist?
