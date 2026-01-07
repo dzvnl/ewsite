@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'VT323', monospace;
+            /* CHANGED: Applied Typewriter Font */
+            font-family: 'Special Elite', monospace; 
             background: url('IMG_4928.jpeg') no-repeat center center fixed;
             background-size: cover;
             height: 100vh;
@@ -19,7 +20,7 @@
             padding: 10px;
         }
 
-        /* Responsive Container - UPDATED FOR GLASS EFFECT */
+        /* Responsive Container */
         #chat-container {
             width: 100%;
             max-width: 800px;
@@ -44,7 +45,7 @@
             color: #e5e5e5;
             font-size: 1.1rem;
             line-height: 1.2;
-            text-shadow: 1px 1px 2px black; /* text shadow helps readability on transparent bg */
+            text-shadow: 1px 1px 2px black; 
         }
 
         #chat-input-area {
@@ -52,22 +53,24 @@
             padding: 10px;
             display: flex;
             gap: 8px;
-            background: transparent; /* Slightly darker input area */
+            background: transparent; 
         }
 
         input {
             flex-grow: 1;
             background: rgba(0, 0, 0, 0.6);
             border: 1px solid #666;
-            color: #facc15;
+            color: #facc15; /* You might want to fade this yellow to a duller gold later */
             padding: 6px 10px;
             outline: none;
             font-size: 1rem;
-            font-family: 'VT323', monospace;
+            /* CHANGED: Applied Typewriter Font to Input */
+            font-family: 'Special Elite', monospace; 
         }
 
         button {
-            font-family: 'VT323', monospace;
+            /* CHANGED: Applied Typewriter Font to Button */
+            font-family: 'Special Elite', monospace; 
             background: none;
             border: 1px solid #facc15;
             cursor: pointer;
