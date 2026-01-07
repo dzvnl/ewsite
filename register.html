@@ -86,7 +86,7 @@
 <body>
 
     <div class="register-card">
-        <h1>.</h1>
+        <h1>register.</h1>
         <p>start</p>
 
         <div id="error-display" class="error-msg"></div>
@@ -135,18 +135,18 @@
             const errorBox = document.getElementById('error-display');
 
             const showError = (msg) => {
-                errorBox.innerText = ">> ERROR: " + msg;
+                errorBox.innerText = "error. " + msg;
                 errorBox.style.display = 'block';
             };
 
             // 1. Local Validation
-            if (!username || !password) return showError("FIELDS REQUIRED.");
-            if (password !== confirm) return showError("PASSWORDS DO NOT MATCH.");
-            if (username.length < 3) return showError("USERNAME TOO SHORT.");
+            if (!username || !password) return showError(".");
+            if (password !== confirm) return showError(".");
+            if (username.length < 3) return showError(".");
             
             // 2. Character Safety (Firebase doesn't like paths with . # $ [ ] )
             const invalidChars = /[.#$/\[\]]/;
-            if (invalidChars.test(username)) return showError("INVALID CHARACTERS IN NAME.");
+            if (invalidChars.test(username)) return showError(".");
 
             try {
                 // 3. DATABASE CHECK: Does this name exist?
@@ -155,7 +155,7 @@
 
                 if (snapshot.exists()) {
                     // CRITICAL: Prevent overwrite
-                    showError("USERNAME ALREADY TAKEN.");
+                    showError("taken.");
                     return;
                 }
 
@@ -175,7 +175,7 @@
 
             } catch (err) {
                 console.error(err);
-                showError("CONNECTION FAILED.");
+                showError("error.");
             }
         };
     </script>
