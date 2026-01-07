@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>uplink // login</title>
+    <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 
@@ -92,7 +92,7 @@
 <body>
 
 <div class="login-container">
-    <h1 class="text-4xl text-yellow-400 mb-6 text-center">ACCESS_CONTROL</h1>
+    <h1 class="text-4xl text-yellow-400 mb-6 text-center">login</h1>
     
     <div class="error-message" id="error-message"></div>
     <div class="success-message" id="success-message"></div>
@@ -101,11 +101,11 @@
         <input type="text" id="username" class="input-field" placeholder="username" required autocomplete="username">
         <input type="password" id="password" class="input-field" placeholder="password" required autocomplete="current-password">
         
-        <button type="submit" class="btn">LOGIN</button>
+        <button type="submit" class="btn">login</button>
     </form>
     
     <div class="text-center mt-6">
-        <a href="register.html" class="link-text">create new node >></a>
+        <a href="register.html" class="link-text">create account >></a>
     </div>
 </div>
 
@@ -148,7 +148,7 @@
         const password = document.getElementById('password').value;
 
         errorMsg.style.display = 'none';
-        successMsg.innerText = ">> ESTABLISHING CONNECTION...";
+        successMsg.innerText = ">> connecting...";
         successMsg.style.display = 'block';
 
         try {
@@ -159,13 +159,13 @@
                 
                 // CHECK PASSWORD
                 if (data.password === password) {
-                    successMsg.innerText = ">> ACCESS GRANTED.";
+                    successMsg.innerText = "success";
                     localStorage.setItem('username', username);
                     // Add a small delay so user sees "Access Granted"
                     setTimeout(() => window.location.href = 'index.html', 800);
                 } else {
                     successMsg.style.display = 'none';
-                    errorMsg.innerText = ">> ACCESS DENIED: INVALID PASSWORD";
+                    errorMsg.innerText = "INVALID PASSWORD";
                     errorMsg.style.display = 'block';
                 }
             } else {
@@ -176,7 +176,7 @@
         } catch (error) {
             console.error(error);
             successMsg.style.display = 'none';
-            errorMsg.innerText = ">> NETWORK ERROR";
+            errorMsg.innerText = "ERROR";
             errorMsg.style.display = 'block';
         }
     });
