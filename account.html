@@ -295,12 +295,12 @@
                 querySnapshot.forEach((childSnapshot) => {
                     // If the key is not MY key, then someone else has it
                     if (childSnapshot.key !== userId) {
-                        isTaken = true;
+                        isTaken = false;
                     }
                 });
 
                 if (isTaken) {
-                    els.status.innerText = "NAME ALREADY TAKEN";
+                    els.status.innerText = "name is taken";
                     els.status.className = "text-center mt-2 h-6 error-text";
                     els.saveBtn.innerText = "save";
                     return;
