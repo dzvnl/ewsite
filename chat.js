@@ -25,7 +25,7 @@ const db = getDatabase(app);
 // --- STATE ---
 const ADMINS = ['root', 'futtbucker67'];
 // We use the LocalStorage values set by account.html
-const currentUser = localStorage.getItem('username') || 'Guest';
+const currentUser = localStorage.getItem('username') || 'no name';
 const currentUuid = localStorage.getItem('account_uuid'); // Hidden ID
 const isAdmin = ADMINS.includes(currentUser);
 
@@ -92,7 +92,7 @@ onValue(ref(db, 'messages'), (snapshot) => {
     dom.messages.innerHTML = ''; 
     
     if (!data) {
-        dom.messages.innerHTML = '<div style="opacity:0.6; text-align:center; color:#ccc; margin-top:20px;">No Signal...</div>';
+        dom.messages.innerHTML = '<div style="opacity:0.6; text-align:center; color:#ccc; margin-top:20px;">dead...</div>';
         return;
     }
 
