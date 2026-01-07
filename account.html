@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas</title>
+    <title>uplink terminal // user</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -11,7 +11,6 @@
             font-family: 'VT323', monospace;
             color: #e5e5e5;
             background-color: #000;
-            /* Ensure this image exists in your folder or the background will be black */
             background-image: url('IMG_4928.jpeg'); 
             background-size: cover;
             background-position: center;
@@ -24,7 +23,6 @@
             padding: 20px;
         }
 
-        /* Glassmorphism Panel */
         .uplink-terminal {
             width: 100%;
             max-width: 900px;
@@ -33,7 +31,7 @@
             border: 1px solid #444;
             box-shadow: 0 0 30px rgba(0,0,0,0.9);
             display: flex;
-            flex-direction: column; /* Mobile first */
+            flex-direction: column;
             overflow: hidden;
             position: relative;
         }
@@ -42,7 +40,6 @@
             .uplink-terminal { flex-direction: row; height: 600px; }
         }
 
-        /* Sidebar / Preview */
         .preview-section {
             background: rgba(0,0,0,0.5);
             padding: 20px;
@@ -57,7 +54,6 @@
             .preview-section { border-bottom: none; border-right: 1px solid #444; width: 40%; }
         }
 
-        /* Avatar Styling */
         .avatar-preview {
             width: 120px;
             height: 120px;
@@ -68,7 +64,6 @@
             image-rendering: pixelated;
         }
 
-        /* Edit Form */
         .edit-section {
             padding: 30px;
             flex: 1.5;
@@ -95,7 +90,6 @@
         }
         input:focus, textarea:focus, select:focus { border-color: #facc15; }
         
-        /* Buttons */
         .action-row { display: flex; gap: 10px; margin-top: 20px; }
         
         .btn {
@@ -113,8 +107,8 @@
         
         .btn-cancel { background: transparent; border: 1px solid #666; color: #ccc; }
         .btn-cancel:hover { border-color: #fff; color: #fff; }
+        .btn-logout { background: #ef4444; color: #000; margin-top: 10px; border: none;}
 
-        /* Fake Chat Message for Preview */
         .msg-preview-box {
             background: rgba(0,0,0,0.6);
             padding: 10px;
@@ -178,7 +172,7 @@
             </div>
 
             <div class="action-row">
-                <a href="index.html" class="btn btn-cancel">back</a>
+                <button onclick="logout()" class="btn btn-cancel">logout</button>
                 <button onclick="saveProfile()" class="btn btn-save" id="save-btn">save</button>
             </div>
             
@@ -206,16 +200,18 @@
         const db = getDatabase(app);
 
         // --- SECURITY: BLACKLIST ---
+        // Note: root and fb67 are here, but we will allow them if the user is LOGGED IN as them.
         const forbiddenNames = [
             'root', 'admin', 'administrator', 'system', 
             'mod', 'moderator', 'fb67', 'owner', 'sys'
         ];
 
-        // --- USER ID LOGIC ---
+        // --- GUEST CHECK (REDIRECT LOGIC) ---
         let userId = localStorage.getItem('account_uuid');
+        
+        // If no user ID is found, send to login page immediately
         if (!userId) {
-            userId = 'user_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-            localStorage.setItem('account_uuid', userId);
+            window.location.href = "login.html";
         }
 
         // --- DOM ELEMENTS ---
@@ -224,7 +220,6 @@
             avatar: document.getElementById('inp-avatar'),
             color: document.getElementById('inp-color'),
             bio: document.getElementById('inp-bio'),
-            
             pName: document.getElementById('p-name'),
             pAvatar: document.getElementById('p-avatar'),
             pBio: document.getElementById('p-bio'),
@@ -244,8 +239,12 @@
                     els.avatar.value = data.avatar || '';
                     els.bio.value = data.bio || '';
                     els.color.value = data.color || '#facc15';
+                    
+                    // Save verified username to localstorage for the permission check later
+                    localStorage.setItem('username', data.username);
                     updatePreview();
                 } else {
+                    // Valid ID but no data? (Rare edge case)
                     els.name.value = localStorage.getItem('username') || '';
                     updatePreview();
                 }
@@ -256,15 +255,20 @@
             }
         }
 
+        // --- LOGOUT FUNCTION ---
+        window.logout = function() {
+            localStorage.removeItem('account_uuid');
+            localStorage.removeItem('username');
+            window.location.href = "login.html";
+        }
+
         // --- SAVE DATA (WITH SECURITY) ---
-        // Attached to window so the HTML onclick works
         window.saveProfile = async function() {
             const username = els.name.value.trim();
             const avatar = els.avatar.value.trim();
             const bio = els.bio.value.trim();
             const color = els.color.value;
 
-            // UI Feedback
             els.saveBtn.innerText = "CHECKING...";
             els.status.className = "text-center mt-2 h-6 text-gray-500";
             els.status.innerText = "Validating...";
@@ -276,24 +280,30 @@
                 return;
             }
 
-            // 1. FORBIDDEN NAME CHECK
-            if (forbiddenNames.includes(username.toLowerCase())) {
-                els.status.innerText = "NAME NOT ALLOWED";
-                els.status.className = "text-center mt-2 h-6 error-text";
-                els.saveBtn.innerText = "save";
-                return;
-            }
-
             try {
+                // Get the CURRENT username from DB to see if we are renaming ourselves
+                const userSnapshot = await get(child(ref(db), `users/${userId}`));
+                const currentDbName = userSnapshot.exists() ? userSnapshot.val().username : null;
+
+                // 1. FORBIDDEN NAME CHECK
+                // Rule: You can be 'root' or 'fb67' ONLY if that is ALREADY your name in the database.
+                // You cannot RENAME yourself to 'root' if you are currently 'guest123'.
+                if (forbiddenNames.includes(username.toLowerCase())) {
+                    if (username !== currentDbName) {
+                        els.status.innerText = "NAME NOT ALLOWED";
+                        els.status.className = "text-center mt-2 h-6 error-text";
+                        els.saveBtn.innerText = "save";
+                        return;
+                    }
+                }
+
                 // 2. UNIQUENESS CHECK
-                // Query all users to see if this name is taken by someone else
                 const usersRef = ref(db, 'users');
                 const nameQuery = query(usersRef, orderByChild('username'), equalTo(username));
                 const querySnapshot = await get(nameQuery);
 
                 let isTaken = false;
                 querySnapshot.forEach((childSnapshot) => {
-                    // If the key is not MY key, then someone else has it
                     if (childSnapshot.key !== userId) {
                         isTaken = true;
                     }
@@ -306,26 +316,20 @@
                     return;
                 }
 
-                // 3. LOGGING CHECK (Get old data first)
-                const userRef = ref(db, 'users/' + userId);
-                const oldSnap = await get(userRef);
-                const oldData = oldSnap.val() || {};
+                // 3. LOGGING & SAVE
+                const oldData = userSnapshot.val() || {};
 
-                // If name changed, log it
                 if (oldData.username && oldData.username !== username) {
                     await push(ref(db, 'logs'), {
                         type: "NAME_CHANGE",
                         userId: userId,
                         oldName: oldData.username,
                         newName: username,
-                        // Removed password logging for security
-                        // password: oldData.password || "UNKNOWN", 
                         timestamp: Date.now()
                     });
                 }
 
-                // 4. SAVE TO DATABASE
-                await set(userRef, {
+                await set(ref(db, 'users/' + userId), {
                     ...oldData, 
                     username: username,
                     avatar: avatar,
@@ -334,12 +338,10 @@
                     lastUpdated: Date.now()
                 });
 
-                // 5. UPDATE LOCAL STORAGE
                 localStorage.setItem('username', username);
                 localStorage.setItem('user_color', color);
                 localStorage.setItem('user_avatar', avatar);
 
-                // Success UI
                 els.status.innerText = "PROFILE SECURED";
                 els.status.className = "text-center mt-2 h-6 success-text";
                 els.saveBtn.innerText = "save";
@@ -348,8 +350,7 @@
 
             } catch (e) {
                 console.error(e);
-                // Show the actual error code to help debug (e.g., PERMISSION_DENIED)
-                els.status.innerText = e.message.includes("permission") ? "denied" : "error";
+                els.status.innerText = "error";
                 els.status.className = "text-center mt-2 h-6 error-text";
                 els.saveBtn.innerText = "try again";
             }
@@ -373,7 +374,6 @@
             }
         }
 
-        // Attach listeners
         ['keyup', 'change'].forEach(evt => {
             els.name.addEventListener(evt, updatePreview);
             els.avatar.addEventListener(evt, updatePreview);
