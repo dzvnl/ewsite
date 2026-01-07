@@ -14,176 +14,76 @@
             background-image: url('IMG_4928.jpeg'); 
             background-size: cover;
             background-position: center;
-            background-attachment: fixed;
-            min-height: 100vh;
-            margin: 0;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
         }
 
-        .uplink-terminal {
-            width: 100%;
-            max-width: 900px;
-            background: rgba(10, 10, 10, 0.85);
-            backdrop-filter: blur(8px);
+        .login-box {
+            width: 400px;
+            background: rgba(10, 10, 10, 0.9);
             border: 1px solid #444;
-            box-shadow: 0 0 30px rgba(0,0,0,0.9);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        @media(min-width: 768px) {
-            .uplink-terminal { flex-direction: row; height: 600px; }
-        }
-
-        .preview-section {
-            background: rgba(0,0,0,0.5);
-            padding: 20px;
-            border-bottom: 1px solid #444;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        @media(min-width: 768px) {
-            .preview-section { border-bottom: none; border-right: 1px solid #444; width: 40%; }
-        }
-
-        .avatar-preview {
-            width: 120px;
-            height: 120px;
-            border: 2px dashed #666;
-            margin-bottom: 15px;
-            background-size: cover;
-            background-position: center;
-            image-rendering: pixelated;
-        }
-
-        .edit-section {
             padding: 30px;
-            flex: 1.5;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+            text-align: center;
         }
 
-        h2 { color: #facc15; font-size: 2rem; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
-
-        label { color: #999; font-size: 1.1rem; display: block; margin-bottom: 4px; }
+        h1 { color: #facc15; font-size: 2.5rem; margin-bottom: 20px; border-bottom: 1px solid #333; }
         
-        input[type="text"], textarea, select {
+        input {
             width: 100%;
             background: #111;
             border: 1px solid #333;
             color: #fff;
-            padding: 10px;
-            font-family: 'VT323', monospace;
-            font-size: 1.2rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        input:focus, textarea:focus, select:focus { border-color: #facc15; }
-        
-        .action-row { display: flex; gap: 10px; margin-top: 20px; }
-        
-        .btn {
-            flex: 1;
             padding: 12px;
             font-family: 'VT323', monospace;
-            font-size: 1.3rem;
-            cursor: pointer;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
             text-align: center;
-            text-decoration: none;
-            border: 1px solid transparent;
         }
-        .btn-save { background: #facc15; color: #000; font-weight: bold; }
-        .btn-save:hover { background: #eab308; }
-        
-        .btn-cancel { background: transparent; border: 1px solid #666; color: #ccc; }
-        .btn-cancel:hover { border-color: #fff; color: #fff; }
-        .btn-logout { background: #ef4444; color: #000; margin-top: 10px; border: none;}
+        input:focus { border-color: #facc15; outline: none; }
 
-        .msg-preview-box {
-            background: rgba(0,0,0,0.6);
-            padding: 10px;
-            border-radius: 4px;
+        .btn {
             width: 100%;
-            font-size: 1.1rem;
+            background: #facc15;
+            color: #000;
+            padding: 10px;
+            font-size: 1.5rem;
+            font-family: 'VT323', monospace;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
         }
-        .error-text { color: #ef4444; }
-        .success-text { color: #4ade80; }
+        .btn:hover { background: #eab308; }
+
+        .links { margin-top: 15px; font-size: 1.1rem; }
+        .links a { color: #888; text-decoration: none; }
+        .links a:hover { color: #fff; }
+
+        .error-msg { color: #ef4444; margin-top: 10px; height: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="uplink-terminal">
+    <div class="login-box">
+        <h1>login</h1>
         
-        <div class="preview-section">
-            <h3 class="text-gray-400 mb-4">preview</h3>
-            
-            <div id="p-avatar" class="avatar-preview" style="background-image: url('https://placehold.co/120x120/000000/333333?text=NO+IMG');"></div>
-            
-            <div class="msg-preview-box">
-                <span style="color:#666; font-size:0.9rem;">12:00 PM</span>
-                <span id="p-name" style="color: #facc15; font-weight: bold;"></span>:
-                <span style="color: #fff;">your look</span>
-            </div>
-            
-            <div id="p-bio" class="text-center mt-4 text-gray-500 italic text-sm">
-                ""
-            </div>
-        </div>
+        <input type="text" id="username" placeholder="USERNAME" autocomplete="off">
+        <input type="password" id="password" placeholder="PASSWORD">
+        
+        <button onclick="login()" id="btn-login" class="btn">login</button>
 
-        <div class="edit-section">
-            <h2>settings</h2>
+        <div id="status" class="error-msg"></div>
 
-            <div>
-                <label>name</label>
-                <input type="text" id="inp-name" maxlength="15" placeholder="Enter alias...">
-            </div>
-
-            <div>
-                <label>url image</label>
-                <input type="text" id="inp-avatar" placeholder="https://example.com/image.jpg">
-                <small class="text-gray-600">paste image link</small>
-            </div>
-
-            <div>
-                <label>color</label>
-                <select id="inp-color">
-                    <option value="#facc15">yellow</option>
-                    <option value="#4ade80">green</option>
-                    <option value="#60a5fa">blue</option>
-                    <option value="#f472b6">pink</option>
-                    <option value="#a78bfa">purple</option>
-                    <option value="#ef4444">red</option>
-                </select>
-            </div>
-
-            <div>
-                <label>bio</label>
-                <textarea id="inp-bio" rows="3" maxlength="60" placeholder="Short status..."></textarea>
-            </div>
-
-            <div class="action-row">
-                <button onclick="logout()" class="btn btn-cancel">logout</button>
-                <button onclick="saveProfile()" class="btn btn-save" id="save-btn">save</button>
-            </div>
-            
-            <div id="status-msg" class="text-center mt-2 h-6"></div>
+        <div class="links">
+            <a href="register.html">create account</a>
         </div>
     </div>
 
     <script type="module">
-        // --- FIREBASE SETUP ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, set, get, child, query, orderByChild, equalTo, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
@@ -199,189 +99,66 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- SECURITY: BLACKLIST ---
-        // Note: root and fb67 are here, but we will allow them if the user is LOGGED IN as them.
-        const forbiddenNames = [
-            'root', 'admin', 'administrator', 'system', 
-            'mod', 'moderator', 'fb67', 'owner', 'sys'
-        ];
-
-        // --- GUEST CHECK (REDIRECT LOGIC) ---
-        let userId = localStorage.getItem('account_uuid');
-        
-        // If no user ID is found, send to login page immediately
-        if (!userId) {
-            window.location.href = "login.html";
+        // --- FIX 1: AUTO-LOGIN CHECK ---
+        // If we already have a session, send to index immediately.
+        // We removed the line that was deleting the session automatically.
+        const existingSession = localStorage.getItem('account_uuid');
+        if (existingSession) {
+            window.location.href = "index.html";
         }
 
-        // --- DOM ELEMENTS ---
-        const els = {
-            name: document.getElementById('inp-name'),
-            avatar: document.getElementById('inp-avatar'),
-            color: document.getElementById('inp-color'),
-            bio: document.getElementById('inp-bio'),
-            pName: document.getElementById('p-name'),
-            pAvatar: document.getElementById('p-avatar'),
-            pBio: document.getElementById('p-bio'),
-            status: document.getElementById('status-msg'),
-            saveBtn: document.getElementById('save-btn')
-        };
+        window.login = async function() {
+            const userInp = document.getElementById('username').value.trim();
+            const passInp = document.getElementById('password').value.trim();
+            const status = document.getElementById('status');
+            const btn = document.getElementById('btn-login');
 
-        // --- LOAD DATA ---
-        async function loadProfile() {
-            els.status.innerText = "Connecting...";
-            els.status.className = "text-center mt-2 h-6 text-gray-500";
-            try {
-                const snapshot = await get(child(ref(db), `users/${userId}`));
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    els.name.value = data.username || '';
-                    els.avatar.value = data.avatar || '';
-                    els.bio.value = data.bio || '';
-                    els.color.value = data.color || '#facc15';
-                    
-                    // Save verified username to localstorage for the permission check later
-                    localStorage.setItem('username', data.username);
-                    updatePreview();
-                } else {
-                    // Valid ID but no data? (Rare edge case)
-                    els.name.value = localStorage.getItem('username') || '';
-                    updatePreview();
-                }
-                els.status.innerText = "";
-            } catch (error) {
-                console.error(error);
-                els.status.innerText = "Offline Mode";
-            }
-        }
-
-        // --- LOGOUT FUNCTION ---
-        window.logout = function() {
-            localStorage.removeItem('account_uuid');
-            localStorage.removeItem('username');
-            window.location.href = "login.html";
-        }
-
-        // --- SAVE DATA (WITH SECURITY) ---
-        window.saveProfile = async function() {
-            const username = els.name.value.trim();
-            const avatar = els.avatar.value.trim();
-            const bio = els.bio.value.trim();
-            const color = els.color.value;
-
-            els.saveBtn.innerText = "CHECKING...";
-            els.status.className = "text-center mt-2 h-6 text-gray-500";
-            els.status.innerText = "Validating...";
-
-            if (!username) {
-                els.status.innerText = "NAME REQUIRED";
-                els.status.className = "text-center mt-2 h-6 error-text";
-                els.saveBtn.innerText = "save";
+            if(!userInp || !passInp) {
+                status.innerText = " required";
                 return;
             }
 
+            btn.innerText = "VERIFYING...";
+            status.innerText = "";
+
             try {
-                // Get the CURRENT username from DB to see if we are renaming ourselves
-                const userSnapshot = await get(child(ref(db), `users/${userId}`));
-                const currentDbName = userSnapshot.exists() ? userSnapshot.val().username : null;
-
-                // 1. FORBIDDEN NAME CHECK
-                // Rule: You can be 'root' or 'fb67' ONLY if that is ALREADY your name in the database.
-                // You cannot RENAME yourself to 'root' if you are currently 'guest123'.
-                if (forbiddenNames.includes(username.toLowerCase())) {
-                    if (username !== currentDbName) {
-                        els.status.innerText = "NAME NOT ALLOWED";
-                        els.status.className = "text-center mt-2 h-6 error-text";
-                        els.saveBtn.innerText = "save";
-                        return;
-                    }
-                }
-
-                // 2. UNIQUENESS CHECK
                 const usersRef = ref(db, 'users');
-                const nameQuery = query(usersRef, orderByChild('username'), equalTo(username));
-                const querySnapshot = await get(nameQuery);
+                const q = query(usersRef, orderByChild('username'), equalTo(userInp));
+                const snapshot = await get(q);
 
-                let isTaken = false;
-                querySnapshot.forEach((childSnapshot) => {
-                    if (childSnapshot.key !== userId) {
-                        isTaken = true;
-                    }
-                });
+                if (snapshot.exists()) {
+                    let validUser = null;
+                    let validId = null;
 
-                if (isTaken) {
-                    els.status.innerText = "name is taken";
-                    els.status.className = "text-center mt-2 h-6 error-text";
-                    els.saveBtn.innerText = "save";
-                    return;
-                }
-
-                // 3. LOGGING & SAVE
-                const oldData = userSnapshot.val() || {};
-
-                if (oldData.username && oldData.username !== username) {
-                    await push(ref(db, 'logs'), {
-                        type: "NAME_CHANGE",
-                        userId: userId,
-                        oldName: oldData.username,
-                        newName: username,
-                        timestamp: Date.now()
+                    snapshot.forEach(childSnap => {
+                        const data = childSnap.val();
+                        // Ensure your database actually HAS a "password" field for "root"
+                        if (data.password === passInp) {
+                            validUser = data;
+                            validId = childSnap.key;
+                        }
                     });
+
+                    if (validUser) {
+                        localStorage.setItem('account_uuid', validId);
+                        localStorage.setItem('username', validUser.username);
+                        window.location.href = "index.html";
+                    } else {
+                        status.innerText = "invalid password";
+                        btn.innerText = "ACCESS";
+                    }
+
+                } else {
+                    status.innerText = "user not found";
+                    btn.innerText = "ACCESS";
                 }
 
-                await set(ref(db, 'users/' + userId), {
-                    ...oldData, 
-                    username: username,
-                    avatar: avatar,
-                    bio: bio,
-                    color: color,
-                    lastUpdated: Date.now()
-                });
-
-                localStorage.setItem('username', username);
-                localStorage.setItem('user_color', color);
-                localStorage.setItem('user_avatar', avatar);
-
-                els.status.innerText = "PROFILE SECURED";
-                els.status.className = "text-center mt-2 h-6 success-text";
-                els.saveBtn.innerText = "save";
-                
-                setTimeout(() => els.status.innerText = "", 2000);
-
-            } catch (e) {
-                console.error(e);
-                els.status.innerText = "error";
-                els.status.className = "text-center mt-2 h-6 error-text";
-                els.saveBtn.innerText = "try again";
-            }
-        };
-
-        // --- LIVE PREVIEW LOGIC ---
-        function updatePreview() {
-            const n = els.name.value || 'Guest';
-            const a = els.avatar.value;
-            const b = els.bio.value || '"No bio set..."';
-            const c = els.color.value;
-
-            els.pName.innerText = n;
-            els.pName.style.color = c;
-            els.pBio.innerText = `"${b}"`;
-
-            if(a && a.startsWith('http')) {
-                els.pAvatar.style.backgroundImage = `url('${a}')`;
-            } else {
-                els.pAvatar.style.backgroundImage = `url('https://placehold.co/120x120/000000/333333?text=NO+IMG')`;
+            } catch (error) {
+                console.error(error);
+                status.innerText = "database error";
+                btn.innerText = "ACCESS";
             }
         }
-
-        ['keyup', 'change'].forEach(evt => {
-            els.name.addEventListener(evt, updatePreview);
-            els.avatar.addEventListener(evt, updatePreview);
-            els.bio.addEventListener(evt, updatePreview);
-            els.color.addEventListener(evt, updatePreview);
-        });
-
-        loadProfile();
     </script>
 </body>
 </html>
