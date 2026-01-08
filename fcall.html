@@ -112,15 +112,17 @@
         import { getDatabase, ref, set, onValue, push, onChildAdded, remove, onDisconnect } 
         from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-        // --- PASTE YOUR API KEYS HERE ---
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "YOUR_DATABASE_URL",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+   
+
+const firebaseConfig = {
+     apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
+    authDomain: "ewsitechat.firebaseapp.com",
+    databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
+    projectId: "ewsitechat",
+    storageBucket: "ewsitechat.firebasestorage.app",
+    messagingSenderId: "282495574514",
+    appId: "1:282495574514:web:e2781da630d93fc1ce8b6b",
+    measurementId: "G-GTN3TL1P2K"
         };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
