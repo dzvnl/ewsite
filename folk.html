@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>folk exclusive</title>
+    <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
     <style>
@@ -52,39 +52,14 @@
             gap: 12px;                
         }
 
-        .message-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-        }
+        /* Message Styles */
+        .message-row { display: flex; align-items: flex-start; gap: 10px; }
+        .msg-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #facc15; flex-shrink: 0; background: #000; }
+        .message-content { display: flex; flex-direction: column; max-width: 85%; }
+        .msg-username { color: #facc15; font-size: 0.8rem; margin-bottom: 2px; opacity: 0.8; }
+        .msg-text { word-wrap: break-word; }
 
-        .msg-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;       
-            object-fit: cover;        
-            border: 2px solid #facc15; 
-            flex-shrink: 0;           
-            background: #000;         
-        }
-
-        .message-content {
-            display: flex;
-            flex-direction: column;
-            max-width: 85%;
-        }
-
-        .msg-username {
-            color: #facc15;
-            font-size: 0.8rem;
-            margin-bottom: 2px;
-            opacity: 0.8;
-        }
-
-        .msg-text {
-            word-wrap: break-word;
-        }
-
+        /* Input Area */
         #chat-input-area {
             border-top: 1px dotted #999;
             padding: 10px;
@@ -106,6 +81,7 @@
             font-family: 'Special Elite', monospace; 
         }
 
+        /* Standard Buttons */
         button {
             font-family: 'Special Elite', monospace; 
             background: none;
@@ -115,17 +91,23 @@
             align-items: center;
             justify-content: center;
         }
-        button:hover {
-            background: rgba(250, 204, 21, 0.2);
-        }
+        button:hover { background: rgba(250, 204, 21, 0.2); }
 
-        .upload-icon {
-            width: 20px;
-            height: 20px;
-            fill: #facc15;
-            filter: drop-shadow(1px 1px 1px black);
+        /* --- NEW: Call Button --- */
+        .call-btn {
+            background: #b91c1c; /* Dark Red */
+            color: #fff;
+            border: 2px solid #ef4444;
+            padding: 5px 12px;
+            font-size: 1rem;
+            margin-right: 15px;
+            animation: pulse-red 2s infinite;
+            text-shadow: 1px 1px 0 #000;
         }
+        .call-btn:hover { background: #ef4444; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
+        /* --- Header Items --- */
         .online-indicator {
             position: absolute;
             top: 12px;
@@ -140,7 +122,14 @@
         }
         .dot { width: 9px; height: 9px; background: #4ade80; border-radius: 100%; box-shadow: 0 0 5px #4ade80; }
         
-        .user-menu { position: absolute; top: 8px; right: 12px; }
+        .user-menu { 
+            position: absolute; 
+            top: 8px; 
+            right: 12px; 
+            display: flex; 
+            align-items: center; 
+        }
+        
         #user-display { background: none; border: none; cursor: pointer; padding: 4px; }
         .person-icon { width: 24px; height: 24px; fill: #facc15; filter: drop-shadow(1px 1px 2px black); }
 
@@ -154,28 +143,54 @@
             min-width: 130px;
             z-index: 100;
         }
-        .dropdown a {
-            display: block;
-            padding: 10px;
-            color: #969696;
-            text-decoration: none;
-            font-size: 1rem;
-            border-bottom: 1px solid #333;
-        }
-        .dropdown a:last-child { border-bottom: none; }
+        .dropdown a { display: block; padding: 10px; color: #969696; text-decoration: none; border-bottom: 1px solid #333; }
         .dropdown a:hover { background: #333; color: #facc15; }
         .show { display: block; }
+
+        /* --- INCOMING CALL MODAL --- */
+        #call-modal {
+            display: none;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #ef4444;
+            padding: 20px;
+            text-align: center;
+            z-index: 200;
+            box-shadow: 0 0 30px #ef4444;
+        }
+        #call-modal h3 { color: #ef4444; margin-top: 0; font-size: 1.5rem; }
+        .modal-btns { display: flex; justify-content: space-around; margin-top: 20px; }
+        .btn-accept { background: #22c55e; color: black; padding: 5px 15px; border: none; }
+        .btn-deny { background: #333; color: #fff; padding: 5px 15px; border: 1px solid #666; }
+
     </style>
 </head>
 <body>
 
     <div id="chat-container">
+        <div id="call-modal">
+            <h3>INCOMING CALL ALERT</h3>
+            <p id="caller-name" style="color: #fff;">User is calling...</p>
+            <div class="modal-btns">
+                <button class="btn-deny" onclick="document.getElementById('call-modal').style.display='none'">IGNORE</button>
+                <button class="btn-accept" id="accept-btn">JOIN</button>
+            </div>
+        </div>
+
         <div class="online-indicator">
             <div class="dot"></div>
             <span id="user-count">0</span>
         </div>
 
         <div class="user-menu">
+            <button id="call-all-btn" class="call-btn">
+                <svg style="width:16px;height:16px;margin-right:5px;fill:currentColor" viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.59l2.2-2.21c.28-.26.36-.65.25-1C8.7 6.45 8.5 5.25 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/></svg>
+                CALL ALL
+            </button>
+
             <button id="user-display" onclick="toggleMenu()">
                 <svg class="person-icon" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
@@ -193,15 +208,10 @@
 
         <div id="chat-input-area">
             <input type="file" id="image-upload" accept="image/*" style="display: none;">
-            
             <input type="text" id="msg-input" placeholder="Type..." autocomplete="off">
-            
             <button onclick="document.getElementById('image-upload').click()" title="Upload Image" style="padding: 5px 10px;">
-                <svg class="upload-icon" viewBox="0 0 24 24">
-                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                </svg>
+                <svg class="upload-icon" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
             </button>
-
             <button id="send-btn" style="color: #facc15; padding: 6px 15px;">[SEND]</button>
         </div>
     </div>
@@ -215,12 +225,9 @@
         const fileInput = document.getElementById('image-upload');
         fileInput.addEventListener('change', function() {
             if (this.files && this.files[0]) {
-                const file = this.files[0];
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    if (window.sendImage) window.sendImage(e.target.result);
-                };
-                reader.readAsDataURL(file);
+                reader.onload = function(e) { if (window.sendImage) window.sendImage(e.target.result); };
+                reader.readAsDataURL(this.files[0]);
                 this.value = '';
             }
         });
