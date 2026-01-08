@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas</title>
+    <title>secure_line_active</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -77,23 +77,30 @@
             color: #fff; font-size: 1rem; padding: 0 4px;
         }
 
+        .connection-status {
+            position: absolute; top: 2px; right: 2px;
+            font-size: 0.8rem; background: rgba(0,0,0,0.8);
+            padding: 2px; color: #facc15;
+        }
+
         /* --- CONTROLS --- */
         .controls { position: absolute; top: 10px; right: 10px; z-index: 50; }
         .btn-end { background: #ef4444; color: white; border: none; padding: 5px 15px; font-family: 'VT323'; font-size: 1.2rem; cursor: pointer; }
         
-        /* Debug Status */
+        /* Debug Log Overlay */
         #status-log {
             position: absolute; bottom: 160px; left: 10px; 
-            color: #666; font-size: 12px; pointer-events: none;
+            color: #666; font-size: 14px; pointer-events: none;
+            text-shadow: 1px 1px 0 #000;
+            max-height: 200px; overflow: hidden;
         }
-
     </style>
 </head>
 <body>
 
     <div id="stage-area">
-        <div class="stage-label" id="stage-name">WAITING FOR SPEAKER...</div>
-        <div id="status-log">Initializing...</div>
+        <div class="stage-label" id="stage-name">WAITING FOR SIGNAL...</div>
+        <div id="status-log">System Initializing...</div>
         <video id="stage-video" autoplay playsinline></video>
         <div class="controls">
             <button class="btn-end" onclick="leaveRoom()">DISCONNECT</button>
@@ -108,13 +115,13 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, push, onChildAdded, remove, onDisconnect } 
-        from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-   
 
-const firebaseConfig = {
+// --- PASTE YOUR API KEYS HERE ---
+     const firebaseConfig = {
      apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
     authDomain: "ewsitechat.firebaseapp.com",
     databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
@@ -123,25 +130,25 @@ const firebaseConfig = {
     messagingSenderId: "282495574514",
     appId: "1:282495574514:web:e2781da630d93fc1ce8b6b",
     measurementId: "G-GTN3TL1P2K"
-        };
+    };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
         // State
-        const peers = {}; // { username: { pc, stream, candidateQueue } }
+        const peers = {}; 
         let localStream = null;
         let activeSpeaker = null;
         let audioContext = null;
 
         const urlParams = new URLSearchParams(window.location.search);
         const roomId = urlParams.get('room');
-        const username = localStorage.getItem('username') || 'Anon';
+        const username = localStorage.getItem('username') || 'Anon_' + Math.floor(Math.random()*1000);
 
         if (!roomId) window.location.href = 'folk.html';
 
         function log(msg) {
-            console.log(`[${username}] ${msg}`);
-            document.getElementById('status-log').innerText = msg;
+            console.log(`[LOG] ${msg}`);
+            document.getElementById('status-log').innerText = msg + "\n" + document.getElementById('status-log').innerText;
         }
 
         // --- 1. SETUP AUDIO ---
@@ -156,21 +163,26 @@ const firebaseConfig = {
         // --- 2. INIT CALL ---
         async function init() {
             try {
-                log("Getting User Media...");
+                // CLEANUP: Remove any old signals for me before starting
+                await remove(ref(db, `folk_calls/${roomId}/signals/${username}`));
+                
+                log("Requesting Camera/Mic...");
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
+                log("Camera Active.");
 
-                // Setup DB Presence
+                // Join the room
                 const partRef = ref(db, `folk_calls/${roomId}/participants/${username}`);
                 set(partRef, { online: true });
                 onDisconnect(partRef).remove();
+                onDisconnect(ref(db, `folk_calls/${roomId}/signals/${username}`)).remove();
 
-                // Listen for new peers
+                // Listen for other participants
                 onChildAdded(ref(db, `folk_calls/${roomId}/participants`), snap => {
                     const peerName = snap.key;
                     if (peerName !== username) {
-                        log(`Found peer: ${peerName}`);
-                        // Alphabetical Sort determines who calls who
+                        log(`Discovered peer: ${peerName}`);
+                        // Alphabetical sort decides who calls whom to prevent collisions
                         if (username > peerName) createPeer(peerName, true);
                         else createPeer(peerName, false);
                     }
@@ -181,7 +193,6 @@ const firebaseConfig = {
                     const data = snap.val();
                     const sender = data.from;
                     
-                    // Create peer object if it doesn't exist (receiver side)
                     if (!peers[sender]) createPeer(sender, false);
                     const pc = peers[sender].pc;
 
@@ -189,8 +200,6 @@ const firebaseConfig = {
                         if (data.type === 'offer') {
                             log(`Received OFFER from ${sender}`);
                             await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-                            
-                            // Process any queued candidates
                             processCandidateQueue(sender);
 
                             const answer = await pc.createAnswer();
@@ -206,7 +215,6 @@ const firebaseConfig = {
                             processCandidateQueue(sender);
                         } 
                         else if (data.type === 'candidate') {
-                            // If remote description isn't set, queue it. If set, add it.
                             if (pc.remoteDescription) {
                                 await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
                             } else {
@@ -214,42 +222,50 @@ const firebaseConfig = {
                             }
                         }
                     } catch (err) {
-                        console.error("Signal Error:", err);
+                        log(`Signal Error with ${sender}: ${err.message}`);
                     }
-                    
-                    // Remove processed signal to keep DB clean
-                    remove(snap.ref);
+                    remove(snap.ref); // Delete signal after reading
                 });
 
-                // Start Speaker Detection Loop
+                // Start Speaker Detection
                 setInterval(checkActiveSpeaker, 500);
 
             } catch(e) { 
-                console.error(e); 
-                log("Error: " + e.message); 
+                log("FATAL ERROR: " + e.message); 
+                alert("Could not start call: " + e.message);
             }
         }
 
         // --- 3. PEER LOGIC ---
         function createPeer(peerName, isInitiator) {
             if (peers[peerName]) return;
-            log(`Creating PeerConnection with ${peerName} (Initiator: ${isInitiator})`);
+            log(`Connecting to ${peerName}... (Initiator: ${isInitiator})`);
 
             const pc = new RTCPeerConnection({ 
-                iceServers: [{ urls: 'stun:stun1.l.google.com:19302' }] 
+                iceServers: [
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    { urls: 'stun:stun2.l.google.com:19302' }
+                ] 
             });
             
             peers[peerName] = { 
                 pc: pc, 
                 stream: new MediaStream(), 
                 analyser: null,
-                candidateQueue: [] // Queue for early candidates
+                candidateQueue: [] 
             };
 
-            // Add local tracks
             localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
 
-            // ICE Candidates
+            // Connection State Monitoring
+            pc.onconnectionstatechange = () => {
+                log(`Connection ${peerName}: ${pc.connectionState}`);
+                updateStatus(peerName, pc.connectionState);
+                if (pc.connectionState === 'failed') {
+                    // Optional: retry logic could go here
+                }
+            };
+
             pc.onicecandidate = e => {
                 if (e.candidate) {
                     push(ref(db, `folk_calls/${roomId}/signals/${peerName}`), { 
@@ -258,13 +274,11 @@ const firebaseConfig = {
                 }
             };
 
-            // Remote Stream
             pc.ontrack = e => {
-                log(`Stream received from ${peerName}`);
+                log(`Got Stream Track from ${peerName}`);
                 const stream = peers[peerName].stream;
                 stream.addTrack(e.track);
 
-                // Audio Analysis Setup
                 if (e.track.kind === 'audio') {
                     initAudioContext();
                     const source = audioContext.createMediaStreamSource(stream);
@@ -278,7 +292,6 @@ const firebaseConfig = {
                 addVideoToStrip(peerName, stream);
             };
 
-            // Create Offer
             if (isInitiator) {
                 pc.onnegotiationneeded = async () => {
                     try {
@@ -287,19 +300,16 @@ const firebaseConfig = {
                         push(ref(db, `folk_calls/${roomId}/signals/${peerName}`), { 
                             type: 'offer', from: username, offer 
                         });
-                    } catch (e) { console.error(e); }
+                    } catch (e) { log("Negotation Error: " + e.message); }
                 };
             }
         }
 
-        // Helper: Process Queued Candidates
         async function processCandidateQueue(peerName) {
             const p = peers[peerName];
             while (p.candidateQueue.length > 0) {
                 const cand = p.candidateQueue.shift();
-                try {
-                    await p.pc.addIceCandidate(new RTCIceCandidate(cand));
-                } catch (e) { console.error("Queue Error", e); }
+                try { await p.pc.addIceCandidate(new RTCIceCandidate(cand)); } catch (e) {}
             }
         }
 
@@ -320,25 +330,32 @@ const firebaseConfig = {
             label.className = 'strip-label';
             label.innerText = name;
 
+            const status = document.createElement('div');
+            status.className = 'connection-status';
+            status.id = `status-${name}`;
+            status.innerText = 'Connecting...';
+
             div.appendChild(vid);
             div.appendChild(label);
+            div.appendChild(status);
             document.getElementById('filmstrip').appendChild(div);
             
             if (!activeSpeaker) promoteToStage(name);
         }
 
+        function updateStatus(name, state) {
+            const el = document.getElementById(`status-${name}`);
+            if (el) el.innerText = state;
+        }
+
         function promoteToStage(name) {
             if (activeSpeaker === name) return;
             activeSpeaker = name;
-
             document.getElementById('stage-name').innerText = name;
             const stageVid = document.getElementById('stage-video');
-            if (peers[name] && peers[name].stream) {
-                stageVid.srcObject = peers[name].stream;
-            }
+            if (peers[name] && peers[name].stream) stageVid.srcObject = peers[name].stream;
         }
 
-        // --- 5. SPEAKER DETECTION ---
         function checkActiveSpeaker() {
             if (!audioContext) return;
             let maxVol = 0;
@@ -365,9 +382,7 @@ const firebaseConfig = {
             window.location.href = 'folk.html';
         };
 
-        // Start
         init();
-
     </script>
 </body>
 </html>
