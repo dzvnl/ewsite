@@ -90,11 +90,15 @@
         <div class="absolute top-5 left-5 z-20">
             <h2 class="text-3xl text-yellow-400 video-overlay-text">CALL WITH: <span id="callingName" class="text-white">...</span></h2>
             <div id="connectionStatus" class="text-xl text-gray-400 video-overlay-text animate-pulse">Initializing...</div>
+            <div id="techStatus" class="text-sm text-gray-600 mt-1 font-mono"></div>
         </div>
 
         <div class="relative w-full h-full bg-gray-900 flex items-center justify-center">
             <video id="remoteVideo" class="w-full h-full object-cover" autoplay playsinline></video>
-            <div id="remotePlaceholder" class="absolute text-gray-600 text-2xl">WAITING FOR VIDEO...</div>
+            <div id="remotePlaceholder" class="absolute text-gray-600 text-2xl text-center">
+                WAITING FOR VIDEO...<br>
+                <span class="text-sm text-gray-500">(This may take up to 10s on different networks)</span>
+            </div>
         </div>
 
         <div class="absolute bottom-5 right-5 z-20 w-48 h-64 bg-black border-2 border-yellow-400 shadow-2xl">
@@ -141,7 +145,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getDatabase, ref, get, set, update, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-        // --- CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
             authDomain: "ewsitechat.firebaseapp.com",
@@ -164,92 +167,107 @@
         const bgs = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg'];
         document.body.style.backgroundImage = `url('${bgs[Math.floor(Math.random()*bgs.length)]}')`;
 
-        // WebRTC Variables
-        let localStream = null;
-        let peerConnection = null;
-        let currentCallPath = null;
-        
-        // STUN Servers (Google's Public Ones)
+        // --- WEBRTC CONFIGURATION (CRITICAL FOR CROSS-NETWORK) ---
+        // Using a list of multiple free STUN servers to increase success rate
         const servers = {
             iceServers: [
-                { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' }
             ]
         };
 
+        let localStream = null;
+        let peerConnection = null;
+        let currentCallPath = null;
+
         // --- 1. USER IDENTIFICATION ---
         if (!myUsername) {
-            myUsername = prompt("Enter your username for calls:", "guest");
+            myUsername = prompt("Enter your username (Required for calling):", "");
             if(myUsername) localStorage.setItem('chat_username', myUsername);
+            else window.location.reload(); // Force reload if canceled
         }
-        document.getElementById('myUsernameDisplay').innerText = myUsername || "Guest";
+        document.getElementById('myUsernameDisplay').innerText = myUsername;
 
         // --- 2. LISTENER (Am I being called?) ---
         if (myUsername) {
-            // We listen to calls/{myUsername}
             const myInboxRef = ref(db, 'calls/' + myUsername);
-            
             onValue(myInboxRef, (snapshot) => {
                 const data = snapshot.val();
                 
-                // If data exists and has an 'offer' but NO 'answer' yet, it's a new call
                 if (data && data.offer && !data.answer) {
-                    console.log("Incoming call detected from:", data.from);
+                    console.log("Incoming call from:", data.from);
                     document.getElementById('incomingCallerName').innerText = data.from;
                     currentCallPath = 'calls/' + myUsername; 
                     document.getElementById('incomingCallPopup').classList.remove('hidden');
-                } 
-                // If data becomes null, caller hung up
-                else if (!data) {
-                    console.log("Call data cleared.");
+                } else if (!data) {
                     document.getElementById('incomingCallPopup').classList.add('hidden');
                 }
             });
         }
 
-        // --- 3. HELPER: SETUP PEER CONNECTION ---
+        // --- 3. CREATE PEER CONNECTION ---
         async function createPeerConnection() {
             peerConnection = new RTCPeerConnection(servers);
 
-            // Get Camera/Mic
-            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            document.getElementById('localVideo').srcObject = localStream;
+            // Connection State Monitoring (For Debugging)
+            peerConnection.onconnectionstatechange = () => {
+                const status = peerConnection.connectionState;
+                console.log("Connection State:", status);
+                document.getElementById('techStatus').innerText = `State: ${status}`;
+                if(status === 'connected') {
+                    document.getElementById('connectionStatus').innerText = "CONNECTED";
+                    document.getElementById('connectionStatus').classList.remove('animate-pulse');
+                    document.getElementById('connectionStatus').classList.add('text-green-500');
+                }
+                if(status === 'failed' || status === 'disconnected') {
+                    document.getElementById('connectionStatus').innerText = "CONNECTION FAILED";
+                    document.getElementById('connectionStatus').classList.add('text-red-500');
+                }
+            };
 
-            // Add Tracks to Connection
-            localStream.getTracks().forEach(track => {
-                peerConnection.addTrack(track, localStream);
-            });
+            // Get Media
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('localVideo').srcObject = localStream;
+                
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+            } catch(e) {
+                alert("Camera Access Denied or HTTPS missing. Cannot Call.");
+                endCall();
+                return null;
+            }
 
-            // When Remote Stream Arrives
+            // Handle Remote Stream
             peerConnection.ontrack = (event) => {
-                console.log("Received remote stream");
+                console.log("Stream received!");
                 document.getElementById('remoteVideo').srcObject = event.streams[0];
-                document.getElementById('connectionStatus').innerText = "CONNECTED";
-                document.getElementById('connectionStatus').classList.remove('animate-pulse');
-                document.getElementById('connectionStatus').classList.add('text-green-500');
             };
 
             return peerConnection;
         }
 
-
         // --- 4. CALLER LOGIC (User A) ---
         window.startCall = async (targetUser) => {
             if (targetUser === myUsername) return alert("Cannot call yourself.");
             
-            console.log("Starting call to:", targetUser);
             document.getElementById('callingName').innerText = targetUser;
+            document.getElementById('connectionStatus').innerText = "Gathering Network Info...";
             document.getElementById('callModal').classList.remove('hidden');
             
-            // Defines where the "Room" is. We use the Target's ID as the mailbox.
             currentCallPath = 'calls/' + targetUser;
-
             await createPeerConnection();
+            if(!peerConnection) return;
 
-            // ICE Candidates for Caller
+            // Gather all network candidates first (Vanilla ICE) for stability
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate === null) {
-                    // Gathering complete - Send Offer
-                    console.log("Sending Offer to DB...");
+                    console.log("Network gathering complete. Sending Offer...");
+                    document.getElementById('connectionStatus').innerText = "Calling...";
+                    
                     set(ref(db, currentCallPath), {
                         offer: JSON.stringify(peerConnection.localDescription),
                         from: myUsername
@@ -257,32 +275,28 @@
                 }
             };
 
-            // Create Offer
             const offer = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offer);
 
-            // LISTEN FOR ANSWER
-            // We listen to the same path for the 'answer' field to appear
+            // Listen for Answer
             onValue(ref(db, currentCallPath), async (snapshot) => {
                 const data = snapshot.val();
-                // Check if there is an answer and we haven't set it yet
                 if (data && data.answer && !peerConnection.currentRemoteDescription) {
-                    console.log("Answer received from DB!");
+                    console.log("Answer received!");
+                    document.getElementById('connectionStatus').innerText = "Connecting...";
                     const answerDesc = new RTCSessionDescription(JSON.parse(data.answer));
                     await peerConnection.setRemoteDescription(answerDesc);
                 }
             });
         };
 
-
         // --- 5. RECEIVER LOGIC (User B) ---
         window.answerCall = async () => {
-            console.log("Answering call...");
             document.getElementById('incomingCallPopup').classList.add('hidden');
             document.getElementById('callModal').classList.remove('hidden');
             document.getElementById('callingName').innerText = "Caller";
+            document.getElementById('connectionStatus').innerText = "Connecting...";
 
-            // Get the Offer from DB
             const snapshot = await get(ref(db, currentCallPath));
             const data = snapshot.val();
             
@@ -293,23 +307,21 @@
             }
 
             await createPeerConnection();
+            if(!peerConnection) return;
 
-            // ICE Candidates for Receiver
+            // Wait for network gathering
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate === null) {
-                    // Gathering complete - Send Answer
-                    console.log("Sending Answer to DB...");
+                    console.log("Sending Answer...");
                     update(ref(db, currentCallPath), {
                         answer: JSON.stringify(peerConnection.localDescription)
                     });
                 }
             };
 
-            // Set Remote (The Offer)
             const offerDesc = new RTCSessionDescription(JSON.parse(data.offer));
             await peerConnection.setRemoteDescription(offerDesc);
 
-            // Create Answer
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
         };
@@ -319,26 +331,16 @@
             if(currentCallPath) remove(ref(db, currentCallPath));
         };
 
-
         // --- 6. CLEANUP ---
         window.endCall = () => {
-            console.log("Ending call...");
             document.getElementById('callModal').classList.add('hidden');
-            
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-            }
-            if (peerConnection) {
-                peerConnection.close();
-            }
-            if (currentCallPath) {
-                remove(ref(db, currentCallPath));
-            }
-            // Reload to clear state completely
+            if (localStream) localStream.getTracks().forEach(track => track.stop());
+            if (peerConnection) peerConnection.close();
+            if (currentCallPath) remove(ref(db, currentCallPath));
             window.location.reload();
         };
 
-        // --- FETCH USERS (Existing Display Logic) ---
+        // --- FETCH USERS ---
         async function fetchUsers() {
             const usersRef = ref(db, 'users');
             try {
@@ -384,8 +386,6 @@
                 }
 
                 card.className = `user-card ${borderClass}`;
-                
-                // Prevent navigation when clicking buttons
                 card.onclick = (e) => {
                     if(e.target.closest('.call-btn') || e.target.closest('button')) return;
                     window.location.href = `account.html?user=${user.username}`;
@@ -399,7 +399,6 @@
                     ${roleHTML}
                     <div class="card-name">${user.username}</div>
                     <div class="card-bio">${bioText}</div>
-                    
                     <button class="call-btn" onclick="window.startCall('${user.username}')">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                         CALL
@@ -416,7 +415,6 @@
         };
 
         fetchUsers();
-
     </script>
 </body>
 </html>
