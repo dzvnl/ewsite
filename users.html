@@ -3,97 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>users</title>
+    <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'VT323', monospace;
             color: #e5e5e5;
-            background-color: #111;
+            background-color: #000;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             min-height: 100vh;
             margin: 0;
-            padding: 80px 20px 20px 20px; /* Padding for top fixed bar */
+            padding: 20px;
         }
 
-        /* --- X-RAY DIAGNOSTIC BAR --- */
-        #diagnosticBar {
-            position: fixed; top: 0; left: 0; width: 100%; height: 70px;
-            background: #000; border-bottom: 2px solid #facc15;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 20px; z-index: 10000; box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        /* --- HEADER --- */
+        .header-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto 30px auto;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
         }
-        .diag-info { font-size: 1.2rem; color: #fff; }
-        .diag-highlight { color: #facc15; font-weight: bold; }
-        .diag-status { color: #4ade80; }
 
-        /* --- GRID --- */
+        h1 {
+            font-size: 3rem;
+            color: #facc15;
+            line-height: 1;
+            margin: 0;
+            text-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
+        }
+
+        /* --- SEARCH --- */
+        .filter-input {
+            background: #111;
+            border: 1px solid #444;
+            color: #fff;
+            font-family: 'VT323';
+            font-size: 1.5rem;
+            padding: 5px 10px;
+            width: 250px;
+        }
+        .filter-input:focus { outline: none; border-color: #facc15; }
+
+        /* --- GRID LAYOUT --- */
         .user-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 20px; max-width: 1000px; margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
         }
-        .user-card {
-            background: #222; border: 1px solid #444; padding: 20px;
-            display: flex; flex-direction: column; align-items: center;
-        }
-        .card-name { font-size: 1.8rem; margin: 10px 0; color: #fff; }
-        .call-btn {
-            background: #166534; color: #fff; width: 100%; padding: 10px;
-            font-size: 1.3rem; border: 1px solid #22c55e; cursor: pointer;
-        }
-        .call-btn:hover { background: #22c55e; color: #000; }
 
-        /* --- CALL UI --- */
-        #callModal, #incomingPopup {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 9999;
+        /* --- USER CARD --- */
+        .user-card {
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #333;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
-        .hidden { display: none !important; }
+
+        .user-card:hover {
+            border-color: #facc15;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+        }
+
+        /* Special borders for roles */
+        .user-card.is-founder { border-color: #c084fc; }
+        .user-card.is-founder:hover { box-shadow: 0 0 10px rgba(192, 132, 252, 0.3); }
         
-        video { background: #000; border: 1px solid #333; }
+        .user-card.is-admin { border-color: #ef4444; }
+
+        .card-pfp {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border: 1px solid #555;
+            margin-bottom: 10px;
+            background: #000;
+        }
+
+        .card-name {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 5px;
+            word-break: break-all;
+            text-align: center;
+        }
+
+        .card-role {
+            font-size: 1rem;
+            text-transform: uppercase;
+            padding: 0 5px;
+            margin-bottom: 5px;
+        }
+        .role-founder { color: #c084fc; border: 1px solid #c084fc; }
+        .role-admin { color: #ef4444; border: 1px solid #ef4444; }
+
+        .card-bio {
+            color: #888;
+            font-size: 1rem;
+            text-align: center;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Limit to 2 lines */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.1;
+        }
+
+        .nav-back {
+            display: block;
+            width: 100%;
+            max-width: 900px;
+            margin: 20px auto;
+            color: #666;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        .nav-back:hover { color: #facc15; }
+        
+        #loading-text { font-size: 1.5rem; color: #666; text-align: center; width: 100%; }
+
     </style>
 </head>
 <body>
 
-    <div id="diagnosticBar">
-        <div>
-            <div class="diag-info">I AM: <span id="myIdentity" class="diag-highlight">...</span></div>
-            <div class="diag-info text-sm text-gray-400">Listening at: <span id="myPath">...</span> <span id="dbStatus" class="diag-status">(Connecting...)</span></div>
-        </div>
-        <button onclick="checkPermissions()" class="bg-gray-700 text-white px-3 py-1 border border-gray-500 hover:bg-gray-600">TEST DB WRITE</button>
-    </div>
+    <a href="index.html" class="nav-back"><< RETURN_HOME</a>
 
-    <div id="incomingPopup" class="hidden">
-        <div class="bg-gray-800 p-8 border-2 border-green-500 rounded text-center">
-            <h1 class="text-4xl text-white mb-4 animate-bounce">📞 INCOMING CALL!</h1>
-            <p class="text-xl text-yellow-400 mb-8">name: <span id="incomingName">...</span></p>
-            <button onclick="answerCall()" class="bg-green-600 text-white px-8 py-4 text-2xl w-full mb-4 hover:bg-green-500">ANSWER VIDEO</button>
-            <button onclick="rejectCall()" class="bg-red-600 text-white px-8 py-2 w-full hover:bg-red-500">Ignore</button>
-        </div>
-    </div>
-
-    <div id="callModal" class="hidden">
-        <div class="absolute top-5 left-5 text-xl text-yellow-400">
-            STATUS: <span id="connectionState" class="text-white">Connecting...</span>
-        </div>
-        
-        <video id="remoteVideo" class="w-full h-full max-w-4xl max-h-[80vh] object-cover" autoplay playsinline></video>
-        
-        <div class="absolute bottom-5 right-5 w-48 h-36 bg-black border-2 border-white">
-            <video id="localVideo" class="w-full h-full object-cover" autoplay playsinline muted></video>
-        </div>
-
-        <button onclick="endCall()" class="absolute bottom-10 bg-red-600 text-white px-10 py-4 text-xl rounded-full border-2 border-red-400 hover:bg-red-500">HANG UP</button>
+    <div class="header-container">
+        <h1>users</h1>
+        <input type="text" id="filterInput" class="filter-input" placeholder="Filter users...">
     </div>
 
     <div id="userGrid" class="user-grid">
-        </div>
+        <div id="loading-text">fetching...</div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, get, set, update, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
+        // --- CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
             authDomain: "ewsitechat.firebaseapp.com",
@@ -106,171 +169,103 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- IDENTITY SETUP ---
-        let myUsername = localStorage.getItem('chat_username');
-        if (!myUsername) {
-            myUsername = prompt("Enter your username exactly as it appears in the database:");
-            if(myUsername) localStorage.setItem('chat_username', myUsername);
-            else myUsername = "guest_" + Math.floor(Math.random()*100);
-        }
-        
-        // Normalize: We remove spaces to avoid path errors
-        myUsername = myUsername.trim(); 
+        // --- ROLES ---
+        const FOUNDERS = ['root', '-nl', 'futtbucker67'];
+        const ADMINS = ['root', 'fb67', '-nl'];
 
-        // DISPLAY DEBUG INFO
-        document.getElementById('myIdentity').innerText = myUsername;
-        document.getElementById('myPath').innerText = `calls/${myUsername}`;
+        const grid = document.getElementById('userGrid');
+        const inputField = document.getElementById('filterInput');
+        let allUsers = []; // Store data here for filtering
 
-        // --- GLOBAL VARS ---
-        let localStream = null;
-        let peerConnection = null;
-        let currentCallPath = null;
-        
-        const servers = {
-            iceServers: [
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' }
-            ]
-        };
+        // Set background randomly
+        const bgs = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg'];
+        document.body.style.backgroundImage = `url('${bgs[Math.floor(Math.random()*bgs.length)]}')`;
 
-        // --- 1. LISTENER (Are you there?) ---
-        const myRef = ref(db, `calls/${myUsername}`);
-        onValue(myRef, (snapshot) => {
-            document.getElementById('dbStatus').innerText = "(ONLINE & READY)";
-            const data = snapshot.val();
-            
-            if (data && data.offer && !data.answer) {
-                console.log("Incoming detected!", data);
-                document.getElementById('incomingName').innerText = data.from;
-                currentCallPath = `calls/${myUsername}`;
-                document.getElementById('incomingPopup').classList.remove('hidden');
-            } else if (!data) {
-                document.getElementById('incomingPopup').classList.add('hidden');
-            }
-        }, (err) => {
-            document.getElementById('dbStatus').innerText = "(PERMISSION DENIED - CHECK RULES)";
-            document.getElementById('dbStatus').style.color = "red";
-            alert("Firebase Error: " + err.message + "\n\nDid you add the Rules?");
-        });
+        // --- SEARCH EVENT LISTENER (This fixes the calling issue) ---
+        inputField.addEventListener('keyup', filterUsers);
 
-        // --- 2. START CALL ---
-        window.startCall = async (targetUser) => {
-            targetUser = targetUser.trim();
-            if(targetUser === myUsername) return alert("You cannot call yourself!");
-
-            // X-RAY CONFIRMATION
-            const confirmCall = confirm(`X-RAY DIAGNOSTIC:\n\nMy ID: ${myUsername}\nCalling Path: calls/${targetUser}\n\nDoes "calls/${targetUser}" match the other screen?\n\nClick OK to send the signal.`);
-            if(!confirmCall) return;
-
-            document.getElementById('callModal').classList.remove('hidden');
-            document.getElementById('connectionState').innerText = "Accessing Camera...";
-
-            currentCallPath = `calls/${targetUser}`;
-
-            // Setup Video
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
-                document.getElementById('localVideo').srcObject = localStream;
-            } catch(e) {
-                return alert("Camera Error: " + e.message);
-            }
-
-            peerConnection = new RTCPeerConnection(servers);
-            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-            peerConnection.ontrack = e => document.getElementById('remoteVideo').srcObject = e.streams[0];
-            
-            peerConnection.onicecandidate = e => {
-                if(!e.candidate) {
-                    document.getElementById('connectionState').innerText = "Signal Ready. Sending...";
-                    set(ref(db, currentCallPath), {
-                        offer: JSON.stringify(peerConnection.localDescription),
-                        from: myUsername
-                    }).then(() => {
-                        document.getElementById('connectionState').innerText = "Ringing... Waiting for answer.";
-                    }).catch(err => alert("WRITE FAILED: " + err.message));
-                }
-            };
-
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
-
-            // Listen for answer
-            onValue(ref(db, currentCallPath), async (snapshot) => {
-                const data = snapshot.val();
-                if(data && data.answer && !peerConnection.currentRemoteDescription) {
-                    document.getElementById('connectionState').innerText = "Connecting...";
-                    const desc = new RTCSessionDescription(JSON.parse(data.answer));
-                    await peerConnection.setRemoteDescription(desc);
-                }
-            });
-        };
-
-        // --- 3. ANSWER CALL ---
-        window.answerCall = async () => {
-            document.getElementById('incomingPopup').classList.add('hidden');
-            document.getElementById('callModal').classList.remove('hidden');
-
-            const snapshot = await get(ref(db, currentCallPath));
-            const data = snapshot.val();
-
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
-                document.getElementById('localVideo').srcObject = localStream;
-            } catch(e) { return alert("Camera Error: " + e.message); }
-
-            peerConnection = new RTCPeerConnection(servers);
-            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-            
-            peerConnection.ontrack = e => document.getElementById('remoteVideo').srcObject = e.streams[0];
-
-            peerConnection.onicecandidate = e => {
-                if(!e.candidate) {
-                    update(ref(db, currentCallPath), {
-                        answer: JSON.stringify(peerConnection.localDescription)
-                    });
-                }
-            };
-
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(data.offer)));
-            const answer = await peerConnection.createAnswer();
-            await peerConnection.setLocalDescription(answer);
-        };
-
-        window.endCall = () => {
-            if(currentCallPath) remove(ref(db, currentCallPath));
-            window.location.reload();
-        };
-        
-        window.checkPermissions = () => {
-            set(ref(db, 'test_write'), { time: Date.now() })
-                .then(() => alert("WRITE SUCCESS! Database is working."))
-                .catch((e) => alert("WRITE FAILED! " + e.message));
-        };
-
-        // --- FETCH USERS ---
         async function fetchUsers() {
             const usersRef = ref(db, 'users');
-            const snap = await get(usersRef);
-            const grid = document.getElementById('userGrid');
-            
-            if(snap.exists()) {
-                const data = snap.val();
-                Object.keys(data).forEach(key => {
-                    const div = document.createElement('div');
-                    div.className = 'user-card';
-                    div.innerHTML = `
-                        <div class="card-name">${key}</div>
-                        <button class="call-btn" onclick="window.startCall('${key}')">CALL</button>
-                    `;
-                    grid.appendChild(div);
-                });
-            } else {
-                grid.innerHTML = "<div class='text-white text-center'>No users found in database.</div>";
+            try {
+                const snapshot = await get(usersRef);
+                grid.innerHTML = ''; // Clear loading text
+
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    
+                    // Convert object to array for sorting/filtering
+                    allUsers = Object.keys(data).map(key => {
+                        return { username: key, ...data[key] };
+                    });
+
+                    // Render all initially
+                    renderList(allUsers);
+                } else {
+                    grid.innerHTML = '<div style="color:#ef4444">NO DATA FOUND</div>';
+                }
+            } catch (error) {
+                console.error(error);
+                grid.innerHTML = '<div style="color:#ef4444">CONNECTION ERROR</div>';
             }
         }
-        
+
+        function renderList(users) {
+            grid.innerHTML = '';
+            
+            // Sort: Founders first, then Admins, then A-Z
+            users.sort((a, b) => {
+                const aFounder = FOUNDERS.includes(a.username);
+                const bFounder = FOUNDERS.includes(b.username);
+                if (aFounder && !bFounder) return -1;
+                if (!aFounder && bFounder) return 1;
+                return 0;
+            });
+
+            users.forEach(user => {
+                const card = document.createElement('div');
+                
+                // Determine CSS classes for roles
+                let roleHTML = '';
+                let borderClass = '';
+
+                if (FOUNDERS.includes(user.username)) {
+                    roleHTML = '<div class="card-role role-founder">founder</div>';
+                    borderClass = 'is-founder';
+                } else if (ADMINS.includes(user.username)) {
+                    roleHTML = '<div class="card-role role-admin">admin</div>';
+                    borderClass = 'is-admin';
+                }
+
+                card.className = `user-card ${borderClass}`;
+                
+                // On click, go to their profile
+                card.onclick = () => window.location.href = `account.html?user=${user.username}`;
+
+                // Default PFP if missing
+                const pfpSrc = user.pfp ? user.pfp : 'https://placehold.co/100x100/111/444?text=?';
+                const bioText = user.bio ? user.bio : 'No bio established.';
+
+                card.innerHTML = `
+                    <img src="${pfpSrc}" class="card-pfp" alt="${user.username}">
+                    ${roleHTML}
+                    <div class="card-name">${user.username}</div>
+                    <div class="card-bio">${bioText}</div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        // --- SEARCH FUNCTION ---
+        function filterUsers() {
+            const input = inputField.value.toLowerCase();
+            const filtered = allUsers.filter(user => user.username.toLowerCase().includes(input));
+            renderList(filtered);
+        }
+
+        // Start
         fetchUsers();
+
     </script>
 </body>
 </html>
