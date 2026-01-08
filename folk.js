@@ -4,13 +4,14 @@ from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 // --- PASTE YOUR API KEYS HERE ---
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    databaseURL: "YOUR_DATABASE_URL",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+     apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
+    authDomain: "ewsitechat.firebaseapp.com",
+    databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
+    projectId: "ewsitechat",
+    storageBucket: "ewsitechat.firebasestorage.app",
+    messagingSenderId: "282495574514",
+    appId: "1:282495574514:web:e2781da630d93fc1ce8b6b",
+    measurementId: "G-GTN3TL1P2K"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -22,7 +23,7 @@ const messagesRef = ref(db, 'folk_messages');
 // Username Logic
 let username = localStorage.getItem('username');
 if (!username) {
-    username = prompt("Enter folk name:") || "Anonymous";
+    username = prompt("name") || "unkown folk";
     localStorage.setItem('username', username);
 }
 const displayNameEl = document.getElementById('display-name');
