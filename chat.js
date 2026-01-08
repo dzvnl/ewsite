@@ -1,13 +1,13 @@
-/* * GLOBAL_NET CHAT LOGIC
- * Target: chat.html
+/*
+ * Target: chat.js
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove, set, onDisconnect } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-console.log("System: Global_Net Online.");
+console.log("go away.");
 
-// --- FIREBASE CONFIG (Must match account.html) ---
+// --- FIREBASE CONFIG ---
 const firebaseConfig = {
     apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
     authDomain: "ewsitechat.firebaseapp.com",
@@ -24,9 +24,8 @@ const db = getDatabase(app);
 
 // --- STATE ---
 const ADMINS = ['root', 'futtbucker67', 'w234'];
-// We use the LocalStorage values set by account.html
 const currentUser = localStorage.getItem('username') || 'no name';
-const currentUuid = localStorage.getItem('account_uuid'); // Hidden ID
+const currentUuid = localStorage.getItem('account_uuid'); 
 const isAdmin = ADMINS.includes(currentUser);
 
 const dom = {
@@ -38,7 +37,7 @@ const dom = {
 
 if(dom.userDisplay) dom.userDisplay.innerText = currentUser;
 
-// --- CSS INJECTION (Updated for colors) ---
+// --- CSS INJECTION ---
 const style = document.createElement('style');
 style.textContent = `
     .msg { margin-bottom: 8px; line-height: 1.2; word-wrap: break-word; display: flex; align-items: flex-start; }
@@ -47,30 +46,30 @@ style.textContent = `
     .msg-user { font-weight: bold; cursor: pointer; text-shadow: 1px 1px 2px black; margin-right: 5px;}
     .msg-user.admin { color: #ef4444 !important; }
     .msg-text { color: #fff; text-shadow: 1px 1px 2px black; }
+    .chat-image { max-width: 250px; max-height: 250px; border-radius: 4px; margin-top: 5px; border: 1px solid #444; display: block; }
     .admin-action { color: #ef4444; cursor: pointer; font-size: 0.7rem; margin-left: 5px; background:rgba(0,0,0,0.5); padding: 0 4px; }
 `;
 document.head.appendChild(style);
 
-// --- 1. SEND LOGIC ---
+// --- 1. SEND LOGIC (TEXT) ---
 
 async function sendMessage() {
     const text = dom.input.value.trim();
     if (!text) return; 
 
-    // Capture current profile state at moment of sending
     const userColor = localStorage.getItem('user_color') || '#facc15';
     
-    // Clear input
+    // Clear input immediately
     const textToSend = text; 
     dom.input.value = '';
     dom.input.focus();
 
     try {
         await push(ref(db, 'messages'), {
-            user: localStorage.getItem('username') || 'Guest', // Always pull fresh name
-            uuid: currentUuid, // Use for identification later if needed
+            user: localStorage.getItem('username') || 'Guest',
+            uuid: currentUuid,
             text: textToSend.substring(0, 300),
-            color: userColor, // Send the chosen color
+            color: userColor,
             time: Date.now()
         });
     } catch (e) {
@@ -78,6 +77,26 @@ async function sendMessage() {
         dom.input.value = textToSend; 
     }
 }
+
+// --- 1.5 SEND LOGIC (IMAGE) ---
+// This function is called by your HTML file when a file is selected
+window.sendImage = async function(imageBase64) {
+    const userColor = localStorage.getItem('user_color') || '#facc15';
+
+    try {
+        await push(ref(db, 'messages'), {
+            user: localStorage.getItem('username') || 'Guest',
+            uuid: currentUuid,
+            text: '', // No text, just image
+            image: imageBase64, // Save the image data
+            color: userColor,
+            time: Date.now()
+        });
+    } catch (e) {
+        console.error("Image Send Error:", e);
+        alert("Failed to send image (file might be too large)");
+    }
+};
 
 window.send = sendMessage;
 
@@ -109,15 +128,21 @@ onValue(ref(db, 'messages'), (snapshot) => {
         }
 
         const time = new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        
-        // Use saved color or default yellow
         const nameColor = msg.color || '#facc15';
+
+        // Check if message has an image
+        let contentHtml = '';
+        if (msg.image) {
+            contentHtml = `<img src="${msg.image}" class="chat-image">`;
+        } else {
+            contentHtml = `<span class="msg-text">${escapeHtml(msg.text)}</span>`;
+        }
 
         el.innerHTML = `
             <div class="msg-content">
                 <span class="msg-meta">${time}</span>
                 <span class="msg-user ${ADMINS.includes(msg.user) ? 'admin' : ''}" style="color: ${nameColor}">${escapeHtml(msg.user)}:</span>
-                <span class="msg-text">${escapeHtml(msg.text)}</span>
+                ${contentHtml}
                 ${adminControls}
             </div>
         `;
