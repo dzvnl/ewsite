@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getDatabase, ref, push, onChildAdded, onValue, set, onDisconnect } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// --- PASTE YOUR API KEYS HERE ---
 const firebaseConfig = {
      apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
     authDomain: "ewsitechat.firebaseapp.com",
@@ -17,13 +16,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Use separate folk_messages path
 const messagesRef = ref(db, 'folk_messages'); 
+const alertsRef = ref(db, 'folk_alerts'); // New Alert Channel
 
 // Username Logic
 let username = localStorage.getItem('username');
 if (!username) {
-    username = prompt("name") || "unkown folk";
+    username = prompt("Enter folk name:") || "Anonymous";
     localStorage.setItem('username', username);
 }
 const displayNameEl = document.getElementById('display-name');
@@ -41,11 +40,55 @@ onValue(presenceRef, (snapshot) => {
     if(countEl) countEl.innerText = count;
 });
 
-// --- Sending Logic (Updated) ---
+// --- NEW: CALL LOGIC ---
+const callBtn = document.getElementById('call-all-btn');
+if (callBtn) {
+    callBtn.addEventListener('click', () => {
+        // Generate a random room ID
+        const roomId = 'ROOM_' + Math.floor(Math.random() * 10000);
+        
+        // 1. Send Alert to everyone
+        push(alertsRef, {
+            type: 'CALL_INVITE',
+            from: username,
+            roomId: roomId,
+            timestamp: Date.now()
+        });
+
+        // 2. Join immediately
+        window.location.href = `folk_call.html?room=${roomId}`;
+    });
+}
+
+// Listen for Call Alerts
+onChildAdded(alertsRef, (snapshot) => {
+    const data = snapshot.val();
+    
+    // Only show alerts created in the last 10 seconds (ignore old history)
+    if (Date.now() - data.timestamp < 10000 && data.from !== username) {
+        const modal = document.getElementById('call-modal');
+        const callerName = document.getElementById('caller-name');
+        const acceptBtn = document.getElementById('accept-btn');
+
+        callerName.innerText = `INCOMING SIGNAL: ${data.from}`;
+        modal.style.display = 'block';
+
+        // Play a small notification sound (optional)
+        try {
+            const audio = new Audio('https://codeskulptor-demos.commondatastorage.googleapis.com/pang/pop.mp3');
+            audio.play();
+        } catch(e) {}
+
+        acceptBtn.onclick = () => {
+            window.location.href = `folk_call.html?room=${data.roomId}`;
+        };
+    }
+});
+
+// --- SENDING MESSAGES ---
 function sendMessage() {
     const input = document.getElementById('msg-input');
     const text = input.value.trim();
-    
     if (text !== "") {
         push(messagesRef, {
             user: username,
@@ -57,34 +100,22 @@ function sendMessage() {
         input.value = "";
     }
 }
-
-// Attach Listeners
 const sendBtn = document.getElementById('send-btn');
-if (sendBtn) {
-    sendBtn.addEventListener('click', sendMessage);
-}
+if (sendBtn) sendBtn.addEventListener('click', sendMessage);
 
-const msgInput = document.getElementById('msg-input');
-if (msgInput) {
-    msgInput.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') sendMessage();
-    });
-}
+document.getElementById('msg-input').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') sendMessage();
+});
 
-// Image Logic
 window.sendImage = function(base64Data) {
     push(messagesRef, {
-        user: username,
-        image: base64Data,
-        timestamp: Date.now(),
-        type: 'image',
+        user: username, image: base64Data, timestamp: Date.now(), type: 'image',
         avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`
     });
 }
 
-// --- Receiving Messages ---
+// --- RECEIVING MESSAGES ---
 const chatBox = document.getElementById('chat-messages');
-
 onChildAdded(messagesRef, (snapshot) => {
     const data = snapshot.val();
     const msgDiv = document.createElement('div');
@@ -96,10 +127,7 @@ onChildAdded(messagesRef, (snapshot) => {
 
     const contentDiv = document.createElement('div');
     contentDiv.className = "message-content";
-
-    const nameSpan = document.createElement('div');
-    nameSpan.className = "msg-username";
-    nameSpan.innerText = data.user;
+    contentDiv.innerHTML = `<div class="msg-username">${data.user}</div>`;
 
     const textDiv = document.createElement('div');
     textDiv.className = "msg-text";
@@ -109,17 +137,13 @@ onChildAdded(messagesRef, (snapshot) => {
         img.src = data.image;
         img.style.maxWidth = "100%";
         img.style.borderRadius = "8px";
-        img.style.border = "1px solid #666";
         textDiv.appendChild(img);
     } else {
         textDiv.innerText = data.text;
     }
-
-    contentDiv.appendChild(nameSpan);
     contentDiv.appendChild(textDiv);
     msgDiv.appendChild(avatarImg);
     msgDiv.appendChild(contentDiv);
-
     chatBox.appendChild(msgDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
 });
