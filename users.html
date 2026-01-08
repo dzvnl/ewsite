@@ -10,107 +10,85 @@
         body {
             font-family: 'VT323', monospace;
             color: #e5e5e5;
-            background-color: #000;
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            background-color: #111;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 80px 20px 20px 20px; /* Padding for top fixed bar */
         }
 
-        /* --- DEBUG PANEL (visible for troubleshooting) --- */
-        #debugPanel {
-            position: fixed; top: 0; left: 0; width: 100%;
-            background: #222; border-bottom: 1px solid #444;
-            color: #0f0; font-size: 1rem; padding: 5px; z-index: 10000;
-            display: flex; gap: 20px; font-family: monospace;
+        /* --- X-RAY DIAGNOSTIC BAR --- */
+        #diagnosticBar {
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px;
+            background: #000; border-bottom: 2px solid #facc15;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; z-index: 10000; box-shadow: 0 5px 20px rgba(0,0,0,0.5);
         }
-
-        /* --- HEADER --- */
-        .header-container {
-            width: 100%; max-width: 900px; margin: 40px auto 30px auto;
-            border-bottom: 2px solid #333; padding-bottom: 10px;
-            display: flex; justify-content: space-between; align-items: end;
-        }
-        h1 { font-size: 3rem; color: #facc15; margin: 0; line-height: 1; }
+        .diag-info { font-size: 1.2rem; color: #fff; }
+        .diag-highlight { color: #facc15; font-weight: bold; }
+        .diag-status { color: #4ade80; }
 
         /* --- GRID --- */
         .user-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px; width: 100%; max-width: 900px; margin: 0 auto;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px; max-width: 1000px; margin: 0 auto;
         }
         .user-card {
-            background: rgba(0,0,0,0.8); border: 1px solid #333; padding: 15px;
-            display: flex; flex-direction: column; align-items: center; cursor: pointer;
+            background: #222; border: 1px solid #444; padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
         }
-        .user-card:hover { border-color: #facc15; transform: translateY(-2px); }
-        .card-pfp { width: 80px; height: 80px; object-fit: cover; border: 1px solid #555; background: #000; margin-bottom: 10px; }
-        .card-name { font-size: 1.5rem; color: #fff; margin-bottom: 5px; }
-
+        .card-name { font-size: 1.8rem; margin: 10px 0; color: #fff; }
         .call-btn {
-            background: #166534; border: 1px solid #22c55e; color: #fff;
-            padding: 5px 15px; font-size: 1.2rem; cursor: pointer; margin-top: auto;
-            display: flex; align-items: center; gap: 5px;
+            background: #166534; color: #fff; width: 100%; padding: 10px;
+            font-size: 1.3rem; border: 1px solid #22c55e; cursor: pointer;
         }
         .call-btn:hover { background: #22c55e; color: #000; }
 
-        /* --- CALL MODAL --- */
-        #callModal { z-index: 9999; }
-        
-        /* --- INCOMING CALL POPUP --- */
-        #incomingCallPopup { z-index: 9998; }
-        .popup-box {
-            background: #1f2937; border: 2px solid #facc15; padding: 30px;
-            text-align: center; border-radius: 10px; box-shadow: 0 0 50px rgba(250, 204, 21, 0.5);
+        /* --- CALL UI --- */
+        #callModal, #incomingPopup {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999;
         }
+        .hidden { display: none !important; }
+        
+        video { background: #000; border: 1px solid #333; }
     </style>
 </head>
 <body>
 
-    <div id="debugPanel">
-        <span>MY ID: <b id="debugId" class="text-white">...</b></span>
-        <span>STATUS: <b id="debugStatus">Connecting...</b></span>
-        <button onclick="window.testSelfCall()" class="ml-auto bg-gray-700 px-2 text-white border border-gray-500 hover:bg-gray-600">TEST ALERT</button>
+    <div id="diagnosticBar">
+        <div>
+            <div class="diag-info">I AM: <span id="myIdentity" class="diag-highlight">...</span></div>
+            <div class="diag-info text-sm text-gray-400">Listening at: <span id="myPath">...</span> <span id="dbStatus" class="diag-status">(Connecting...)</span></div>
+        </div>
+        <button onclick="checkPermissions()" class="bg-gray-700 text-white px-3 py-1 border border-gray-500 hover:bg-gray-600">TEST DB WRITE</button>
     </div>
 
-    <div id="callModal" class="hidden fixed inset-0 bg-black flex flex-col items-center justify-center">
-        <div class="absolute top-10 left-10 z-20">
-            <h2 class="text-3xl text-yellow-400">CALLING: <span id="callingName" class="text-white">...</span></h2>
-            <div id="connectionStatus" class="text-xl text-gray-400">Initializing...</div>
+    <div id="incomingPopup" class="hidden">
+        <div class="bg-gray-800 p-8 border-2 border-green-500 rounded text-center">
+            <h1 class="text-4xl text-white mb-4 animate-bounce">📞 INCOMING CALL!</h1>
+            <p class="text-xl text-yellow-400 mb-8">name: <span id="incomingName">...</span></p>
+            <button onclick="answerCall()" class="bg-green-600 text-white px-8 py-4 text-2xl w-full mb-4 hover:bg-green-500">ANSWER VIDEO</button>
+            <button onclick="rejectCall()" class="bg-red-600 text-white px-8 py-2 w-full hover:bg-red-500">Ignore</button>
+        </div>
+    </div>
+
+    <div id="callModal" class="hidden">
+        <div class="absolute top-5 left-5 text-xl text-yellow-400">
+            STATUS: <span id="connectionState" class="text-white">Connecting...</span>
         </div>
         
-        <video id="remoteVideo" class="w-full h-full object-cover" autoplay playsinline></video>
+        <video id="remoteVideo" class="w-full h-full max-w-4xl max-h-[80vh] object-cover" autoplay playsinline></video>
         
-        <div class="absolute bottom-5 right-5 z-20 w-48 h-64 bg-black border-2 border-yellow-400">
+        <div class="absolute bottom-5 right-5 w-48 h-36 bg-black border-2 border-white">
             <video id="localVideo" class="w-full h-full object-cover" autoplay playsinline muted></video>
         </div>
 
-        <button onclick="endCall()" class="absolute bottom-10 z-30 bg-red-600 text-white rounded-full p-6 shadow-xl border-2 border-red-400">
-            HANG UP
-        </button>
-    </div>
-
-    <div id="incomingCallPopup" class="hidden fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center">
-        <div class="popup-box">
-            <h2 class="text-3xl text-white mb-2">INCOMING CALL</h2>
-            <p class="text-xl text-yellow-400 mb-8">From: <span id="incomingCallerName">...</span></p>
-            <div class="flex justify-center gap-4">
-                <button onclick="answerCall()" class="bg-green-600 text-white px-8 py-3 text-xl rounded border border-green-400 hover:bg-green-500">ANSWER</button>
-                <button onclick="rejectCall()" class="bg-red-600 text-white px-8 py-3 text-xl rounded border border-red-400 hover:bg-red-500">REJECT</button>
-            </div>
-        </div>
-    </div>
-
-    <a href="index.html" class="block w-full max-w-[900px] mx-auto mt-12 text-gray-500 hover:text-yellow-400"><< RETURN_HOME</a>
-
-    <div class="header-container">
-        <h1>users</h1>
+        <button onclick="endCall()" class="absolute bottom-10 bg-red-600 text-white px-10 py-4 text-xl rounded-full border-2 border-red-400 hover:bg-red-500">HANG UP</button>
     </div>
 
     <div id="userGrid" class="user-grid">
-        <div class="text-center text-gray-500">Loading users...</div>
-    </div>
+        </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -128,54 +106,26 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- GLOBAL VARIABLES ---
+        // --- IDENTITY SETUP ---
         let myUsername = localStorage.getItem('chat_username');
+        if (!myUsername) {
+            myUsername = prompt("Enter your username exactly as it appears in the database:");
+            if(myUsername) localStorage.setItem('chat_username', myUsername);
+            else myUsername = "guest_" + Math.floor(Math.random()*100);
+        }
+        
+        // Normalize: We remove spaces to avoid path errors
+        myUsername = myUsername.trim(); 
+
+        // DISPLAY DEBUG INFO
+        document.getElementById('myIdentity').innerText = myUsername;
+        document.getElementById('myPath').innerText = `calls/${myUsername}`;
+
+        // --- GLOBAL VARS ---
         let localStream = null;
         let peerConnection = null;
         let currentCallPath = null;
-
-        // Force lowercase to prevent matching errors
-        if(myUsername) myUsername = myUsername.toLowerCase().trim();
-
-        // 1. LOGIN & SETUP
-        if (!myUsername) {
-            let rawUser = prompt("Enter your username to receive calls:");
-            if (rawUser) {
-                myUsername = rawUser.toLowerCase().trim();
-                localStorage.setItem('chat_username', myUsername);
-            } else {
-                myUsername = "guest_" + Math.floor(Math.random() * 1000);
-            }
-        }
-
-        // Update Debug Panel
-        document.getElementById('debugId').innerText = myUsername;
-        document.getElementById('debugStatus').innerText = "Connecting to DB...";
-
-        // 2. LISTEN FOR CALLS (The Critical Part)
-        const myCallRef = ref(db, 'calls/' + myUsername);
         
-        onValue(myCallRef, (snapshot) => {
-            document.getElementById('debugStatus').innerText = "Online & Listening";
-            const data = snapshot.val();
-
-            if (data && data.offer && !data.answer) {
-                // We have a new call!
-                console.log("INCOMING CALL DATA:", data);
-                document.getElementById('incomingCallerName').innerText = data.from;
-                currentCallPath = 'calls/' + myUsername; 
-                document.getElementById('incomingCallPopup').classList.remove('hidden');
-            } else if (!data) {
-                // Call ended or reset
-                document.getElementById('incomingCallPopup').classList.add('hidden');
-            }
-        }, (error) => {
-            console.error("FIREBASE ERROR:", error);
-            document.getElementById('debugStatus').innerText = "DB ERROR (Check Console)";
-            document.getElementById('debugStatus').style.color = "red";
-        });
-
-        // 3. WEBRTC SETUP (STUN SERVERS)
         const servers = {
             iceServers: [
                 { urls: 'stun:stun1.l.google.com:19302' },
@@ -183,139 +133,143 @@
             ]
         };
 
-        async function createPeerConnection() {
-            peerConnection = new RTCPeerConnection(servers);
+        // --- 1. LISTENER (Are you there?) ---
+        const myRef = ref(db, `calls/${myUsername}`);
+        onValue(myRef, (snapshot) => {
+            document.getElementById('dbStatus').innerText = "(ONLINE & READY)";
+            const data = snapshot.val();
+            
+            if (data && data.offer && !data.answer) {
+                console.log("Incoming detected!", data);
+                document.getElementById('incomingName').innerText = data.from;
+                currentCallPath = `calls/${myUsername}`;
+                document.getElementById('incomingPopup').classList.remove('hidden');
+            } else if (!data) {
+                document.getElementById('incomingPopup').classList.add('hidden');
+            }
+        }, (err) => {
+            document.getElementById('dbStatus').innerText = "(PERMISSION DENIED - CHECK RULES)";
+            document.getElementById('dbStatus').style.color = "red";
+            alert("Firebase Error: " + err.message + "\n\nDid you add the Rules?");
+        });
 
-            // Debug Connection State
-            peerConnection.onconnectionstatechange = () => {
-                document.getElementById('connectionStatus').innerText = "State: " + peerConnection.connectionState;
-            };
+        // --- 2. START CALL ---
+        window.startCall = async (targetUser) => {
+            targetUser = targetUser.trim();
+            if(targetUser === myUsername) return alert("You cannot call yourself!");
 
-            // Get Media
+            // X-RAY CONFIRMATION
+            const confirmCall = confirm(`X-RAY DIAGNOSTIC:\n\nMy ID: ${myUsername}\nCalling Path: calls/${targetUser}\n\nDoes "calls/${targetUser}" match the other screen?\n\nClick OK to send the signal.`);
+            if(!confirmCall) return;
+
+            document.getElementById('callModal').classList.remove('hidden');
+            document.getElementById('connectionState').innerText = "Accessing Camera...";
+
+            currentCallPath = `calls/${targetUser}`;
+
+            // Setup Video
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
                 document.getElementById('localVideo').srcObject = localStream;
-                localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
             } catch(e) {
-                alert("Could not access camera. Ensure HTTPS is used.");
+                return alert("Camera Error: " + e.message);
             }
 
-            // Handle Remote Stream
-            peerConnection.ontrack = (event) => {
-                document.getElementById('remoteVideo').srcObject = event.streams[0];
-            };
+            peerConnection = new RTCPeerConnection(servers);
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
-            return peerConnection;
-        }
-
-        // 4. START CALL (Caller)
-        window.startCall = async (targetUser) => {
-            targetUser = targetUser.toLowerCase().trim(); // Normalize target
-            if (targetUser === myUsername) return alert("Cannot call yourself.");
-
-            document.getElementById('callingName').innerText = targetUser;
-            document.getElementById('callModal').classList.remove('hidden');
+            peerConnection.ontrack = e => document.getElementById('remoteVideo').srcObject = e.streams[0];
             
-            currentCallPath = 'calls/' + targetUser;
-
-            await createPeerConnection();
-
-            // Wait for ALL ICE candidates (simplest way to ensure connection works)
-            peerConnection.onicecandidate = (event) => {
-                if (event.candidate === null) {
-                    // Send Offer to Firebase
+            peerConnection.onicecandidate = e => {
+                if(!e.candidate) {
+                    document.getElementById('connectionState').innerText = "Signal Ready. Sending...";
                     set(ref(db, currentCallPath), {
                         offer: JSON.stringify(peerConnection.localDescription),
                         from: myUsername
-                    });
+                    }).then(() => {
+                        document.getElementById('connectionState').innerText = "Ringing... Waiting for answer.";
+                    }).catch(err => alert("WRITE FAILED: " + err.message));
                 }
             };
 
             const offer = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offer);
 
-            // Listen for Answer
+            // Listen for answer
             onValue(ref(db, currentCallPath), async (snapshot) => {
                 const data = snapshot.val();
-                if (data && data.answer && !peerConnection.currentRemoteDescription) {
-                    const answerDesc = new RTCSessionDescription(JSON.parse(data.answer));
-                    await peerConnection.setRemoteDescription(answerDesc);
+                if(data && data.answer && !peerConnection.currentRemoteDescription) {
+                    document.getElementById('connectionState').innerText = "Connecting...";
+                    const desc = new RTCSessionDescription(JSON.parse(data.answer));
+                    await peerConnection.setRemoteDescription(desc);
                 }
             });
         };
 
-        // 5. ANSWER CALL (Receiver)
+        // --- 3. ANSWER CALL ---
         window.answerCall = async () => {
-            document.getElementById('incomingCallPopup').classList.add('hidden');
+            document.getElementById('incomingPopup').classList.add('hidden');
             document.getElementById('callModal').classList.remove('hidden');
-            document.getElementById('callingName').innerText = document.getElementById('incomingCallerName').innerText;
 
             const snapshot = await get(ref(db, currentCallPath));
             const data = snapshot.val();
 
-            await createPeerConnection();
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
+                document.getElementById('localVideo').srcObject = localStream;
+            } catch(e) { return alert("Camera Error: " + e.message); }
 
-            peerConnection.onicecandidate = (event) => {
-                if (event.candidate === null) {
-                    // Send Answer
+            peerConnection = new RTCPeerConnection(servers);
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+            
+            peerConnection.ontrack = e => document.getElementById('remoteVideo').srcObject = e.streams[0];
+
+            peerConnection.onicecandidate = e => {
+                if(!e.candidate) {
                     update(ref(db, currentCallPath), {
                         answer: JSON.stringify(peerConnection.localDescription)
                     });
                 }
             };
 
-            const offerDesc = new RTCSessionDescription(JSON.parse(data.offer));
-            await peerConnection.setRemoteDescription(offerDesc);
-
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(data.offer)));
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
         };
 
-        window.rejectCall = () => {
-            document.getElementById('incomingCallPopup').classList.add('hidden');
-            if(currentCallPath) remove(ref(db, currentCallPath));
-        };
-
         window.endCall = () => {
-            document.getElementById('callModal').classList.add('hidden');
-            if(localStream) localStream.getTracks().forEach(track => track.stop());
-            if(peerConnection) peerConnection.close();
             if(currentCallPath) remove(ref(db, currentCallPath));
             window.location.reload();
         };
-
-        // DEBUG TOOL
-        window.testSelfCall = () => {
-            document.getElementById('incomingCallerName').innerText = "TEST_SYSTEM";
-            document.getElementById('incomingCallPopup').classList.remove('hidden');
+        
+        window.checkPermissions = () => {
+            set(ref(db, 'test_write'), { time: Date.now() })
+                .then(() => alert("WRITE SUCCESS! Database is working."))
+                .catch((e) => alert("WRITE FAILED! " + e.message));
         };
 
         // --- FETCH USERS ---
         async function fetchUsers() {
             const usersRef = ref(db, 'users');
-            try {
-                const snapshot = await get(usersRef);
-                const grid = document.getElementById('userGrid');
-                grid.innerHTML = ''; 
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    const users = Object.keys(data).map(key => ({ username: key, ...data[key] }));
-                    
-                    users.forEach(user => {
-                        const card = document.createElement('div');
-                        card.className = "user-card";
-                        card.innerHTML = `
-                            <img src="${user.pfp || 'https://placehold.co/100'}" class="card-pfp">
-                            <div class="card-name">${user.username}</div>
-                            <button class="call-btn" onclick="window.startCall('${user.username}')">CALL</button>
-                        `;
-                        grid.appendChild(card);
-                    });
-                }
-            } catch (error) {
-                console.error(error);
+            const snap = await get(usersRef);
+            const grid = document.getElementById('userGrid');
+            
+            if(snap.exists()) {
+                const data = snap.val();
+                Object.keys(data).forEach(key => {
+                    const div = document.createElement('div');
+                    div.className = 'user-card';
+                    div.innerHTML = `
+                        <div class="card-name">${key}</div>
+                        <button class="call-btn" onclick="window.startCall('${key}')">CALL</button>
+                    `;
+                    grid.appendChild(div);
+                });
+            } else {
+                grid.innerHTML = "<div class='text-white text-center'>No users found in database.</div>";
             }
         }
+        
         fetchUsers();
     </script>
 </body>
