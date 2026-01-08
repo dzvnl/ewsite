@@ -67,12 +67,11 @@
 <body>
 
     <div class="login-box">
-        <h1>login</h1>
+        <h1>access</h1>
         
         <input type="text" id="username" placeholder="USERNAME" autocomplete="off">
-        <input type="password" id="password" placeholder="PASSWORD">
         
-        <button onclick="login()" id="btn-login" class="btn">login</button>
+        <button onclick="login()" id="btn-login" class="btn">enter</button>
 
         <div id="status" class="error-msg"></div>
 
@@ -101,54 +100,46 @@
 
         window.login = async function() {
             const userInp = document.getElementById('username').value.trim();
-            const passInp = document.getElementById('password').value.trim();
             const status = document.getElementById('status');
             const btn = document.getElementById('btn-login');
 
-            if(!userInp || !passInp) {
-                status.innerText = " required";
+            // Removed password check
+            if(!userInp) {
+                status.innerText = "username required";
                 return;
             }
 
-            btn.innerText = "VERIFYING...";
+            btn.innerText = "SEARCHING...";
             status.innerText = "";
 
             try {
                 const usersRef = ref(db, 'users');
+                // We still query the DB to get the correct User ID (UUID) 
+                // so settings.html loads the right data
                 const q = query(usersRef, orderByChild('username'), equalTo(userInp));
                 const snapshot = await get(q);
 
                 if (snapshot.exists()) {
-                    let validUser = null;
-                    let validId = null;
+                    // Password check loop removed. 
+                    // We simply take the first matching user found.
+                    
+                    const key = Object.keys(snapshot.val())[0];
+                    const data = snapshot.val()[key];
 
-                    snapshot.forEach(childSnap => {
-                        const data = childSnap.val();
-                        // Ensure your database actually HAS a "password" field for "root"
-                        if (data.password === passInp) {
-                            validUser = data;
-                            validId = childSnap.key;
-                        }
-                    });
-
-                    if (validUser) {
-                        localStorage.setItem('account_uuid', validId);
-                        localStorage.setItem('username', validUser.username);
-                        window.location.href = "settings.html";
-                    } else {
-                        status.innerText = "invalid password";
-                        btn.innerText = "ACCESS";
-                    }
+                    localStorage.setItem('account_uuid', key);
+                    localStorage.setItem('username', data.username);
+                    
+                    window.location.href = "settings.html";
 
                 } else {
                     status.innerText = "user not found";
-                    btn.innerText = "ACCESS";
+                    btn.innerText = "ENTER";
                 }
 
             } catch (error) {
                 console.error(error);
                 status.innerText = "database error";
-                btn.innerText = "ACCESS";
+                btn.innerText = "ENTER";
             }
         }
     </script>
