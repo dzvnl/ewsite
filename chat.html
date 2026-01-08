@@ -174,36 +174,49 @@
 
     <script type="module" src="chat.js"></script>
     
-    <script>
-        function toggleMenu() {
-            document.getElementById("user-dropdown").classList.toggle("show");
+   <script>
+    function toggleMenu() {
+        document.getElementById("user-dropdown").classList.toggle("show");
+    }
+    window.onclick = function(event) {
+        if (!event.target.closest('#user-display')) {
+            document.getElementById("user-dropdown").classList.remove('show');
         }
-        window.onclick = function(event) {
-            if (!event.target.closest('#user-display')) {
-                document.getElementById("user-dropdown").classList.remove('show');
-            }
-        }
-        function logout() {
-            localStorage.removeItem('username');
-            // REDIRECT TO INDEX.HTML
-            window.location.href = 'index.html';
-        }
+    }
+    function logout() {
+        localStorage.removeItem('username');
+        window.location.href = 'index.html';
+    }
 
-        // --- NEW: Handle Image Selection ---
-        const fileInput = document.getElementById('image-upload');
-        
-        fileInput.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                const file = this.files[0];
-                console.log("File selected:", file.name);
-                
-                // TODO: Here is where you would call your backend upload function
-                // Example: uploadImage(file);
-                
-                // For now, let's just alert so you know it works
-                // alert("Image selected: " + file.name); 
+    // --- UPDATED: Handle Image Selection ---
+    const fileInput = document.getElementById('image-upload');
+    
+    fileInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const file = this.files[0];
+
+            // Limit file size (optional safety check, e.g. 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                alert("File too big. Please choose a smaller image.");
+                this.value = '';
+                return;
             }
-        });
-    </script>
-</body>
-</html>
+
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const imageData = e.target.result; 
+                
+                // SEND TO FIREBASE VIA CHAT.JS
+                if (window.sendImage) {
+                    window.sendImage(imageData);
+                } else {
+                    console.error("sendImage function not found in chat.js");
+                }
+            };
+            
+            reader.readAsDataURL(file);
+            this.value = ''; // Clear input so you can upload the same file again
+        }
+    });
+</script>
