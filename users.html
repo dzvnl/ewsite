@@ -71,7 +71,7 @@
             align-items: center;
             transition: all 0.2s;
             cursor: pointer;
-            position: relative;
+            position: relative; /* Needed for absolute positioning of call button */
             overflow: hidden;
         }
 
@@ -118,11 +118,28 @@
             font-size: 1rem;
             text-align: center;
             display: -webkit-box;
-            -webkit-line-clamp: 2; /* Limit to 2 lines */
+            -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
             line-height: 1.1;
         }
+
+        /* --- NEW CALL BUTTON --- */
+        .call-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #22c55e;
+            color: #000;
+            border: none;
+            font-family: 'VT323';
+            font-size: 1rem;
+            padding: 2px 6px;
+            cursor: pointer;
+            z-index: 10;
+            transition: background 0.2s;
+        }
+        .call-btn:hover { background: #4ade80; }
 
         .nav-back {
             display: block;
@@ -154,9 +171,11 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        // Added 'push' and 'set' for calling logic
+        import { getDatabase, ref, get, push, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        // Added Auth to check who is calling
+        import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-        // --- CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
             authDomain: "ewsitechat.firebaseapp.com",
@@ -168,37 +187,31 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const auth = getAuth(app);
 
-        // --- ROLES ---
         const FOUNDERS = ['root', '-nl', 'futtbucker67'];
         const ADMINS = ['root', 'fb67', '-nl'];
 
         const grid = document.getElementById('userGrid');
         const inputField = document.getElementById('filterInput');
-        let allUsers = []; // Store data here for filtering
+        let allUsers = []; 
 
-        // Set background randomly
         const bgs = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg'];
         document.body.style.backgroundImage = `url('${bgs[Math.floor(Math.random()*bgs.length)]}')`;
 
-        // --- SEARCH EVENT LISTENER (This fixes the calling issue) ---
         inputField.addEventListener('keyup', filterUsers);
 
         async function fetchUsers() {
             const usersRef = ref(db, 'users');
             try {
                 const snapshot = await get(usersRef);
-                grid.innerHTML = ''; // Clear loading text
+                grid.innerHTML = ''; 
 
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    
-                    // Convert object to array for sorting/filtering
                     allUsers = Object.keys(data).map(key => {
                         return { username: key, ...data[key] };
                     });
-
-                    // Render all initially
                     renderList(allUsers);
                 } else {
                     grid.innerHTML = '<div style="color:#ef4444">NO DATA FOUND</div>';
@@ -209,10 +222,34 @@
             }
         }
 
+        // --- CALL FUNCTION ---
+        function initiateCall(targetUser, e) {
+            e.stopPropagation(); // Prevent clicking the call button from opening the profile
+            
+            if(!auth.currentUser) {
+                alert("Please log in to make calls.");
+                return;
+            }
+
+            // Create a unique call ID in Firebase
+            const callRef = push(ref(db, 'calls'));
+            const callId = callRef.key;
+
+            // Write call data
+            set(callRef, {
+                caller: auth.currentUser.uid,
+                recipient: targetUser,
+                status: 'dialing',
+                timestamp: Date.now()
+            }).then(() => {
+                // Redirect to call page (You will need to create call.html)
+                window.location.href = `call.html?room=${callId}&recipient=${targetUser}`;
+            });
+        }
+
         function renderList(users) {
             grid.innerHTML = '';
             
-            // Sort: Founders first, then Admins, then A-Z
             users.sort((a, b) => {
                 const aFounder = FOUNDERS.includes(a.username);
                 const bFounder = FOUNDERS.includes(b.username);
@@ -224,7 +261,6 @@
             users.forEach(user => {
                 const card = document.createElement('div');
                 
-                // Determine CSS classes for roles
                 let roleHTML = '';
                 let borderClass = '';
 
@@ -238,12 +274,17 @@
 
                 card.className = `user-card ${borderClass}`;
                 
-                // On click, go to their profile
+                // Card click = Go to profile
                 card.onclick = () => window.location.href = `account.html?user=${user.username}`;
 
-                // Default PFP if missing
                 const pfpSrc = user.pfp ? user.pfp : 'https://placehold.co/100x100/111/444?text=?';
                 const bioText = user.bio ? user.bio : 'No bio established.';
+
+                // Add Call Button (stop propagation ensures it doesn't trigger card click)
+                const callBtn = document.createElement('button');
+                callBtn.className = 'call-btn';
+                callBtn.innerText = 'CALL';
+                callBtn.onclick = (e) => initiateCall(user.username, e);
 
                 card.innerHTML = `
                     <img src="${pfpSrc}" class="card-pfp" alt="${user.username}">
@@ -251,19 +292,19 @@
                     <div class="card-name">${user.username}</div>
                     <div class="card-bio">${bioText}</div>
                 `;
-
+                
+                // Append button explicitly to avoid innerHTML string messiness
+                card.appendChild(callBtn);
                 grid.appendChild(card);
             });
         }
 
-        // --- SEARCH FUNCTION ---
         function filterUsers() {
             const input = inputField.value.toLowerCase();
             const filtered = allUsers.filter(user => user.username.toLowerCase().includes(input));
             renderList(filtered);
         }
 
-        // Start
         fetchUsers();
 
     </script>
