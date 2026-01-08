@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>folk_secure_conference</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'VT323', monospace;
+            background-color: #050505;
+            color: #22c55e;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER & STATUS --- */
+        #top-bar {
+            padding: 10px 20px;
+            background: #111;
+            border-bottom: 1px solid #22c55e;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+            z-index: 50;
+        }
+        .status-blink { animation: blink 2s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* --- VIDEO GRID --- */
+        #video-grid {
+            flex-grow: 1;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            overflow-y: auto;
+            background-image: radial-gradient(#111 15%, transparent 16%), radial-gradient(#111 15%, transparent 16%);
+            background-size: 20px 20px;
+            background-color: #000;
+        }
+
+        /* Dynamic sizing based on participant count is handled via JS, 
+           but these are base styles for the video cards */
+        .video-card {
+            position: relative;
+            background: #000;
+            border: 1px solid #333;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+            overflow: hidden;
+            border-radius: 4px;
+            /* Default size (approx 1/3 width for desktop) */
+            width: 300px; 
+            height: 225px;
+            transition: all 0.3s ease;
+        }
+        
+        .video-card video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-label {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            background: rgba(0,0,0,0.8);
+            color: #22c55e;
+            padding: 2px 8px;
+            font-size: 1.2rem;
+            border: 1px solid #22c55e;
+        }
+
+        /* --- CONTROLS --- */
+        #controls {
+            height: 70px;
+            background: #111;
+            border-top: 1px solid #22c55e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            z-index: 50;
+        }
+
+        .btn {
+            font-family: 'VT323';
+            font-size: 1.5rem;
+            padding: 5px 20px;
+            cursor: pointer;
+            border: 1px solid #22c55e;
+            background: #000;
+            color: #22c55e;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+        .btn:hover { background: #22c55e; color: #000; }
+        .btn-end { border-color: #ef4444; color: #ef4444; }
+        .btn-end:hover { background: #ef4444; color: #fff; }
+
+    </style>
+</head>
+<body>
+
+    <div id="top-bar">
+        <div id="room-info">FREQ: <span id="display-room">...</span></div>
+        <div id="connection-status" class="status-blink">SEARCHING FOR PEERS...</div>
+    </div>
+
+    <div id="video-grid">
+        <div class="video-card" id="local-card">
+            <video id="localVideo" autoplay playsinline muted style="transform: scaleX(-1);"></video>
+            <div class="video-label" id="local-label">YOU</div>
+        </div>
+        </div>
+
+    <div id="controls">
+        <button class="btn btn-end" onclick="leaveRoom()">DISCONNECT</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, push, onChildAdded, remove, onDisconnect } 
+        from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+        // --- CONFIG (Same as yours) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
+            authDomain: "ewsitechat.firebaseapp.com",
+            databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
+            projectId: "ewsitechat",
+            storageBucket: "ewsitechat.firebasestorage.app",
+            messagingSenderId: "282495574514",
+            appId: "1:282495574514:web:e2781da630d93fc1ce8b6b"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // --- GLOBAL STATE ---
+        const peers = {}; // Stores RTCPeerConnection objects: { 'username': pc }
+        let localStream = null;
+        
+        // 1. Get Params & User Info
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('room');
+        const username = localStorage.getItem('username') || 'Anonymous_' + Math.floor(Math.random()*1000);
+
+        if (!roomId) { alert("No Frequency (Room) ID."); window.location.href = 'folk.html'; }
+
+        // Update UI
+        document.getElementById('display-room').innerText = roomId;
+        document.getElementById('local-label').innerText = username + " (YOU)";
+
+        // STUN Servers (Google public ones)
+        const iceConfig = {
+            iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }]
+        };
+
+        // --- 2. INITIALIZATION ---
+        async function init() {
+            try {
+                // Get Media
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('localVideo').srcObject = localStream;
+
+                // 2a. Register Presence
+                const participantRef = ref(db, `folk_calls/${roomId}/participants/${username}`);
+                set(participantRef, { online: true });
+                onDisconnect(participantRef).remove(); // Remove me if I close tab
+
+                // 2b. Listen for other Participants
+                const participantsRef = ref(db, `folk_calls/${roomId}/participants`);
+                onChildAdded(participantsRef, (snapshot) => {
+                    const peerName = snapshot.key;
+                    if (peerName === username) return; // Ignore self
+
+                    // COORDINATION: To prevent double-calling, only the alphabetically 
+                    // "later" user initiates the offer.
+                    // If I am "Zebra" and "Apple" is there, "Zebra" > "Apple", so I call.
+                    // If I am "Apple" and "Zebra" joins, I wait.
+                    if (username > peerName) {
+                        createPeerConnection(peerName, true); // true = initiator
+                    } else {
+                        createPeerConnection(peerName, false); // false = waiter
+                    }
+                });
+
+                // 2c. Listen for SIGNALS directed to ME
+                // Using a mailbox: folk_calls/ROOM/signals/MY_NAME
+                const mySignalsRef = ref(db, `folk_calls/${roomId}/signals/${username}`);
+                onChildAdded(mySignalsRef, async (snapshot) => {
+                    const data = snapshot.val();
+                    const sender = data.from;
+                    
+                    // If we haven't set up the PC yet (race condition safety), do it now
+                    if (!peers[sender]) createPeerConnection(sender, false);
+                    
+                    const pc = peers[sender];
+
+                    if (data.type === 'offer') {
+                        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+                        const answer = await pc.createAnswer();
+                        await pc.setLocalDescription(answer);
+                        // Send Answer back to SENDER's mailbox
+                        push(ref(db, `folk_calls/${roomId}/signals/${sender}`), {
+                            type: 'answer',
+                            from: username,
+                            answer: answer
+                        });
+                    } 
+                    else if (data.type === 'answer') {
+                        await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+                    } 
+                    else if (data.type === 'candidate') {
+                        try {
+                            await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+                        } catch (e) { console.error("Error adding ICE", e); }
+                    }
+                    
+                    // Optional: remove signal after processing to keep DB clean
+                    remove(snapshot.ref);
+                });
+
+                document.getElementById('connection-status').innerText = "STATUS: ONLINE - SECURE MESH ACTIVE";
+                document.getElementById('connection-status').style.color = "#22c55e";
+
+            } catch (err) {
+                console.error(err);
+                alert("Camera/Mic access denied or error.");
+            }
+        }
+
+        // --- 3. PEER CONNECTION LOGIC ---
+        function createPeerConnection(peerName, isInitiator) {
+            if (peers[peerName]) return; // Already exists
+
+            console.log(`Creating connection to ${peerName}. Initiator: ${isInitiator}`);
+            const pc = new RTCPeerConnection(iceConfig);
+            peers[peerName] = pc;
+
+            // Add local tracks
+            localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+            // On ICE Candidate -> Send to Peer's mailbox
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    push(ref(db, `folk_calls/${roomId}/signals/${peerName}`), {
+                        type: 'candidate',
+                        from: username,
+                        candidate: event.candidate.toJSON()
+                    });
+                }
+            };
+
+            // On Remote Stream -> Create Video Element
+            pc.ontrack = (event) => {
+                const stream = event.streams[0];
+                // Check if video element already exists for this user
+                let vidContainer = document.getElementById(`card-${peerName}`);
+                
+                if (!vidContainer) {
+                    // Create Container
+                    vidContainer = document.createElement('div');
+                    vidContainer.id = `card-${peerName}`;
+                    vidContainer.className = 'video-card';
+
+                    // Create Video
+                    const vid = document.createElement('video');
+                    vid.autoplay = true;
+                    vid.playsInline = true;
+                    vid.srcObject = stream;
+                    
+                    // Create Label
+                    const label = document.createElement('div');
+                    label.className = 'video-label';
+                    label.innerText = peerName;
+
+                    vidContainer.appendChild(vid);
+                    vidContainer.appendChild(label);
+                    document.getElementById('video-grid').appendChild(vidContainer);
+                    
+                    adjustGrid();
+                }
+            };
+
+            // If Initiator -> Create Offer
+            if (isInitiator) {
+                pc.onnegotiationneeded = async () => {
+                    try {
+                        const offer = await pc.createOffer();
+                        await pc.setLocalDescription(offer);
+                        push(ref(db, `folk_calls/${roomId}/signals/${peerName}`), {
+                            type: 'offer',
+                            from: username,
+                            offer: offer
+                        });
+                    } catch (e) { console.error(e); }
+                };
+            }
+        }
+
+        // --- 4. UTILITIES ---
+        function adjustGrid() {
+            const grid = document.getElementById('video-grid');
+            const cards = document.querySelectorAll('.video-card');
+            const count = cards.length;
+
+            // Simple responsive logic for 1-10 users
+            let width = "100%";
+            if (count >= 2) width = "45%"; 
+            if (count >= 5) width = "30%";
+            if (count >= 9) width = "22%";
+
+            cards.forEach(card => card.style.width = width);
+        }
+
+        window.leaveRoom = function() {
+            // Remove self from participants
+            remove(ref(db, `folk_calls/${roomId}/participants/${username}`))
+            .then(() => {
+                // Close all connections
+                Object.values(peers).forEach(pc => pc.close());
+                window.location.href = 'folk.html';
+            });
+        };
+
+        // Handle window close
+        window.onbeforeunload = function() {
+            remove(ref(db, `folk_calls/${roomId}/participants/${username}`));
+        };
+
+        // Start
+        init();
+
+    </script>
+</body>
+</html>
