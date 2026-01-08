@@ -80,67 +80,36 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    <script>
+        // 1. PREVENT REDIRECT LOOP:
+        // If the URL contains "?user=", we assume the user is trying to view a profile.
+        // We do NOT want to run any auto-login or redirect logic here.
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('user')) {
+            console.log("Viewing user profile: " + urlParams.get('user'));
+            // If this file is supposed to show the profile, logic would go here.
+            // If this file is strictly the login page, we might want to redirect:
+            // window.location.href = "account.html" + window.location.search;
+        }
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
-            authDomain: "ewsitechat.firebaseapp.com",
-            databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
-            projectId: "ewsitechat",
-            storageBucket: "ewsitechat.firebasestorage.app",
-            messagingSenderId: "282495574514",
-            appId: "1:282495574514:web:e2781da630d93fc1ce8b6b",
-            measurementId: "G-GTN3TL1P2K"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        window.login = async function() {
+        // 2. SIMPLIFIED LOGIN (No Database Check)
+        window.login = function() {
             const userInp = document.getElementById('username').value.trim();
             const status = document.getElementById('status');
-            const btn = document.getElementById('btn-login');
 
-            // Removed password check
             if(!userInp) {
                 status.innerText = "username required";
                 return;
             }
 
-            btn.innerText = "SEARCHING...";
-            status.innerText = "";
+            // Set the session immediately without checking Firebase
+            localStorage.setItem('username', userInp);
+            
+            // Note: Since we aren't checking the DB, we don't have a real UUID.
+            // We'll use the username as the UUID for now.
+            localStorage.setItem('account_uuid', userInp);
 
-            try {
-                const usersRef = ref(db, 'users');
-                // We still query the DB to get the correct User ID (UUID) 
-                // so settings.html loads the right data
-                const q = query(usersRef, orderByChild('username'), equalTo(userInp));
-                const snapshot = await get(q);
-
-                if (snapshot.exists()) {
-                    // Password check loop removed. 
-                    // We simply take the first matching user found.
-                    
-                    const key = Object.keys(snapshot.val())[0];
-                    const data = snapshot.val()[key];
-
-                    localStorage.setItem('account_uuid', key);
-                    localStorage.setItem('username', data.username);
-                    
-                    window.location.href = "settings.html";
-
-                } else {
-                    status.innerText = "user not found";
-                    btn.innerText = "ENTER";
-                }
-
-            } catch (error) {
-                console.error(error);
-                status.innerText = "database error";
-                btn.innerText = "ENTER";
-            }
+            window.location.href = "settings.html";
         }
     </script>
 </body>
