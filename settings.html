@@ -33,7 +33,7 @@
         .form-group { margin-bottom: 15px; }
         label { color: #888; display: block; margin-bottom: 5px; }
         
-        input, textarea {
+        input[type="text"], textarea {
             width: 100%;
             background: #111;
             border: 1px solid #444;
@@ -43,7 +43,38 @@
             font-size: 1.2rem;
             outline: none;
         }
-        input:focus { border-color: #facc15; }
+        input:focus, textarea:focus { border-color: #facc15; }
+
+        /* Custom File Input Styling */
+        input[type="file"] {
+            display: none; /* Hide the ugly default button */
+        }
+        .file-upload-btn {
+            display: block;
+            width: 100%;
+            background: #222;
+            border: 1px dashed #666;
+            color: #ccc;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        .file-upload-btn:hover { border-color: #facc15; color: #facc15; }
+
+        .preview-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .pfp-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 2px solid #facc15;
+            object-fit: cover;
+            background: #000;
+        }
 
         .btn-row { display: flex; gap: 10px; margin-top: 20px; }
         
@@ -72,6 +103,10 @@
     <div class="settings-panel">
         <h2>settings</h2>
 
+        <div class="preview-container">
+            <img id="img-preview" src="https://via.placeholder.com/100" class="pfp-preview">
+        </div>
+
         <div class="form-group">
             <label>username</label>
             <input type="text" id="inp-username">
@@ -83,8 +118,11 @@
         </div>
 
         <div class="form-group">
-            <label>url</label>
-            <input type="text" id="inp-pfp">
+            <label>profile picture</label>
+            <label for="inp-file" class="file-upload-btn">
+                [ click to upload photo ]
+            </label>
+            <input type="file" id="inp-file" accept="image/*">
         </div>
 
         <div class="btn-row">
@@ -115,6 +153,9 @@
         const currentName = localStorage.getItem('username');
         if(!currentName) window.location.href = 'login.html';
 
+        // Variable to hold the final image string
+        let finalPfpString = "";
+
         // Load Data
         const loadData = async () => {
             const snapshot = await get(ref(db, 'users/' + currentName));
@@ -122,15 +163,39 @@
                 const data = snapshot.val();
                 document.getElementById('inp-username').value = data.username;
                 document.getElementById('inp-bio').value = data.bio || '';
-                document.getElementById('inp-pfp').value = data.pfp || '';
+                
+                // If they have a pic, show it and save it to our variable
+                if (data.pfp) {
+                    finalPfpString = data.pfp;
+                    document.getElementById('img-preview').src = data.pfp;
+                }
             }
         };
         loadData();
 
+        // --- NEW: Handle File Selection ---
+        document.getElementById('inp-file').addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    // This result is the long text string (Base64)
+                    finalPfpString = e.target.result;
+                    // Update the circle immediately
+                    document.getElementById('img-preview').src = finalPfpString;
+                };
+                
+                // Start reading the file
+                reader.readAsDataURL(file);
+            }
+        });
+
         window.saveSettings = async () => {
             const newName = document.getElementById('inp-username').value.trim();
             const newBio = document.getElementById('inp-bio').value;
-            const newPfp = document.getElementById('inp-pfp').value;
+            // We use finalPfpString instead of reading an input box
+            const newPfp = finalPfpString; 
             const status = document.getElementById('status');
 
             if(!newName) return;
@@ -160,18 +225,17 @@
                     return;
                 }
 
-                // B. Get Old Data to Log it and Move it
+                // B. Get Old Data
                 const oldUserRef = ref(db, 'users/' + currentName);
                 const oldSnap = await get(oldUserRef);
                 const oldData = oldSnap.val();
 
-                // C. LOGGING (As requested: Name + Password)
-                // We create a separate 'logs' node
+                // C. LOGGING
                 await push(ref(db, 'logs'), {
                     type: "NAME_CHANGE",
                     oldName: currentName,
                     newName: newName,
-                    password: oldData.password, // Logging the password as requested
+                    // removed password logging for safety
                     timestamp: Date.now()
                 });
 
@@ -197,7 +261,7 @@
 
             } catch(e) {
                 console.error(e);
-                status.innerText = "error";
+                status.innerText = "error (image too big?)";
                 status.className = "status-msg error";
             }
         };
