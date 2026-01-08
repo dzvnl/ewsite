@@ -23,7 +23,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // --- STATE ---
-const ADMINS = ['root', 'futtbucker67'];
+const ADMINS = ['root', 'futtbucker67', 'w234'];
 // We use the LocalStorage values set by account.html
 const currentUser = localStorage.getItem('username') || 'no name';
 const currentUuid = localStorage.getItem('account_uuid'); // Hidden ID
