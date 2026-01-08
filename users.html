@@ -71,7 +71,7 @@
             align-items: center;
             transition: all 0.2s;
             cursor: pointer;
-            position: relative; /* Needed for absolute positioning of call button */
+            position: relative; 
             overflow: hidden;
         }
 
@@ -171,10 +171,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        // Added 'push' and 'set' for calling logic
         import { getDatabase, ref, get, push, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-        // Added Auth to check who is calling
-        import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        // Import 'onAuthStateChanged' to accurately track login status
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
@@ -188,6 +187,20 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
+
+        // --- AUTH STATE TRACKER ---
+        // We use this variable instead of checking auth.currentUser directly immediately
+        let currentUser = null;
+        
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                // console.log("Auth synced: Logged in as", user.uid);
+            } else {
+                currentUser = null;
+                // console.log("Auth synced: No user");
+            }
+        });
 
         const FOUNDERS = ['root', '-nl', 'futtbucker67'];
         const ADMINS = ['root', 'fb67', '-nl'];
@@ -224,25 +237,23 @@
 
         // --- CALL FUNCTION ---
         function initiateCall(targetUser, e) {
-            e.stopPropagation(); // Prevent clicking the call button from opening the profile
+            e.stopPropagation(); 
             
-            if(!auth.currentUser) {
-                alert("Please log in to make calls.");
+            // Check the synced user variable
+            if(!currentUser) {
+                alert("Please log in to make calls. (If you just loaded the page, wait 1 second and try again)");
                 return;
             }
 
-            // Create a unique call ID in Firebase
             const callRef = push(ref(db, 'calls'));
             const callId = callRef.key;
 
-            // Write call data
             set(callRef, {
-                caller: auth.currentUser.uid,
+                caller: currentUser.uid,
                 recipient: targetUser,
                 status: 'dialing',
                 timestamp: Date.now()
             }).then(() => {
-                // Redirect to call page (You will need to create call.html)
                 window.location.href = `call.html?room=${callId}&recipient=${targetUser}`;
             });
         }
@@ -280,7 +291,7 @@
                 const pfpSrc = user.pfp ? user.pfp : 'https://placehold.co/100x100/111/444?text=?';
                 const bioText = user.bio ? user.bio : 'No bio established.';
 
-                // Add Call Button (stop propagation ensures it doesn't trigger card click)
+                // Add Call Button
                 const callBtn = document.createElement('button');
                 callBtn.className = 'call-btn';
                 callBtn.innerText = 'CALL';
@@ -293,7 +304,6 @@
                     <div class="card-bio">${bioText}</div>
                 `;
                 
-                // Append button explicitly to avoid innerHTML string messiness
                 card.appendChild(callBtn);
                 grid.appendChild(card);
             });
