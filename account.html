@@ -29,6 +29,9 @@
             text-align: center;
         }
 
+        /* HIDE LOGIN BOX IF VIEWING A USER */
+        .hidden { display: none; }
+
         h1 { color: #facc15; font-size: 2.5rem; margin-bottom: 20px; border-bottom: 1px solid #333; }
         
         input {
@@ -66,50 +69,106 @@
 </head>
 <body>
 
-    <div class="login-box">
+    <div id="login-container" class="login-box">
         <h1>access</h1>
-        
         <input type="text" id="username" placeholder="USERNAME" autocomplete="off">
-        
         <button onclick="login()" id="btn-login" class="btn">enter</button>
-
         <div id="status" class="error-msg"></div>
-
         <div class="links">
             <a href="register.html">create account</a>
         </div>
     </div>
 
-    <script>
-        // 1. PREVENT REDIRECT LOOP:
-        // If the URL contains "?user=", we assume the user is trying to view a profile.
-        // We do NOT want to run any auto-login or redirect logic here.
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('user')) {
-            console.log("Viewing user profile: " + urlParams.get('user'));
-            // If this file is supposed to show the profile, logic would go here.
-            // If this file is strictly the login page, we might want to redirect:
-            // window.location.href = "account.html" + window.location.search;
+    <div id="profile-container" class="login-box hidden">
+        <h1 id="profile-name">User Profile</h1>
+        <p>You are viewing a public profile.</p>
+        <button onclick="window.location.href='/'" class="btn" style="margin-top:20px;">BACK TO HOME</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getDatabase, ref, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+        // --- CRITICAL FIX START ---
+        // We check the URL immediately.
+        // If ?user=something exists, we STOP all auto-redirects and login logic.
+        
+        const params = new URLSearchParams(window.location.search);
+        const targetUser = params.get('user');
+
+        if (targetUser) {
+            // WE ARE IN VIEW MODE
+            console.log("Viewing specific user:", targetUser);
+            
+            // Hide the login box, show the profile view
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('profile-container').classList.remove('hidden');
+            document.getElementById('profile-name').innerText = targetUser;
+
+            // Stop the script here so no login/redirect happens
+            throw new Error("Stopping script execution: Viewing public profile.");
+        }
+        // --- CRITICAL FIX END ---
+
+
+        // --- STANDARD LOGIN LOGIC BELOW (Only runs if NO ?user= is present) ---
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
+            authDomain: "ewsitechat.firebaseapp.com",
+            databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
+            projectId: "ewsitechat",
+            storageBucket: "ewsitechat.firebasestorage.app",
+            messagingSenderId: "282495574514",
+            appId: "1:282495574514:web:e2781da630d93fc1ce8b6b",
+            measurementId: "G-GTN3TL1P2K"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Check if user is ALREADY logged in (and not trying to view someone else)
+        if (localStorage.getItem('account_uuid') && !targetUser) {
+             window.location.href = "settings.html";
         }
 
-        // 2. SIMPLIFIED LOGIN (No Database Check)
-        window.login = function() {
+        window.login = async function() {
             const userInp = document.getElementById('username').value.trim();
             const status = document.getElementById('status');
+            const btn = document.getElementById('btn-login');
 
             if(!userInp) {
                 status.innerText = "username required";
                 return;
             }
 
-            // Set the session immediately without checking Firebase
-            localStorage.setItem('username', userInp);
-            
-            // Note: Since we aren't checking the DB, we don't have a real UUID.
-            // We'll use the username as the UUID for now.
-            localStorage.setItem('account_uuid', userInp);
+            btn.innerText = "SEARCHING...";
+            status.innerText = "";
 
-            window.location.href = "settings.html";
+            try {
+                const usersRef = ref(db, 'users');
+                const q = query(usersRef, orderByChild('username'), equalTo(userInp));
+                const snapshot = await get(q);
+
+                if (snapshot.exists()) {
+                    const key = Object.keys(snapshot.val())[0];
+                    const data = snapshot.val()[key];
+
+                    localStorage.setItem('account_uuid', key);
+                    localStorage.setItem('username', data.username);
+                    
+                    window.location.href = "settings.html";
+
+                } else {
+                    status.innerText = "user not found";
+                    btn.innerText = "ENTER";
+                }
+
+            } catch (error) {
+                console.error(error);
+                status.innerText = "database error";
+                btn.innerText = "ENTER";
+            }
         }
     </script>
 </body>
