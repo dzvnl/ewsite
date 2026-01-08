@@ -56,7 +56,7 @@ if (callBtn) {
         });
 
         // 2. Join immediately
-        window.location.href = `folk_call.html?room=${roomId}`;
+        window.location.href = `fcall.html?room=${roomId}`;
     });
 }
 
@@ -80,7 +80,7 @@ onChildAdded(alertsRef, (snapshot) => {
         } catch(e) {}
 
         acceptBtn.onclick = () => {
-            window.location.href = `folk_call.html?room=${data.roomId}`;
+            window.location.href = `fcall.html?room=${data.roomId}`;
         };
     }
 });
