@@ -65,6 +65,7 @@
         .links a:hover { color: #fff; }
 
         .error-msg { color: #ef4444; margin-top: 10px; height: 20px; }
+        .bio-text { color: #aaa; margin: 20px 0; font-size: 1.2rem; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -81,37 +82,14 @@
 
     <div id="profile-container" class="login-box hidden">
         <h1 id="profile-name">User Profile</h1>
-        <p>You are viewing a public profile.</p>
+        <div id="profile-status" class="error-msg"></div>
+        <p id="profile-bio" class="bio-text">Loading profile data...</p>
         <button onclick="window.location.href='/'" class="btn" style="margin-top:20px;">BACK TO HOME</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getDatabase, ref, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
-        // --- CRITICAL FIX START ---
-        // We check the URL immediately.
-        // If ?user=something exists, we STOP all auto-redirects and login logic.
-        
-        const params = new URLSearchParams(window.location.search);
-        const targetUser = params.get('user');
-
-        if (targetUser) {
-            // WE ARE IN VIEW MODE
-            console.log("Viewing specific user:", targetUser);
-            
-            // Hide the login box, show the profile view
-            document.getElementById('login-container').classList.add('hidden');
-            document.getElementById('profile-container').classList.remove('hidden');
-            document.getElementById('profile-name').innerText = targetUser;
-
-            // Stop the script here so no login/redirect happens
-            throw new Error("Stopping script execution: Viewing public profile.");
-        }
-        // --- CRITICAL FIX END ---
-
-
-        // --- STANDARD LOGIN LOGIC BELOW (Only runs if NO ?user= is present) ---
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
@@ -126,48 +104,95 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        
+        // 1. Check URL for "?user=NAME"
+        const params = new URLSearchParams(window.location.search);
+        const targetUser = params.get('user');
 
-        // Check if user is ALREADY logged in (and not trying to view someone else)
-        if (localStorage.getItem('account_uuid') && !targetUser) {
-             window.location.href = "settings.html";
-        }
+        if (targetUser) {
+            // ===========================
+            //      PROFILE VIEW MODE
+            // ===========================
+            
+            // Switch UI
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('profile-container').classList.remove('hidden');
+            document.getElementById('profile-name').innerText = targetUser;
+            
+            // Fetch real data from Firebase
+            const loadProfile = async () => {
+                const bioEl = document.getElementById('profile-bio');
+                try {
+                    const usersRef = ref(db, 'users');
+                    const q = query(usersRef, orderByChild('username'), equalTo(targetUser));
+                    const snapshot = await get(q);
 
-        window.login = async function() {
-            const userInp = document.getElementById('username').value.trim();
-            const status = document.getElementById('status');
-            const btn = document.getElementById('btn-login');
+                    if (snapshot.exists()) {
+                        const key = Object.keys(snapshot.val())[0];
+                        const data = snapshot.val()[key];
+                        // Display Bio if it exists, otherwise default text
+                        bioEl.innerText = data.bio ? data.bio : "This user has not written a bio yet.";
+                    } else {
+                        document.getElementById('profile-name').innerText = "404";
+                        bioEl.innerText = "User does not exist.";
+                        bioEl.style.color = "#ef4444";
+                    }
+                } catch (error) {
+                    console.error(error);
+                    bioEl.innerText = "Error loading profile.";
+                }
+            };
+            
+            loadProfile();
 
-            if(!userInp) {
-                status.innerText = "username required";
-                return;
+        } else {
+            // ===========================
+            //       LOGIN MODE
+            // ===========================
+
+            // Auto-redirect if already logged in
+            if (localStorage.getItem('account_uuid')) {
+                 window.location.href = "settings.html";
             }
 
-            btn.innerText = "SEARCHING...";
-            status.innerText = "";
+            // Define the login function globally so the HTML button can see it
+            window.login = async function() {
+                const userInp = document.getElementById('username').value.trim();
+                const status = document.getElementById('status');
+                const btn = document.getElementById('btn-login');
 
-            try {
-                const usersRef = ref(db, 'users');
-                const q = query(usersRef, orderByChild('username'), equalTo(userInp));
-                const snapshot = await get(q);
-
-                if (snapshot.exists()) {
-                    const key = Object.keys(snapshot.val())[0];
-                    const data = snapshot.val()[key];
-
-                    localStorage.setItem('account_uuid', key);
-                    localStorage.setItem('username', data.username);
-                    
-                    window.location.href = "settings.html";
-
-                } else {
-                    status.innerText = "user not found";
-                    btn.innerText = "ENTER";
+                if(!userInp) {
+                    status.innerText = "username required";
+                    return;
                 }
 
-            } catch (error) {
-                console.error(error);
-                status.innerText = "database error";
-                btn.innerText = "ENTER";
+                btn.innerText = "SEARCHING...";
+                status.innerText = "";
+
+                try {
+                    const usersRef = ref(db, 'users');
+                    const q = query(usersRef, orderByChild('username'), equalTo(userInp));
+                    const snapshot = await get(q);
+
+                    if (snapshot.exists()) {
+                        const key = Object.keys(snapshot.val())[0];
+                        const data = snapshot.val()[key];
+
+                        localStorage.setItem('account_uuid', key);
+                        localStorage.setItem('username', data.username);
+                        
+                        window.location.href = "settings.html";
+
+                    } else {
+                        status.innerText = "user not found";
+                        btn.innerText = "ENTER";
+                    }
+
+                } catch (error) {
+                    console.error(error);
+                    status.innerText = "database error";
+                    btn.innerText = "ENTER";
+                }
             }
         }
     </script>
