@@ -151,7 +151,7 @@ onValue(connectionsRef, (snap) => {
 
 dom.messages.addEventListener('click', (e) => {
     if (e.target.classList.contains('delete-btn') && isAdmin) {
-        if(confir('')) {
+        if(confirm('fr?')) {
             const id = e.target.getAttribute('data-id');
             remove(ref(db, `messages/${id}`));
         }
