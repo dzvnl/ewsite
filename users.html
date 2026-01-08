@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>database // users</title>
+    <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -144,12 +144,12 @@
     <a href="index.html" class="nav-back"><< RETURN_HOME</a>
 
     <div class="header-container">
-        <h1>USER_DATABASE</h1>
+        <h1>users</h1>
         <input type="text" id="filterInput" class="filter-input" placeholder="Filter users..." onkeyup="filterUsers()">
     </div>
 
     <div id="userGrid" class="user-grid">
-        <div id="loading-text">Fetching data packets...</div>
+        <div id="loading-text">fetching...</div>
     </div>
 
     <script type="module">
@@ -225,10 +225,10 @@
                 let borderClass = '';
 
                 if (FOUNDERS.includes(user.username)) {
-                    roleHTML = '<div class="card-role role-founder">FOUNDER</div>';
+                    roleHTML = '<div class="card-role role-founder">founder</div>';
                     borderClass = 'is-founder';
                 } else if (ADMINS.includes(user.username)) {
-                    roleHTML = '<div class="card-role role-admin">ADMIN</div>';
+                    roleHTML = '<div class="card-role role-admin">admin</div>';
                     borderClass = 'is-admin';
                 }
 
