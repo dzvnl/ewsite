@@ -39,7 +39,6 @@
             text-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
         }
 
-        /* --- SEARCH --- */
         .filter-input {
             background: #111;
             border: 1px solid #444;
@@ -51,7 +50,7 @@
         }
         .filter-input:focus { outline: none; border-color: #facc15; }
 
-        /* --- AUTH DEBUGGER --- */
+        /* --- STATUS INDICATOR --- */
         #auth-status {
             position: absolute;
             top: 10px;
@@ -62,7 +61,7 @@
             border: 1px solid #333;
         }
 
-        /* --- GRID LAYOUT --- */
+        /* --- GRID --- */
         .user-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -72,7 +71,6 @@
             margin: 0 auto;
         }
 
-        /* --- USER CARD --- */
         .user-card {
             background: rgba(0,0,0,0.8);
             border: 1px solid #333;
@@ -82,20 +80,12 @@
             align-items: center;
             transition: all 0.2s;
             cursor: pointer;
-            position: relative; 
+            position: relative;
             overflow: hidden;
         }
+        .user-card:hover { border-color: #facc15; transform: translateY(-2px); }
 
-        .user-card:hover {
-            border-color: #facc15;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
-        }
-
-        /* Special borders for roles */
         .user-card.is-founder { border-color: #c084fc; }
-        .user-card.is-founder:hover { box-shadow: 0 0 10px rgba(192, 132, 252, 0.3); }
-        
         .user-card.is-admin { border-color: #ef4444; }
 
         .card-pfp {
@@ -107,20 +97,9 @@
             background: #000;
         }
 
-        .card-name {
-            font-size: 1.5rem;
-            color: #fff;
-            margin-bottom: 5px;
-            word-break: break-all;
-            text-align: center;
-        }
-
-        .card-role {
-            font-size: 1rem;
-            text-transform: uppercase;
-            padding: 0 5px;
-            margin-bottom: 5px;
-        }
+        .card-name { font-size: 1.5rem; color: #fff; margin-bottom: 5px; }
+        
+        .card-role { font-size: 1rem; text-transform: uppercase; padding: 0 5px; margin-bottom: 5px; }
         .role-founder { color: #c084fc; border: 1px solid #c084fc; }
         .role-admin { color: #ef4444; border: 1px solid #ef4444; }
 
@@ -148,7 +127,6 @@
             padding: 2px 6px;
             cursor: pointer;
             z-index: 10;
-            transition: background 0.2s;
         }
         .call-btn:hover { background: #4ade80; }
 
@@ -171,7 +149,7 @@
 
     <a href="index.html" class="nav-back"><< RETURN_HOME</a>
 
-    <div id="auth-status" style="color: #888;">STATUS: CHECKING...</div>
+    <div id="auth-status" style="color: #888;">STATUS: CONNECTING...</div>
 
     <div class="header-container">
         <h1>users</h1>
@@ -185,7 +163,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getDatabase, ref, get, push, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        // Added 'signInAnonymously' to force a login if needed
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
@@ -200,21 +179,25 @@
         const db = getDatabase(app);
         const auth = getAuth(app);
 
-        // --- AUTH & DEBUGGING ---
         let currentUser = null;
         const statusDiv = document.getElementById('auth-status');
         
+        // --- AUTO-LOGIN LOGIC ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                // User is signed in
                 currentUser = user;
-                statusDiv.innerText = "STATUS: LOGGED IN";
-                statusDiv.style.color = "#22c55e"; // Green
+                statusDiv.innerText = "STATUS: ONLINE";
+                statusDiv.style.color = "#22c55e"; 
                 statusDiv.style.borderColor = "#22c55e";
             } else {
-                currentUser = null;
-                statusDiv.innerText = "STATUS: NOT LOGGED IN";
-                statusDiv.style.color = "#ef4444"; // Red
-                statusDiv.style.borderColor = "#ef4444";
+                // User is NOT signed in -> Auto-sign in as guest
+                statusDiv.innerText = "STATUS: AUTO-LOGGING IN...";
+                signInAnonymously(auth).catch((error) => {
+                    console.error("Guest login failed:", error);
+                    statusDiv.innerText = "STATUS: LOGIN FAILED";
+                    statusDiv.style.color = "#ef4444";
+                });
             }
         });
 
@@ -230,6 +213,7 @@
 
         inputField.addEventListener('keyup', filterUsers);
 
+        // --- FETCH USERS ---
         async function fetchUsers() {
             const usersRef = ref(db, 'users');
             try {
@@ -256,7 +240,7 @@
             e.stopPropagation(); 
             
             if(!currentUser) {
-                alert("You are not logged in. Please return to the home page and log in.");
+                alert("Still connecting... please wait 2 seconds.");
                 return;
             }
 
@@ -300,13 +284,11 @@
 
                 card.className = `user-card ${borderClass}`;
                 
-                // Card click = Go to profile
                 card.onclick = () => window.location.href = `account.html?user=${user.username}`;
 
                 const pfpSrc = user.pfp ? user.pfp : 'https://placehold.co/100x100/111/444?text=?';
                 const bioText = user.bio ? user.bio : 'No bio established.';
 
-                // Add Call Button
                 const callBtn = document.createElement('button');
                 callBtn.className = 'call-btn';
                 callBtn.innerText = 'CALL';
