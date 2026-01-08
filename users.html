@@ -51,6 +51,17 @@
         }
         .filter-input:focus { outline: none; border-color: #facc15; }
 
+        /* --- AUTH DEBUGGER --- */
+        #auth-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.2rem;
+            padding: 5px 10px;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #333;
+        }
+
         /* --- GRID LAYOUT --- */
         .user-grid {
             display: grid;
@@ -124,7 +135,7 @@
             line-height: 1.1;
         }
 
-        /* --- NEW CALL BUTTON --- */
+        /* --- CALL BUTTON --- */
         .call-btn {
             position: absolute;
             top: 5px;
@@ -160,6 +171,8 @@
 
     <a href="index.html" class="nav-back"><< RETURN_HOME</a>
 
+    <div id="auth-status" style="color: #888;">STATUS: CHECKING...</div>
+
     <div class="header-container">
         <h1>users</h1>
         <input type="text" id="filterInput" class="filter-input" placeholder="Filter users...">
@@ -172,7 +185,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getDatabase, ref, get, push, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-        // Import 'onAuthStateChanged' to accurately track login status
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -188,17 +200,21 @@
         const db = getDatabase(app);
         const auth = getAuth(app);
 
-        // --- AUTH STATE TRACKER ---
-        // We use this variable instead of checking auth.currentUser directly immediately
+        // --- AUTH & DEBUGGING ---
         let currentUser = null;
+        const statusDiv = document.getElementById('auth-status');
         
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                // console.log("Auth synced: Logged in as", user.uid);
+                statusDiv.innerText = "STATUS: LOGGED IN";
+                statusDiv.style.color = "#22c55e"; // Green
+                statusDiv.style.borderColor = "#22c55e";
             } else {
                 currentUser = null;
-                // console.log("Auth synced: No user");
+                statusDiv.innerText = "STATUS: NOT LOGGED IN";
+                statusDiv.style.color = "#ef4444"; // Red
+                statusDiv.style.borderColor = "#ef4444";
             }
         });
 
@@ -239,9 +255,8 @@
         function initiateCall(targetUser, e) {
             e.stopPropagation(); 
             
-            // Check the synced user variable
             if(!currentUser) {
-                alert("Please log in to make calls. (If you just loaded the page, wait 1 second and try again)");
+                alert("You are not logged in. Please return to the home page and log in.");
                 return;
             }
 
