@@ -31,6 +31,19 @@ const isAdmin = ADMINS.includes(currentUser);
 // Default avatar if none is set
 const DEFAULT_AVATAR = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
 
+// --- NEW FIX: VARIABLE TO HOLD YOUR PFP ---
+let myCurrentAvatar = null; 
+
+// --- NEW FIX: FETCH YOUR PFP FROM DB ---
+// This ensures we have the correct URL from settings, not empty local storage
+const myUserRef = ref(db, 'users/' + currentUser);
+onValue(myUserRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data && data.pfp) {
+        myCurrentAvatar = data.pfp;
+    }
+});
+
 const dom = {
     messages: document.getElementById('chat-messages'),
     input: document.getElementById('msg-input'),
@@ -47,8 +60,9 @@ async function sendMessage() {
     if (!text) return; 
 
     const userColor = localStorage.getItem('user_color') || '#facc15';
-    // Retrieve profile pic from settings (if it exists), otherwise null
-    const userAvatar = localStorage.getItem('profile_pic') || null;
+    
+    // --- UPDATED: USE THE DB VARIABLE, NOT LOCAL STORAGE ---
+    const userAvatar = myCurrentAvatar; 
     
     // Clear input immediately
     const textToSend = text; 
@@ -73,7 +87,9 @@ async function sendMessage() {
 // --- 1.5 SEND LOGIC (IMAGE MESSAGE) ---
 window.sendImage = async function(imageBase64) {
     const userColor = localStorage.getItem('user_color') || '#facc15';
-    const userAvatar = localStorage.getItem('profile_pic') || null;
+    
+    // --- UPDATED: USE THE DB VARIABLE ---
+    const userAvatar = myCurrentAvatar;
 
     try {
         await push(ref(db, 'messages'), {
@@ -113,12 +129,10 @@ onValue(ref(db, 'messages'), (snapshot) => {
 
     msgList.forEach(msg => {
         const el = document.createElement('div');
-        // This class matches the CSS in your HTML file
         el.className = 'message-row'; 
         
         let adminControls = '';
         if (isAdmin) {
-            // Added simple styling inline for delete button to match theme
             adminControls = `<span class="admin-action delete-btn" data-id="${msg.id}" style="color:red; cursor:pointer; font-size:0.7em; margin-left:5px;">[DEL]</span>`;
         }
 
