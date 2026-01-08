@@ -1,11 +1,8 @@
-// folk.js
-
-// 1. Import Firebase (Use the same versions as your main chat)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, push, onChildAdded, onValue, set, onDisconnect } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// 2. Your Firebase Config (Copy this exactly from your chat.js)
+// --- PASTE YOUR API KEYS HERE ---
 const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_AUTH_DOMAIN",
@@ -16,37 +13,35 @@ const firebaseConfig = {
     appId: "YOUR_APP_ID"
 };
 
-// 3. Initialize
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// -------------------------------------------------------------
-// CRITICAL: This is what separates "Folk" from "Chat".
-// Instead of ref(db, 'messages'), we use ref(db, 'folk_messages')
-// -------------------------------------------------------------
+// Use separate folk_messages path
 const messagesRef = ref(db, 'folk_messages'); 
 
-// Check for username
+// Username Logic
 let username = localStorage.getItem('username');
 if (!username) {
     username = prompt("Enter folk name:") || "Anonymous";
     localStorage.setItem('username', username);
 }
-document.getElementById('display-name').innerText = username;
+const displayNameEl = document.getElementById('display-name');
+if (displayNameEl) displayNameEl.innerText = username;
 
-// --- Handle Online Count (Optional: use separate count for folk) ---
-const presenceRef = ref(db, 'folk_presence'); // Separate presence list
+// Online Count
+const presenceRef = ref(db, 'folk_presence');
 const userStatusRef = ref(db, `folk_presence/${Date.now()}`);
 set(userStatusRef, username);
 onDisconnect(userStatusRef).remove();
 
 onValue(presenceRef, (snapshot) => {
     const count = snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
-    document.getElementById('user-count').innerText = count;
+    const countEl = document.getElementById('user-count');
+    if(countEl) countEl.innerText = count;
 });
 
-// --- Sending Messages ---
-window.send = function() {
+// --- Sending Logic (Updated) ---
+function sendMessage() {
     const input = document.getElementById('msg-input');
     const text = input.value.trim();
     
@@ -56,13 +51,26 @@ window.send = function() {
             text: text,
             timestamp: Date.now(),
             type: 'text',
-            avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}` // Generates consistent avatar
+            avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`
         });
         input.value = "";
     }
 }
 
-// --- Sending Images ---
+// Attach Listeners
+const sendBtn = document.getElementById('send-btn');
+if (sendBtn) {
+    sendBtn.addEventListener('click', sendMessage);
+}
+
+const msgInput = document.getElementById('msg-input');
+if (msgInput) {
+    msgInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') sendMessage();
+    });
+}
+
+// Image Logic
 window.sendImage = function(base64Data) {
     push(messagesRef, {
         user: username,
@@ -81,21 +89,17 @@ onChildAdded(messagesRef, (snapshot) => {
     const msgDiv = document.createElement('div');
     msgDiv.className = "message-row";
 
-    // Create Avatar
     const avatarImg = document.createElement('img');
     avatarImg.src = data.avatar || "default.png";
     avatarImg.className = "msg-avatar";
 
-    // Create Content Wrapper
     const contentDiv = document.createElement('div');
     contentDiv.className = "message-content";
 
-    // Username
     const nameSpan = document.createElement('div');
     nameSpan.className = "msg-username";
     nameSpan.innerText = data.user;
 
-    // Message Text or Image
     const textDiv = document.createElement('div');
     textDiv.className = "msg-text";
 
@@ -110,19 +114,11 @@ onChildAdded(messagesRef, (snapshot) => {
         textDiv.innerText = data.text;
     }
 
-    // Assemble
     contentDiv.appendChild(nameSpan);
     contentDiv.appendChild(textDiv);
     msgDiv.appendChild(avatarImg);
     msgDiv.appendChild(contentDiv);
 
     chatBox.appendChild(msgDiv);
-    
-    // Auto scroll to bottom
     chatBox.scrollTop = chatBox.scrollHeight;
-});
-
-// Allow Enter key to send
-document.getElementById('msg-input').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') window.send();
 });
