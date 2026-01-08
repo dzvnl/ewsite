@@ -5,7 +5,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove, set, onDisconnect } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-console.log("go away.");
+console.log("chat loaded.");
 
 // --- FIREBASE CONFIG ---
 const firebaseConfig = {
@@ -28,6 +28,9 @@ const currentUser = localStorage.getItem('username') || 'no name';
 const currentUuid = localStorage.getItem('account_uuid'); 
 const isAdmin = ADMINS.includes(currentUser);
 
+// Default avatar if none is set
+const DEFAULT_AVATAR = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
+
 const dom = {
     messages: document.getElementById('chat-messages'),
     input: document.getElementById('msg-input'),
@@ -37,20 +40,6 @@ const dom = {
 
 if(dom.userDisplay) dom.userDisplay.innerText = currentUser;
 
-// --- CSS INJECTION ---
-const style = document.createElement('style');
-style.textContent = `
-    .msg { margin-bottom: 8px; line-height: 1.2; word-wrap: break-word; display: flex; align-items: flex-start; }
-    .msg-content { flex: 1; }
-    .msg-meta { font-size: 0.75rem; color: #666; margin-right: 8px; vertical-align: bottom; }
-    .msg-user { font-weight: bold; cursor: pointer; text-shadow: 1px 1px 2px black; margin-right: 5px;}
-    .msg-user.admin { color: #ef4444 !important; }
-    .msg-text { color: #fff; text-shadow: 1px 1px 2px black; }
-    .chat-image { max-width: 250px; max-height: 250px; border-radius: 4px; margin-top: 5px; border: 1px solid #444; display: block; }
-    .admin-action { color: #ef4444; cursor: pointer; font-size: 0.7rem; margin-left: 5px; background:rgba(0,0,0,0.5); padding: 0 4px; }
-`;
-document.head.appendChild(style);
-
 // --- 1. SEND LOGIC (TEXT) ---
 
 async function sendMessage() {
@@ -58,6 +47,8 @@ async function sendMessage() {
     if (!text) return; 
 
     const userColor = localStorage.getItem('user_color') || '#facc15';
+    // Retrieve profile pic from settings (if it exists), otherwise null
+    const userAvatar = localStorage.getItem('profile_pic') || null;
     
     // Clear input immediately
     const textToSend = text; 
@@ -70,6 +61,7 @@ async function sendMessage() {
             uuid: currentUuid,
             text: textToSend.substring(0, 300),
             color: userColor,
+            avatar: userAvatar, // SEND AVATAR
             time: Date.now()
         });
     } catch (e) {
@@ -78,18 +70,19 @@ async function sendMessage() {
     }
 }
 
-// --- 1.5 SEND LOGIC (IMAGE) ---
-// This function is called by your HTML file when a file is selected
+// --- 1.5 SEND LOGIC (IMAGE MESSAGE) ---
 window.sendImage = async function(imageBase64) {
     const userColor = localStorage.getItem('user_color') || '#facc15';
+    const userAvatar = localStorage.getItem('profile_pic') || null;
 
     try {
         await push(ref(db, 'messages'), {
             user: localStorage.getItem('username') || 'Guest',
             uuid: currentUuid,
-            text: '', // No text, just image
-            image: imageBase64, // Save the image data
+            text: '', 
+            image: imageBase64, 
             color: userColor,
+            avatar: userAvatar, // SEND AVATAR
             time: Date.now()
         });
     } catch (e) {
@@ -120,30 +113,42 @@ onValue(ref(db, 'messages'), (snapshot) => {
 
     msgList.forEach(msg => {
         const el = document.createElement('div');
-        el.className = 'msg';
+        // This class matches the CSS in your HTML file
+        el.className = 'message-row'; 
         
         let adminControls = '';
         if (isAdmin) {
-            adminControls = `<span class="admin-action delete-btn" data-id="${msg.id}">DEL</span>`;
+            // Added simple styling inline for delete button to match theme
+            adminControls = `<span class="admin-action delete-btn" data-id="${msg.id}" style="color:red; cursor:pointer; font-size:0.7em; margin-left:5px;">[DEL]</span>`;
         }
 
         const time = new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         const nameColor = msg.color || '#facc15';
+        
+        // Determine Avatar URL (Use message avatar, or default if missing)
+        const avatarUrl = msg.avatar || DEFAULT_AVATAR;
 
-        // Check if message has an image
+        // Content: Image or Text?
         let contentHtml = '';
         if (msg.image) {
-            contentHtml = `<img src="${msg.image}" class="chat-image">`;
+            contentHtml = `<img src="${msg.image}" style="max-width: 200px; border-radius: 4px; border: 1px solid #555; margin-top:5px;">`;
         } else {
             contentHtml = `<span class="msg-text">${escapeHtml(msg.text)}</span>`;
         }
 
+        // New HTML Structure: Avatar on left, Content on right
         el.innerHTML = `
-            <div class="msg-content">
-                <span class="msg-meta">${time}</span>
-                <span class="msg-user ${ADMINS.includes(msg.user) ? 'admin' : ''}" style="color: ${nameColor}">${escapeHtml(msg.user)}:</span>
+            <img src="${avatarUrl}" class="msg-avatar" alt="pic">
+            
+            <div class="message-content">
+                <div>
+                    <span class="msg-username ${ADMINS.includes(msg.user) ? 'admin' : ''}" style="color: ${nameColor}">
+                        ${escapeHtml(msg.user)}
+                    </span>
+                    <span style="font-size: 0.7rem; color: #666; margin-left: 5px;">${time}</span>
+                    ${adminControls}
+                </div>
                 ${contentHtml}
-                ${adminControls}
             </div>
         `;
         dom.messages.appendChild(el);
@@ -176,7 +181,7 @@ onValue(connectionsRef, (snap) => {
 
 dom.messages.addEventListener('click', (e) => {
     if (e.target.classList.contains('delete-btn') && isAdmin) {
-        if(confirm('fr?')) {
+        if(confirm('Delete this message?')) {
             const id = e.target.getAttribute('data-id');
             remove(ref(db, `messages/${id}`));
         }
