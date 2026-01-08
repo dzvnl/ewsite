@@ -30,13 +30,7 @@
             align-items: end;
         }
 
-        h1 {
-            font-size: 3rem;
-            color: #facc15;
-            line-height: 1;
-            margin: 0;
-            text-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
-        }
+        h1 { font-size: 3rem; color: #facc15; margin: 0; line-height: 1; text-shadow: 0 0 10px rgba(250, 204, 21, 0.3); }
 
         .filter-input {
             background: #111;
@@ -71,64 +65,68 @@
             overflow: hidden;
         }
         .user-card:hover { border-color: #facc15; transform: translateY(-2px); }
-
         .user-card.is-founder { border-color: #c084fc; }
         .user-card.is-admin { border-color: #ef4444; }
 
-        .card-pfp {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border: 1px solid #555;
-            margin-bottom: 10px;
-            background: #000;
-        }
-
+        .card-pfp { width: 80px; height: 80px; object-fit: cover; border: 1px solid #555; margin-bottom: 10px; background: #000; }
         .card-name { font-size: 1.5rem; color: #fff; margin-bottom: 5px; }
-        
         .card-role { font-size: 1rem; text-transform: uppercase; padding: 0 5px; margin-bottom: 5px; }
         .role-founder { color: #c084fc; border: 1px solid #c084fc; }
         .role-admin { color: #ef4444; border: 1px solid #ef4444; }
+        .card-bio { color: #888; font-size: 1rem; text-align: center; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.1; }
 
-        .card-bio {
-            color: #888;
-            font-size: 1rem;
-            text-align: center;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            line-height: 1.1;
-        }
-
-        /* --- CALL BUTTON --- */
         .call-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #22c55e;
-            color: #000;
-            border: none;
-            font-family: 'VT323';
-            font-size: 1rem;
-            padding: 2px 6px;
-            cursor: pointer;
-            z-index: 10;
+            position: absolute; top: 5px; right: 5px;
+            background: #22c55e; color: #000; border: none;
+            font-family: 'VT323'; font-size: 1rem; padding: 2px 6px;
+            cursor: pointer; z-index: 10;
         }
         .call-btn:hover { background: #4ade80; }
 
-        .nav-back {
-            display: block;
-            width: 100%;
-            max-width: 900px;
-            margin: 20px auto;
-            color: #666;
-            text-decoration: none;
-            font-size: 1.2rem;
-        }
+        .nav-back { display: block; width: 100%; max-width: 900px; margin: 20px auto; color: #666; text-decoration: none; font-size: 1.2rem; }
         .nav-back:hover { color: #facc15; }
-        
         #loading-text { font-size: 1.5rem; color: #666; text-align: center; width: 100%; }
+
+        /* --- INCOMING CALL MODAL --- */
+        #incomingModal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 50;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .incoming-box {
+            background: #111;
+            border: 2px solid #22c55e;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(34, 197, 94, 0.2);
+            animation: shake 0.5s infinite;
+        }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .incoming-text { font-size: 3rem; color: #22c55e; margin-bottom: 20px; }
+        .caller-id { font-size: 1.5rem; color: #fff; margin-bottom: 30px; }
+        .accept-btn {
+            background: #22c55e; color: #000;
+            font-family: 'VT323'; font-size: 2rem;
+            padding: 10px 40px; border: none; cursor: pointer;
+        }
+        .accept-btn:hover { background: #fff; }
 
     </style>
 </head>
@@ -145,10 +143,17 @@
         <div id="loading-text">fetching...</div>
     </div>
 
+    <div id="incomingModal">
+        <div class="incoming-box">
+            <div class="incoming-text">INCOMING CALL</div>
+            <div id="incomingCaller" class="caller-id">UNKNOWN</div>
+            <button id="acceptBtn" class="accept-btn">ACCEPT</button>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, get, push, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-        // Import signInAnonymously to handle the "no login" request
+        import { getDatabase, ref, get, push, set, onChildAdded, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -164,33 +169,65 @@
         const db = getDatabase(app);
         const auth = getAuth(app);
 
-        // Keep track of user
         let currentUser = null;
-        onAuthStateChanged(auth, (user) => {
-            if (user) currentUser = user;
-        });
+        let myUsername = null; // We need to find out WHO we are to receive calls
 
         const FOUNDERS = ['root', '-nl', 'futtbucker67'];
         const ADMINS = ['root', 'fb67', '-nl'];
         const grid = document.getElementById('userGrid');
         const inputField = document.getElementById('filterInput');
+        
+        // Modal Elements
+        const modal = document.getElementById('incomingModal');
+        const incomingCallerText = document.getElementById('incomingCaller');
+        const acceptBtn = document.getElementById('acceptBtn');
         let allUsers = []; 
 
+        // Background
         const bgs = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg'];
         document.body.style.backgroundImage = `url('${bgs[Math.floor(Math.random()*bgs.length)]}')`;
 
         inputField.addEventListener('keyup', filterUsers);
 
+        // --- 1. HANDLE AUTH & IDENTIFY USER ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                // Once logged in, we fetch users to find OUR OWN username
+                await fetchUsers();
+            } else {
+                // Not logged in? Be a guest (Guests can call, but cannot receive calls easily)
+                signInAnonymously(auth);
+            }
+        });
+
+        // --- 2. FETCH USERS & SETUP LISTENER ---
         async function fetchUsers() {
             const usersRef = ref(db, 'users');
             try {
                 const snapshot = await get(usersRef);
                 grid.innerHTML = ''; 
+
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     allUsers = Object.keys(data).map(key => {
                         return { username: key, ...data[key] };
                     });
+
+                    // IDENTIFY MYSELF
+                    // We look for a user in the DB that matches our Auth UID
+                    if (currentUser) {
+                        const myProfile = allUsers.find(u => u.uid === currentUser.uid); // Assumes you saved 'uid' in user profile
+                        if (myProfile) {
+                            myUsername = myProfile.username;
+                            console.log("Identified as:", myUsername);
+                            listenForIncomingCalls();
+                        } else {
+                            // If we can't find ourselves (e.g. Guest), we can't receive calls
+                            console.log("Guest mode or profile not found. Can make calls but not receive.");
+                        }
+                    }
+
                     renderList(allUsers);
                 } else {
                     grid.innerHTML = '<div style="color:#ef4444">NO DATA FOUND</div>';
@@ -201,23 +238,46 @@
             }
         }
 
-        // --- SIMPLIFIED CALL FUNCTION ---
+        // --- 3. LISTEN FOR INCOMING CALLS ---
+        function listenForIncomingCalls() {
+            const callsRef = ref(db, 'calls');
+            
+            // Limit to last 1 to avoid fetching old calls on reload
+            onChildAdded(callsRef, (snapshot) => {
+                const callData = snapshot.val();
+                const callId = snapshot.key;
+
+                // CHECK: Is this call for ME? And is it 'dialing'?
+                if (callData.recipient === myUsername && callData.status === 'dialing') {
+                    
+                    // Don't ring if the call is old (older than 30 seconds)
+                    const now = Date.now();
+                    if (now - callData.timestamp > 30000) return;
+
+                    // SHOW MODAL
+                    incomingCallerText.innerText = "FROM ID: " + callData.caller.slice(0,5); // Just showing first 5 chars of ID
+                    modal.style.display = 'flex';
+
+                    // SETUP ACCEPT BUTTON
+                    acceptBtn.onclick = () => {
+                        // Update status to 'active'
+                        update(ref(db, `calls/${callId}`), { status: 'active' });
+                        // Go to call room
+                        window.location.href = `call.html?room=${callId}&recipient=${myUsername}`;
+                    };
+                }
+            });
+        }
+
+        // --- 4. MAKE A CALL ---
         async function initiateCall(targetUser, e) {
             e.stopPropagation();
             
-            // 1. If not logged in, force a guest login right now
             if (!currentUser) {
-                try {
-                    console.log("Not logged in. Logging in as guest...");
-                    const userCredential = await signInAnonymously(auth);
-                    currentUser = userCredential.user;
-                } catch (error) {
-                    alert("System Error: Could not verify guest access.");
-                    return;
-                }
+                const userCredential = await signInAnonymously(auth);
+                currentUser = userCredential.user;
             }
 
-            // 2. Proceed with call
             const callRef = push(ref(db, 'calls'));
             const callId = callRef.key;
 
@@ -244,7 +304,6 @@
 
             users.forEach(user => {
                 const card = document.createElement('div');
-                
                 let roleHTML = '';
                 let borderClass = '';
                 if (FOUNDERS.includes(user.username)) {
@@ -254,7 +313,6 @@
                     roleHTML = '<div class="card-role role-admin">admin</div>';
                     borderClass = 'is-admin';
                 }
-
                 card.className = `user-card ${borderClass}`;
                 card.onclick = () => window.location.href = `account.html?user=${user.username}`;
 
@@ -283,8 +341,6 @@
             const filtered = allUsers.filter(user => user.username.toLowerCase().includes(input));
             renderList(filtered);
         }
-
-        fetchUsers();
     </script>
 </body>
 </html>
