@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas</title>
+    <title>folk exclusive</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
     <style>
@@ -176,34 +176,11 @@
         </div>
 
         <div class="user-menu">
-           // --- Sending Messages (The Fix) ---
-function sendMessage() {
-    const input = document.getElementById('msg-input');
-    const text = input.value.trim();
-    
-    if (text !== "") {
-        push(messagesRef, {
-            user: username,
-            text: text,
-            timestamp: Date.now(),
-            type: 'text',
-            avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`
-        });
-        input.value = ""; // Clear input after sending
-    }
-}
-
-// Attach the listeners safely
-// 1. Listen for the Click on the specific ID we added
-const sendBtn = document.getElementById('send-btn');
-if (sendBtn) {
-    sendBtn.addEventListener('click', sendMessage);
-}
-
-// 2. Listen for the Enter key
-document.getElementById('msg-input').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') sendMessage();
-});
+            <button id="user-display" onclick="toggleMenu()">
+                <svg class="person-icon" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                </svg>
+            </button>
             <div id="user-dropdown" class="dropdown">
                 <a href="folk" id="display-name" style="color:#fff; pointer-events:none;"></a>
                 <a href="index.html">Main Chat</a>
@@ -225,7 +202,7 @@ document.getElementById('msg-input').addEventListener('keypress', function (e) {
                 </svg>
             </button>
 
-            <button onclick="send()" style="color: #facc15; padding: 6px 15px;">[SEND]</button>
+            <button id="send-btn" style="color: #facc15; padding: 6px 15px;">[SEND]</button>
         </div>
     </div>
 
