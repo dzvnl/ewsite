@@ -31,6 +31,14 @@
             flex-direction: column;
             position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
+
+            /* --- NEW: Resizable Properties --- */
+            resize: both;        /* Allows dragging corners */
+            overflow: hidden;    /* Required for resize handle to show properly */
+            min-width: 300px;    /* Prevents it from getting too small */
+            min-height: 400px;   /* Prevents it from getting too small */
+            max-height: 95vh;    /* Stops it from going off screen */
+            max-width: 95vw;     /* Stops it from going off screen */
         }
 
         #chat-messages {
@@ -41,26 +49,26 @@
             font-size: 1.1rem;
             line-height: 1.2;
             text-shadow: 1px 1px 2px black; 
-            display: flex;           /* CHANGED: Flex column to stack rows */
-            flex-direction: column;  /* CHANGED */
-            gap: 12px;               /* CHANGED: Space between messages */
+            display: flex;            
+            flex-direction: column;  
+            gap: 12px;                
         }
 
-        /* --- NEW: Message & Avatar Styles --- */
+        /* --- Message & Avatar Styles --- */
         .message-row {
             display: flex;
-            align-items: flex-start; /* Aligns image with top of text */
+            align-items: flex-start;
             gap: 10px;
         }
 
         .msg-avatar {
             width: 40px;
             height: 40px;
-            border-radius: 50%;       /* Circle shape */
-            object-fit: cover;        /* Prevents image stretching */
-            border: 2px solid #facc15; /* Yellow border to match theme */
-            flex-shrink: 0;           /* Prevents avatar from squishing */
-            background: #000;         /* Fallback background */
+            border-radius: 50%;       
+            object-fit: cover;        
+            border: 2px solid #facc15; 
+            flex-shrink: 0;           
+            background: #000;         
         }
 
         .message-content {
@@ -88,6 +96,8 @@
             gap: 8px;
             background: transparent; 
             align-items: center; 
+            /* Ensure input area stays at bottom when resizing */
+            flex-shrink: 0; 
         }
 
         input[type="text"] {
