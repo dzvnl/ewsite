@@ -54,13 +54,14 @@
             display: flex;
             gap: 8px;
             background: transparent; 
+            align-items: center; /* Ensures buttons and input align vertically */
         }
 
-        input {
+        input[type="text"] {
             flex-grow: 1;
             background: rgba(0, 0, 0, 0.6);
             border: 1px solid #666;
-            color: #facc15; /* You might want to fade this yellow to a duller gold later */
+            color: #facc15; 
             padding: 6px 10px;
             outline: none;
             font-size: 1rem;
@@ -74,9 +75,20 @@
             background: none;
             border: 1px solid #facc15;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         button:hover {
             background: rgba(250, 204, 21, 0.2);
+        }
+
+        /* Upload Icon Styles */
+        .upload-icon {
+            width: 20px;
+            height: 20px;
+            fill: #facc15;
+            filter: drop-shadow(1px 1px 1px black);
         }
 
         /* Top Bar Indicators */
@@ -146,8 +158,17 @@
         <div id="chat-messages"></div>
 
         <div id="chat-input-area">
+            <input type="file" id="image-upload" accept="image/*" style="display: none;">
+            
             <input type="text" id="msg-input" placeholder="Type..." autocomplete="off">
-            <button onclick="send()" style="color: #facc15; padding: 0 15px;">[SEND]</button>
+            
+            <button onclick="document.getElementById('image-upload').click()" title="Upload Image" style="padding: 5px 10px;">
+                <svg class="upload-icon" viewBox="0 0 24 24">
+                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                </svg>
+            </button>
+
+            <button onclick="send()" style="color: #facc15; padding: 6px 15px;">[SEND]</button>
         </div>
     </div>
 
@@ -167,6 +188,22 @@
             // REDIRECT TO INDEX.HTML
             window.location.href = 'index.html';
         }
+
+        // --- NEW: Handle Image Selection ---
+        const fileInput = document.getElementById('image-upload');
+        
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                console.log("File selected:", file.name);
+                
+                // TODO: Here is where you would call your backend upload function
+                // Example: uploadImage(file);
+                
+                // For now, let's just alert so you know it works
+                // alert("Image selected: " + file.name); 
+            }
+        });
     </script>
 </body>
 </html>
