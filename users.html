@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas</title>
+    <title>users</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -19,126 +19,97 @@
             padding: 20px;
         }
 
+        /* --- DEBUG PANEL (visible for troubleshooting) --- */
+        #debugPanel {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background: #222; border-bottom: 1px solid #444;
+            color: #0f0; font-size: 1rem; padding: 5px; z-index: 10000;
+            display: flex; gap: 20px; font-family: monospace;
+        }
+
         /* --- HEADER --- */
         .header-container {
-            width: 100%;
-            max-width: 900px;
-            margin: 0 auto 30px auto;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: end;
+            width: 100%; max-width: 900px; margin: 40px auto 30px auto;
+            border-bottom: 2px solid #333; padding-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: end;
         }
+        h1 { font-size: 3rem; color: #facc15; margin: 0; line-height: 1; }
 
-        h1 { font-size: 3rem; color: #facc15; line-height: 1; margin: 0; text-shadow: 0 0 10px rgba(250, 204, 21, 0.3); }
-
-        /* --- SEARCH --- */
-        .filter-input {
-            background: #111; border: 1px solid #444; color: #fff;
-            font-family: 'VT323'; font-size: 1.5rem; padding: 5px 10px; width: 250px;
-        }
-        .filter-input:focus { outline: none; border-color: #facc15; }
-
-        /* --- GRID LAYOUT --- */
+        /* --- GRID --- */
         .user-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 20px; width: 100%; max-width: 900px; margin: 0 auto;
         }
-
-        /* --- USER CARD --- */
         .user-card {
             background: rgba(0,0,0,0.8); border: 1px solid #333; padding: 15px;
-            display: flex; flex-direction: column; align-items: center;
-            transition: all 0.2s; cursor: pointer; position: relative; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; cursor: pointer;
         }
-        .user-card:hover { border-color: #facc15; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.8); }
-        .user-card.is-founder { border-color: #c084fc; }
-        .user-card.is-admin { border-color: #ef4444; }
-
-        .card-pfp { width: 80px; height: 80px; object-fit: cover; border: 1px solid #555; margin-bottom: 10px; background: #000; }
-        .card-name { font-size: 1.5rem; color: #fff; margin-bottom: 5px; word-break: break-all; text-align: center; }
-        .card-role { font-size: 1rem; text-transform: uppercase; padding: 0 5px; margin-bottom: 5px; }
-        .role-founder { color: #c084fc; border: 1px solid #c084fc; }
-        .role-admin { color: #ef4444; border: 1px solid #ef4444; }
-        .card-bio { color: #888; font-size: 1rem; text-align: center; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.1; margin-bottom: 10px; }
+        .user-card:hover { border-color: #facc15; transform: translateY(-2px); }
+        .card-pfp { width: 80px; height: 80px; object-fit: cover; border: 1px solid #555; background: #000; margin-bottom: 10px; }
+        .card-name { font-size: 1.5rem; color: #fff; margin-bottom: 5px; }
 
         .call-btn {
             background: #166534; border: 1px solid #22c55e; color: #fff;
-            padding: 5px 15px; font-family: 'VT323'; font-size: 1.2rem;
-            cursor: pointer; display: flex; align-items: center; gap: 5px;
-            margin-top: auto; transition: 0.2s; z-index: 10;
+            padding: 5px 15px; font-size: 1.2rem; cursor: pointer; margin-top: auto;
+            display: flex; align-items: center; gap: 5px;
         }
-        .call-btn:hover { background: #22c55e; color: #000; box-shadow: 0 0 10px #22c55e; }
+        .call-btn:hover { background: #22c55e; color: #000; }
 
-        .nav-back { display: block; width: 100%; max-width: 900px; margin: 20px auto; color: #666; text-decoration: none; font-size: 1.2rem; }
-        .nav-back:hover { color: #facc15; }
-        
-        #loading-text { font-size: 1.5rem; color: #666; text-align: center; width: 100%; }
-
-        /* Video Call Modal Styles */
+        /* --- CALL MODAL --- */
         #callModal { z-index: 9999; }
-        .video-overlay-text { text-shadow: 2px 2px 0px #000; }
         
-        /* Incoming Call Popup */
-        #incomingCallPopup { z-index: 9999; }
+        /* --- INCOMING CALL POPUP --- */
+        #incomingCallPopup { z-index: 9998; }
+        .popup-box {
+            background: #1f2937; border: 2px solid #facc15; padding: 30px;
+            text-align: center; border-radius: 10px; box-shadow: 0 0 50px rgba(250, 204, 21, 0.5);
+        }
     </style>
 </head>
 <body>
 
+    <div id="debugPanel">
+        <span>MY ID: <b id="debugId" class="text-white">...</b></span>
+        <span>STATUS: <b id="debugStatus">Connecting...</b></span>
+        <button onclick="window.testSelfCall()" class="ml-auto bg-gray-700 px-2 text-white border border-gray-500 hover:bg-gray-600">TEST ALERT</button>
+    </div>
+
     <div id="callModal" class="hidden fixed inset-0 bg-black flex flex-col items-center justify-center">
-        <div class="absolute top-5 left-5 z-20">
-            <h2 class="text-3xl text-yellow-400 video-overlay-text">CALL WITH: <span id="callingName" class="text-white">...</span></h2>
-            <div id="connectionStatus" class="text-xl text-gray-400 video-overlay-text animate-pulse">Initializing...</div>
-            <div id="techStatus" class="text-sm text-gray-600 mt-1 font-mono"></div>
+        <div class="absolute top-10 left-10 z-20">
+            <h2 class="text-3xl text-yellow-400">CALLING: <span id="callingName" class="text-white">...</span></h2>
+            <div id="connectionStatus" class="text-xl text-gray-400">Initializing...</div>
         </div>
-
-        <div class="relative w-full h-full bg-gray-900 flex items-center justify-center">
-            <video id="remoteVideo" class="w-full h-full object-cover" autoplay playsinline></video>
-            <div id="remotePlaceholder" class="absolute text-gray-600 text-2xl text-center">
-                WAITING FOR VIDEO...<br>
-                <span class="text-sm text-gray-500">(This may take up to 10s on different networks)</span>
-            </div>
-        </div>
-
-        <div class="absolute bottom-5 right-5 z-20 w-48 h-64 bg-black border-2 border-yellow-400 shadow-2xl">
+        
+        <video id="remoteVideo" class="w-full h-full object-cover" autoplay playsinline></video>
+        
+        <div class="absolute bottom-5 right-5 z-20 w-48 h-64 bg-black border-2 border-yellow-400">
             <video id="localVideo" class="w-full h-full object-cover" autoplay playsinline muted></video>
-            <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-center text-white text-sm">YOU</div>
         </div>
 
-        <button onclick="endCall()" class="absolute bottom-10 z-30 bg-red-600 hover:bg-red-500 text-white rounded-full p-6 shadow-xl border-2 border-red-400 transition transform hover:scale-110">
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L9.91 8.09"/></svg>
+        <button onclick="endCall()" class="absolute bottom-10 z-30 bg-red-600 text-white rounded-full p-6 shadow-xl border-2 border-red-400">
+            HANG UP
         </button>
     </div>
 
     <div id="incomingCallPopup" class="hidden fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center">
-        <div class="bg-gray-800 border-2 border-yellow-400 p-8 rounded-lg text-center max-w-md w-full shadow-2xl">
+        <div class="popup-box">
             <h2 class="text-3xl text-white mb-2">INCOMING CALL</h2>
-            <p class="text-xl text-yellow-400 mb-8">From: <span id="incomingCallerName">Unknown</span></p>
-            
+            <p class="text-xl text-yellow-400 mb-8">From: <span id="incomingCallerName">...</span></p>
             <div class="flex justify-center gap-4">
-                <button onclick="answerCall()" class="bg-green-600 hover:bg-green-500 text-white px-8 py-3 text-xl rounded border border-green-400">ACCEPT</button>
-                <button onclick="rejectCall()" class="bg-red-600 hover:bg-red-500 text-white px-8 py-3 text-xl rounded border border-red-400">DECLINE</button>
+                <button onclick="answerCall()" class="bg-green-600 text-white px-8 py-3 text-xl rounded border border-green-400 hover:bg-green-500">ANSWER</button>
+                <button onclick="rejectCall()" class="bg-red-600 text-white px-8 py-3 text-xl rounded border border-red-400 hover:bg-red-500">REJECT</button>
             </div>
         </div>
     </div>
 
-    <a href="index.html" class="nav-back"><< RETURN_HOME</a>
+    <a href="index.html" class="block w-full max-w-[900px] mx-auto mt-12 text-gray-500 hover:text-yellow-400"><< RETURN_HOME</a>
 
     <div class="header-container">
         <h1>users</h1>
-        <div class="text-right">
-            <div class="text-sm text-gray-500">Logged in as:</div>
-            <div id="myUsernameDisplay" class="text-xl text-green-400">...</div>
-        </div>
-    </div>
-    
-    <div class="flex justify-center mb-4">
-        <input type="text" id="filterInput" class="filter-input" placeholder="Filter users..." onkeyup="filterUsers()">
     </div>
 
     <div id="userGrid" class="user-grid">
-        <div id="loading-text">fetching...</div>
+        <div class="text-center text-gray-500">Loading users...</div>
     </div>
 
     <script type="module">
@@ -157,117 +128,102 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- GLOBALS ---
-        const FOUNDERS = ['root', '-nl', 'futtbucker67']; 
-        const ADMINS = ['root', 'fb67', '-nl'];
-        let allUsers = []; 
-        let myUsername = localStorage.getItem('chat_username'); 
-
-        // Random BG
-        const bgs = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg'];
-        document.body.style.backgroundImage = `url('${bgs[Math.floor(Math.random()*bgs.length)]}')`;
-
-        // --- WEBRTC CONFIGURATION (CRITICAL FOR CROSS-NETWORK) ---
-        // Using a list of multiple free STUN servers to increase success rate
-        const servers = {
-            iceServers: [
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' },
-                { urls: 'stun:stun3.l.google.com:19302' },
-                { urls: 'stun:stun4.l.google.com:19302' }
-            ]
-        };
-
+        // --- GLOBAL VARIABLES ---
+        let myUsername = localStorage.getItem('chat_username');
         let localStream = null;
         let peerConnection = null;
         let currentCallPath = null;
 
-        // --- 1. USER IDENTIFICATION ---
+        // Force lowercase to prevent matching errors
+        if(myUsername) myUsername = myUsername.toLowerCase().trim();
+
+        // 1. LOGIN & SETUP
         if (!myUsername) {
-            myUsername = prompt("Enter your username (Required for calling):", "");
-            if(myUsername) localStorage.setItem('chat_username', myUsername);
-            else window.location.reload(); // Force reload if canceled
-        }
-        document.getElementById('myUsernameDisplay').innerText = myUsername;
-
-        // --- 2. LISTENER (Am I being called?) ---
-        if (myUsername) {
-            const myInboxRef = ref(db, 'calls/' + myUsername);
-            onValue(myInboxRef, (snapshot) => {
-                const data = snapshot.val();
-                
-                if (data && data.offer && !data.answer) {
-                    console.log("Incoming call from:", data.from);
-                    document.getElementById('incomingCallerName').innerText = data.from;
-                    currentCallPath = 'calls/' + myUsername; 
-                    document.getElementById('incomingCallPopup').classList.remove('hidden');
-                } else if (!data) {
-                    document.getElementById('incomingCallPopup').classList.add('hidden');
-                }
-            });
+            let rawUser = prompt("Enter your username to receive calls:");
+            if (rawUser) {
+                myUsername = rawUser.toLowerCase().trim();
+                localStorage.setItem('chat_username', myUsername);
+            } else {
+                myUsername = "guest_" + Math.floor(Math.random() * 1000);
+            }
         }
 
-        // --- 3. CREATE PEER CONNECTION ---
+        // Update Debug Panel
+        document.getElementById('debugId').innerText = myUsername;
+        document.getElementById('debugStatus').innerText = "Connecting to DB...";
+
+        // 2. LISTEN FOR CALLS (The Critical Part)
+        const myCallRef = ref(db, 'calls/' + myUsername);
+        
+        onValue(myCallRef, (snapshot) => {
+            document.getElementById('debugStatus').innerText = "Online & Listening";
+            const data = snapshot.val();
+
+            if (data && data.offer && !data.answer) {
+                // We have a new call!
+                console.log("INCOMING CALL DATA:", data);
+                document.getElementById('incomingCallerName').innerText = data.from;
+                currentCallPath = 'calls/' + myUsername; 
+                document.getElementById('incomingCallPopup').classList.remove('hidden');
+            } else if (!data) {
+                // Call ended or reset
+                document.getElementById('incomingCallPopup').classList.add('hidden');
+            }
+        }, (error) => {
+            console.error("FIREBASE ERROR:", error);
+            document.getElementById('debugStatus').innerText = "DB ERROR (Check Console)";
+            document.getElementById('debugStatus').style.color = "red";
+        });
+
+        // 3. WEBRTC SETUP (STUN SERVERS)
+        const servers = {
+            iceServers: [
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' }
+            ]
+        };
+
         async function createPeerConnection() {
             peerConnection = new RTCPeerConnection(servers);
 
-            // Connection State Monitoring (For Debugging)
+            // Debug Connection State
             peerConnection.onconnectionstatechange = () => {
-                const status = peerConnection.connectionState;
-                console.log("Connection State:", status);
-                document.getElementById('techStatus').innerText = `State: ${status}`;
-                if(status === 'connected') {
-                    document.getElementById('connectionStatus').innerText = "CONNECTED";
-                    document.getElementById('connectionStatus').classList.remove('animate-pulse');
-                    document.getElementById('connectionStatus').classList.add('text-green-500');
-                }
-                if(status === 'failed' || status === 'disconnected') {
-                    document.getElementById('connectionStatus').innerText = "CONNECTION FAILED";
-                    document.getElementById('connectionStatus').classList.add('text-red-500');
-                }
+                document.getElementById('connectionStatus').innerText = "State: " + peerConnection.connectionState;
             };
 
             // Get Media
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
-                
-                localStream.getTracks().forEach(track => {
-                    peerConnection.addTrack(track, localStream);
-                });
+                localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
             } catch(e) {
-                alert("Camera Access Denied or HTTPS missing. Cannot Call.");
-                endCall();
-                return null;
+                alert("Could not access camera. Ensure HTTPS is used.");
             }
 
             // Handle Remote Stream
             peerConnection.ontrack = (event) => {
-                console.log("Stream received!");
                 document.getElementById('remoteVideo').srcObject = event.streams[0];
             };
 
             return peerConnection;
         }
 
-        // --- 4. CALLER LOGIC (User A) ---
+        // 4. START CALL (Caller)
         window.startCall = async (targetUser) => {
+            targetUser = targetUser.toLowerCase().trim(); // Normalize target
             if (targetUser === myUsername) return alert("Cannot call yourself.");
-            
+
             document.getElementById('callingName').innerText = targetUser;
-            document.getElementById('connectionStatus').innerText = "Gathering Network Info...";
             document.getElementById('callModal').classList.remove('hidden');
             
             currentCallPath = 'calls/' + targetUser;
-            await createPeerConnection();
-            if(!peerConnection) return;
 
-            // Gather all network candidates first (Vanilla ICE) for stability
+            await createPeerConnection();
+
+            // Wait for ALL ICE candidates (simplest way to ensure connection works)
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate === null) {
-                    console.log("Network gathering complete. Sending Offer...");
-                    document.getElementById('connectionStatus').innerText = "Calling...";
-                    
+                    // Send Offer to Firebase
                     set(ref(db, currentCallPath), {
                         offer: JSON.stringify(peerConnection.localDescription),
                         from: myUsername
@@ -282,37 +238,26 @@
             onValue(ref(db, currentCallPath), async (snapshot) => {
                 const data = snapshot.val();
                 if (data && data.answer && !peerConnection.currentRemoteDescription) {
-                    console.log("Answer received!");
-                    document.getElementById('connectionStatus').innerText = "Connecting...";
                     const answerDesc = new RTCSessionDescription(JSON.parse(data.answer));
                     await peerConnection.setRemoteDescription(answerDesc);
                 }
             });
         };
 
-        // --- 5. RECEIVER LOGIC (User B) ---
+        // 5. ANSWER CALL (Receiver)
         window.answerCall = async () => {
             document.getElementById('incomingCallPopup').classList.add('hidden');
             document.getElementById('callModal').classList.remove('hidden');
-            document.getElementById('callingName').innerText = "Caller";
-            document.getElementById('connectionStatus').innerText = "Connecting...";
+            document.getElementById('callingName').innerText = document.getElementById('incomingCallerName').innerText;
 
             const snapshot = await get(ref(db, currentCallPath));
             const data = snapshot.val();
-            
-            if (!data || !data.offer) {
-                alert("Call expired.");
-                window.endCall();
-                return;
-            }
 
             await createPeerConnection();
-            if(!peerConnection) return;
 
-            // Wait for network gathering
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate === null) {
-                    console.log("Sending Answer...");
+                    // Send Answer
                     update(ref(db, currentCallPath), {
                         answer: JSON.stringify(peerConnection.localDescription)
                     });
@@ -331,13 +276,18 @@
             if(currentCallPath) remove(ref(db, currentCallPath));
         };
 
-        // --- 6. CLEANUP ---
         window.endCall = () => {
             document.getElementById('callModal').classList.add('hidden');
-            if (localStream) localStream.getTracks().forEach(track => track.stop());
-            if (peerConnection) peerConnection.close();
-            if (currentCallPath) remove(ref(db, currentCallPath));
+            if(localStream) localStream.getTracks().forEach(track => track.stop());
+            if(peerConnection) peerConnection.close();
+            if(currentCallPath) remove(ref(db, currentCallPath));
             window.location.reload();
+        };
+
+        // DEBUG TOOL
+        window.testSelfCall = () => {
+            document.getElementById('incomingCallerName').innerText = "TEST_SYSTEM";
+            document.getElementById('incomingCallPopup').classList.remove('hidden');
         };
 
         // --- FETCH USERS ---
@@ -347,73 +297,25 @@
                 const snapshot = await get(usersRef);
                 const grid = document.getElementById('userGrid');
                 grid.innerHTML = ''; 
-
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    allUsers = Object.keys(data).map(key => ({ username: key, ...data[key] }));
-                    renderList(allUsers);
-                } else {
-                    grid.innerHTML = '<div style="color:#ef4444">NO DATA FOUND</div>';
+                    const users = Object.keys(data).map(key => ({ username: key, ...data[key] }));
+                    
+                    users.forEach(user => {
+                        const card = document.createElement('div');
+                        card.className = "user-card";
+                        card.innerHTML = `
+                            <img src="${user.pfp || 'https://placehold.co/100'}" class="card-pfp">
+                            <div class="card-name">${user.username}</div>
+                            <button class="call-btn" onclick="window.startCall('${user.username}')">CALL</button>
+                        `;
+                        grid.appendChild(card);
+                    });
                 }
             } catch (error) {
                 console.error(error);
-                document.getElementById('userGrid').innerHTML = '<div style="color:#ef4444">CONNECTION ERROR</div>';
             }
         }
-
-        function renderList(users) {
-            const grid = document.getElementById('userGrid');
-            grid.innerHTML = '';
-            
-            users.sort((a, b) => {
-                const aFounder = FOUNDERS.includes(a.username);
-                const bFounder = FOUNDERS.includes(b.username);
-                if (aFounder && !bFounder) return -1;
-                if (!aFounder && bFounder) return 1;
-                return 0;
-            });
-
-            users.forEach(user => {
-                const card = document.createElement('div');
-                let roleHTML = '', borderClass = '';
-
-                if (FOUNDERS.includes(user.username)) {
-                    roleHTML = '<div class="card-role role-founder">founder</div>';
-                    borderClass = 'is-founder';
-                } else if (ADMINS.includes(user.username)) {
-                    roleHTML = '<div class="card-role role-admin">admin</div>';
-                    borderClass = 'is-admin';
-                }
-
-                card.className = `user-card ${borderClass}`;
-                card.onclick = (e) => {
-                    if(e.target.closest('.call-btn') || e.target.closest('button')) return;
-                    window.location.href = `account.html?user=${user.username}`;
-                };
-
-                const pfpSrc = user.pfp ? user.pfp : 'https://placehold.co/100x100/111/444?text=?';
-                const bioText = user.bio ? user.bio : 'No bio established.';
-
-                card.innerHTML = `
-                    <img src="${pfpSrc}" class="card-pfp" alt="${user.username}">
-                    ${roleHTML}
-                    <div class="card-name">${user.username}</div>
-                    <div class="card-bio">${bioText}</div>
-                    <button class="call-btn" onclick="window.startCall('${user.username}')">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                        CALL
-                    </button>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        window.filterUsers = () => {
-            const input = document.getElementById('filterInput').value.toLowerCase();
-            const filtered = allUsers.filter(user => user.username.toLowerCase().includes(input));
-            renderList(filtered);
-        };
-
         fetchUsers();
     </script>
 </body>
