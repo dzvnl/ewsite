@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
     <style>
         body {
-            /* CHANGED: Applied Typewriter Font */
             font-family: 'Special Elite', monospace; 
             background: url('IMG_4928.jpeg') no-repeat center center fixed;
             background-size: cover;
@@ -20,17 +19,13 @@
             padding: 10px;
         }
 
-        /* Responsive Container */
         #chat-container {
             width: 800%;
             max-width: 800px;
             height: 85vh;
-            
-            /* Transparent Background + Blur */
             background: rgba(0, 0, 0, 0.3); 
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px); /* For Safari */
-            
+            -webkit-backdrop-filter: blur(10px);
             border: 2px solid #969696;
             display: flex;
             flex-direction: column;
@@ -46,7 +41,45 @@
             font-size: 1.1rem;
             line-height: 1.2;
             text-shadow: 1px 1px 2px black; 
+            display: flex;           /* CHANGED: Flex column to stack rows */
+            flex-direction: column;  /* CHANGED */
+            gap: 12px;               /* CHANGED: Space between messages */
         }
+
+        /* --- NEW: Message & Avatar Styles --- */
+        .message-row {
+            display: flex;
+            align-items: flex-start; /* Aligns image with top of text */
+            gap: 10px;
+        }
+
+        .msg-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;       /* Circle shape */
+            object-fit: cover;        /* Prevents image stretching */
+            border: 2px solid #facc15; /* Yellow border to match theme */
+            flex-shrink: 0;           /* Prevents avatar from squishing */
+            background: #000;         /* Fallback background */
+        }
+
+        .message-content {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+        }
+
+        .msg-username {
+            color: #facc15;
+            font-size: 0.8rem;
+            margin-bottom: 2px;
+            opacity: 0.8;
+        }
+
+        .msg-text {
+            word-wrap: break-word;
+        }
+        /* ------------------------------------ */
 
         #chat-input-area {
             border-top: 1px dotted #999;
@@ -54,7 +87,7 @@
             display: flex;
             gap: 8px;
             background: transparent; 
-            align-items: center; /* Ensures buttons and input align vertically */
+            align-items: center; 
         }
 
         input[type="text"] {
@@ -65,12 +98,10 @@
             padding: 6px 10px;
             outline: none;
             font-size: 1rem;
-            /* CHANGED: Applied Typewriter Font to Input */
             font-family: 'Special Elite', monospace; 
         }
 
         button {
-            /* CHANGED: Applied Typewriter Font to Button */
             font-family: 'Special Elite', monospace; 
             background: none;
             border: 1px solid #facc15;
@@ -83,7 +114,6 @@
             background: rgba(250, 204, 21, 0.2);
         }
 
-        /* Upload Icon Styles */
         .upload-icon {
             width: 20px;
             height: 20px;
@@ -91,7 +121,6 @@
             filter: drop-shadow(1px 1px 1px black);
         }
 
-        /* Top Bar Indicators */
         .online-indicator {
             position: absolute;
             top: 12px;
@@ -106,7 +135,6 @@
         }
         .dot { width: 9px; height: 9px; background: #4ade80; border-radius: 100%; box-shadow: 0 0 5px #4ade80; }
         
-        /* Person Outline Icon */
         .user-menu { position: absolute; top: 8px; right: 12px; }
         #user-display { background: none; border: none; cursor: pointer; padding: 4px; }
         .person-icon { width: 24px; height: 24px; fill: #facc15; filter: drop-shadow(1px 1px 2px black); }
@@ -174,50 +202,24 @@
     </div>
 
     <script type="module" src="chat.js"></script>
-    
-   <script>
-    function toggleMenu() {
-        document.getElementById("user-dropdown").classList.toggle("show");
-    }
-    window.onclick = function(event) {
-        if (!event.target.closest('#user-display')) {
-            document.getElementById("user-dropdown").classList.remove('show');
-        }
-    }
-    function logout() {
-        localStorage.removeItem('username');
-        window.location.href = 'index.html';
-    }
-
-    // --- UPDATED: Handle Image Selection ---
-    const fileInput = document.getElementById('image-upload');
-    
-    fileInput.addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-            const file = this.files[0];
-
-            // Limit file size (optional safety check, e.g. 2MB)
-            if (file.size > 2 * 1024 * 1024) {
-                alert("File too big. Please choose a smaller image.");
+    <script>
+        function toggleMenu() { document.getElementById("user-dropdown").classList.toggle("show"); }
+        window.onclick = function(event) { if (!event.target.closest('#user-display')) { document.getElementById("user-dropdown").classList.remove('show'); } }
+        function logout() { localStorage.removeItem('username'); window.location.href = 'index.html'; }
+        
+        // Image logic
+        const fileInput = document.getElementById('image-upload');
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (window.sendImage) window.sendImage(e.target.result);
+                };
+                reader.readAsDataURL(file);
                 this.value = '';
-                return;
             }
-
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                const imageData = e.target.result; 
-                
-                // SEND TO FIREBASE VIA CHAT.JS
-                if (window.sendImage) {
-                    window.sendImage(imageData);
-                } else {
-                    console.error("sendImage function not found in chat.js");
-                }
-            };
-            
-            reader.readAsDataURL(file);
-            this.value = ''; // Clear input so you can upload the same file again
-        }
-    });
-</script>
+        });
+    </script>
+</body>
+</html>
