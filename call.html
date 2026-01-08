@@ -3,142 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>calling...</title>
+    <title>secure_line</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'VT323', monospace;
             background-color: #000;
-            color: #e5e5e5;
+            color: #22c55e;
             height: 100vh;
             margin: 0;
             display: flex;
             flex-direction: column;
+            align-items: center;
             overflow: hidden;
         }
 
-        /* --- LAYOUT --- */
-        .call-header {
-            padding: 20px;
-            text-align: center;
-            border-bottom: 2px solid #333;
-            background: #111;
-        }
-
-        .status-text {
-            font-size: 1.5rem;
-            color: #facc15;
-            text-transform: uppercase;
-            animation: pulse 2s infinite;
-        }
-
-        .video-grid {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* Split screen */
-            gap: 20px;
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            align-items: center;
-        }
-
-        /* --- VIDEO BOXES --- */
-        .video-box {
-            background: #111;
-            border: 2px solid #444;
-            height: 100%;
-            max-height: 500px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* --- VIDEO GRID --- */
+        .video-container {
             position: relative;
-            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #111;
         }
 
-        video {
+        /* Remote Video (Full Screen) */
+        #remoteVideo {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transform: scaleX(-1); /* Mirror effect for self */
+            transform: scaleX(-1); /* Mirror effect */
         }
 
-        .video-label {
+        /* Local Video (Picture in Picture) */
+        #localVideo {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
-            background: rgba(0,0,0,0.7);
-            padding: 2px 8px;
-            font-size: 1.2rem;
-            border: 1px solid #555;
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+            height: 150px;
+            background: #000;
+            border: 2px solid #22c55e;
+            object-fit: cover;
+            z-index: 10;
+            transform: scaleX(-1);
         }
 
-        /* --- CONTROLS --- */
+        /* --- OVERLAYS --- */
+        .status-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border: 1px solid #22c55e;
+            z-index: 20;
+            font-size: 1.5rem;
+        }
+
         .controls {
-            padding: 20px;
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 20;
             display: flex;
-            justify-content: center;
-            gap: 20px;
-            background: #111;
-            border-top: 2px solid #333;
+            gap: 10px;
         }
 
         .btn {
-            border: 2px solid;
-            background: transparent;
-            color: #fff;
             font-family: 'VT323';
             font-size: 1.5rem;
-            padding: 10px 30px;
+            padding: 5px 15px;
             cursor: pointer;
-            transition: all 0.2s;
+            border: none;
             text-transform: uppercase;
         }
+        .btn-end { background: #ef4444; color: #fff; }
+        .btn-end:hover { background: #b91c1c; }
 
-        .btn-end { border-color: #ef4444; color: #ef4444; }
-        .btn-end:hover { background: #ef4444; color: #000; }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        /* Responsive: Stack videos on mobile */
-        @media (max-width: 768px) {
-            .video-grid { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
-        }
     </style>
 </head>
 <body>
 
-    <div class="call-header">
-        <div id="status" class="status-text">CONNECTING...</div>
-        <div id="room-id" style="font-size: 1rem; color: #666; margin-top: 5px;"></div>
-    </div>
+    <div class="video-container">
+        <div id="statusText" class="status-overlay">INITIALIZING ENCRYPTION...</div>
 
-    <div class="video-grid">
-        <div class="video-box">
-            <video id="localVideo" autoplay playsinline muted></video>
-            <div class="video-label">YOU</div>
+        <video id="remoteVideo" autoplay playsinline></video>
+        <video id="localVideo" autoplay playsinline muted></video>
+
+        <div class="controls">
+            <button class="btn btn-end" onclick="endCall()">DISCONNECT</button>
         </div>
-
-        <div class="video-box">
-            <video id="remoteVideo" autoplay playsinline></video>
-            <div class="video-label" id="remoteLabel">WAITING...</div>
-        </div>
-    </div>
-
-    <div class="controls">
-        <button class="btn btn-end" onclick="endCall()">END CALL</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getDatabase, ref, set, onValue, update, push, onChildAdded } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
         // --- CONFIG ---
         const firebaseConfig = {
@@ -150,92 +113,156 @@
             messagingSenderId: "282495574514",
             appId: "1:282495574514:web:e2781da630d93fc1ce8b6b"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const auth = getAuth(app);
 
-        // Get URL Params
+        // --- WEBRTC SETUP ---
+        const servers = {
+            iceServers: [
+                { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
+            ]
+        };
+
+        const pc = new RTCPeerConnection(servers);
+        let localStream = null;
+        let remoteStream = null;
+
+        // URL Params
         const urlParams = new URLSearchParams(window.location.search);
         const roomId = urlParams.get('room');
-        const recipientName = urlParams.get('recipient');
-
+        
+        const statusText = document.getElementById('statusText');
         const localVideo = document.getElementById('localVideo');
-        const remoteLabel = document.getElementById('remoteLabel');
-        const statusText = document.getElementById('status');
-        const roomIdDisplay = document.getElementById('room-id');
+        const remoteVideo = document.getElementById('remoteVideo');
 
-        // Validation
         if (!roomId) {
-            alert("No Call ID found.");
+            alert("No Room ID provided!");
             window.location.href = 'users.html';
         }
 
-        roomIdDisplay.innerText = `ID: ${roomId}`;
-        if(recipientName) remoteLabel.innerText = recipientName;
-
-        // --- 1. SETUP MEDIA (CAMERA/MIC) ---
-        async function startMedia() {
+        // --- 1. STARTUP ---
+        async function start() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                localVideo.srcObject = stream;
-                statusText.innerText = `DIALING ${recipientName || 'USER'}...`;
+                // Get Camera/Mic
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 
-                // NOTE: Here is where you would normally attach this stream to a WebRTC PeerConnection
+                // Show Local Video
+                localVideo.srcObject = localStream;
+
+                // Push tracks to PeerConnection
+                localStream.getTracks().forEach(track => {
+                    pc.addTrack(track, localStream);
+                });
+
+                // Listen for Remote Tracks
+                pc.ontrack = (event) => {
+                    event.streams[0].getTracks().forEach(track => {
+                        remoteStream = new MediaStream();
+                        remoteStream.addTrack(track);
+                        remoteVideo.srcObject = event.streams[0];
+                        statusText.innerText = "STATUS: SECURE CONNECTION ESTABLISHED";
+                        statusText.style.color = "#22c55e";
+                    });
+                };
+
+                // Listen for Local ICE Candidates -> Send to Firebase
+                pc.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        push(ref(db, `calls/${roomId}/iceCandidates`), event.candidate.toJSON());
+                    }
+                };
+
+                // DETERMINE IF CALLER OR RECEIVER
+                checkRoleAndSignaling();
+
             } catch (error) {
-                console.error("Error accessing media:", error);
-                alert("Could not access camera/microphone.");
-                statusText.innerText = "MEDIA ERROR";
-                statusText.style.color = "#ef4444";
+                console.error(error);
+                statusText.innerText = "ERROR: CAMERA BLOCKED OR MISSING";
+                statusText.style.color = "red";
             }
         }
 
-        // --- 2. LISTEN TO CALL STATUS ---
-        // This ensures if one person hangs up, the other person knows.
-        const callRef = ref(db, `calls/${roomId}`);
-        
-        onValue(callRef, (snapshot) => {
-            const data = snapshot.val();
+        // --- 2. SIGNALING LOGIC ---
+        function checkRoleAndSignaling() {
+            const callRef = ref(db, `calls/${roomId}`);
             
-            if (!data) {
-                // Call entry deleted (ended)
-                alert("Call ended.");
-                window.location.href = 'users.html';
-                return;
-            }
+            // Check if an offer already exists. 
+            // If NO offer, I am the CALLER.
+            // If YES offer, I am the RECEIVER.
+            
+            onValue(callRef, async (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
 
-            if (data.status === 'active') {
-                statusText.innerText = "CONNECTED";
-                statusText.style.color = "#22c55e";
-                statusText.style.animation = "none";
-            }
-        });
+                // HANDLING ICE CANDIDATES (FROM THE OTHER PERSON)
+                const candidatesRef = ref(db, `calls/${roomId}/iceCandidates`);
+                onChildAdded(candidatesRef, (data) => {
+                    const candidate = new RTCIceCandidate(data.val());
+                    pc.addIceCandidate(candidate).catch(e => console.error("ICE Error", e));
+                });
 
-        // --- 3. END CALL FUNCTION ---
+                // --- LOGIC SPLIT ---
+
+                // CASE A: I am the CALLER (First time setup)
+                // We check if *I* created the call entry locally? 
+                // Simpler check: If there is no 'offer' in DB yet, create it.
+                if (!data.offer && !data.answer) {
+                    statusText.innerText = "STATUS: DIALING...";
+                    createOffer();
+                }
+                
+                // CASE B: I am the RECEIVER (An offer exists, but no answer yet)
+                else if (data.offer && !data.answer && pc.signalingState === "stable") {
+                    statusText.innerText = "STATUS: CONNECTING...";
+                    answerCall(data.offer);
+                }
+
+                // CASE C: I am the CALLER (Waiting for answer, and it just arrived)
+                else if (data.offer && data.answer && pc.signalingState === "have-local-offer") {
+                    statusText.innerText = "STATUS: HANDSHAKING...";
+                    const answerDesc = new RTCSessionDescription(data.answer);
+                    await pc.setRemoteDescription(answerDesc);
+                }
+            }, { onlyOnce: false }); // Keep listening for updates
+        }
+
+        // --- 3. HELPER FUNCTIONS ---
+
+        async function createOffer() {
+            const offerDescription = await pc.createOffer();
+            await pc.setLocalDescription(offerDescription);
+
+            const offer = {
+                sdp: offerDescription.sdp,
+                type: offerDescription.type,
+            };
+
+            await update(ref(db, `calls/${roomId}`), { offer });
+        }
+
+        async function answerCall(offer) {
+            const offerDesc = new RTCSessionDescription(offer);
+            await pc.setRemoteDescription(offerDesc);
+
+            const answerDescription = await pc.createAnswer();
+            await pc.setLocalDescription(answerDescription);
+
+            const answer = {
+                type: answerDescription.type,
+                sdp: answerDescription.sdp,
+            };
+
+            await update(ref(db, `calls/${roomId}`), { answer });
+        }
+
+        // --- 4. END CALL ---
         window.endCall = () => {
-            // Stop tracks (turn off camera light)
-            if (localVideo.srcObject) {
-                localVideo.srcObject.getTracks().forEach(track => track.stop());
-            }
-
-            // Remove call from database (signals end to other user)
-            remove(callRef).then(() => {
-                window.location.href = 'users.html';
-            });
+            pc.close();
+            window.location.href = 'users.html';
         };
 
-        // --- AUTH CHECK & START ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                startMedia();
-                
-                // If we are the recipient joining, update status to active
-                // (Logic: If I am not the caller listed in DB, I must be the answerer)
-                // For simplicity in this structure, we just ensure media runs.
-            } else {
-                window.location.href = 'index.html';
-            }
-        });
+        // START
+        start();
 
     </script>
 </body>
