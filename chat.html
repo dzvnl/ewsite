@@ -19,6 +19,23 @@
             padding: 10px;
         }
 
+        /* --- BAN SCREEN OVERLAY --- */
+        #ban-screen {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #ef4444;
+            text-align: center;
+        }
+        #ban-screen h1 { font-size: 4rem; margin: 0; text-shadow: 0 0 20px red; }
+        #ban-screen p { font-size: 1.5rem; color: #fff; }
+
+        /* --- CHAT CONTAINER --- */
         #chat-container {
             width: 800%;
             max-width: 800px;
@@ -31,6 +48,8 @@
             flex-direction: column;
             position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
+
+            /* Resizable Properties */
             resize: both;        
             overflow: hidden;    
             min-width: 300px;    
@@ -48,8 +67,8 @@
             line-height: 1.2;
             text-shadow: 1px 1px 2px black; 
             display: flex;             
-            flex-direction: column;  
-            gap: 12px;                
+            flex-direction: column;   
+            gap: 12px;                 
         }
 
         /* --- Message & Avatar Styles --- */
@@ -68,12 +87,6 @@
             flex-shrink: 0;            
             background: #000;         
         }
-        
-        /* Added Founder Style from Users.html */
-        .msg-avatar.founder {
-            border-color: #c084fc;
-            box-shadow: 0 0 8px rgba(192, 132, 252, 0.5);
-        }
 
         .message-content {
             display: flex;
@@ -87,24 +100,22 @@
             margin-bottom: 2px;
             opacity: 0.8;
         }
-        .msg-username.founder {
-            color: #c084fc;
-        }
 
         .msg-text {
             word-wrap: break-word;
         }
         
-        /* Ban Screen Style */
-        #ban-screen {
-            display: none;
-            position: fixed; top:0; left:0; width:100%; height:100%;
-            background: #000; color: #ef4444;
-            z-index: 9999;
-            flex-direction: column;
-            align-items: center; justify-content: center;
-            font-size: 3rem; text-align: center;
+        /* System Message Style */
+        .system-msg {
+            color: #ef4444;
+            width: 100%;
+            text-align: center;
+            border-top: 1px dashed #444;
+            border-bottom: 1px dashed #444;
+            padding: 5px;
+            font-size: 0.9rem;
         }
+
         /* ------------------------------------ */
 
         #chat-input-area {
@@ -162,7 +173,7 @@
         }
         .dot { width: 9px; height: 9px; background: #4ade80; border-radius: 100%; box-shadow: 0 0 5px #4ade80; }
         
-        .user-menu { position: absolute; top: 8px; right: 12px; z-index: 50; }
+        .user-menu { position: absolute; top: 8px; right: 12px; }
         #user-display { background: none; border: none; cursor: pointer; padding: 4px; }
         .person-icon { width: 24px; height: 24px; fill: #facc15; filter: drop-shadow(1px 1px 2px black); }
 
@@ -192,8 +203,8 @@
 <body>
 
     <div id="ban-screen">
-        <div>ACCESS DENIED</div>
-        <div style="font-size: 1.5rem; color: #fff; margin-top:20px;">You have been banned from this server.</div>
+        <h1>BANNED</h1>
+        <p>CONNECTION TERMINATED BY ADMIN.</p>
     </div>
 
     <div id="chat-container">
@@ -209,8 +220,8 @@
                 </svg>
             </button>
             <div id="user-dropdown" class="dropdown">
-                <a href="folk" id="display-name" style="color:#fff; pointer-events:none;"></a>
-                <a href="settings.html">settings</a>
+                <a href="folk" id="display-name-link" style="color:#fff; pointer-events:none;">Loading...</a>
+                <a href="settings">settings</a>
                 <a href="users.html">users</a>
                 <a href="#" onclick="logout()">logout</a>
             </div>
@@ -235,10 +246,10 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, set, get, query, orderByChild, equalTo, update, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref, push, onChildAdded, get, update, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-        // --- CONFIG FROM USERS.HTML ---
+        // --- CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
             authDomain: "ewsitechat.firebaseapp.com",
@@ -258,23 +269,23 @@
         let myUid = null;
         let myPfp = 'https://placehold.co/40x40/000/fff?text=U';
         
-        // ADMIN/BAN LIST
+        // ADMIN LIST
         const FOUNDERS = ['root', '-nl', 'futtbucker67'];
         
         // DOM ELEMENTS
         const messagesDiv = document.getElementById('chat-messages');
         const inputField = document.getElementById('msg-input');
         const sendBtn = document.getElementById('send-btn');
-        const displayNameLink = document.getElementById('display-name');
+        const displayNameLink = document.getElementById('display-name-link');
         const banScreen = document.getElementById('ban-screen');
+        const userCountSpan = document.getElementById('user-count');
 
         // --- 1. AUTH & BAN CHECK ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 myUid = user.uid;
                 
-                // Real-time listener for BAN status
-                // If an admin bans you while you are chatting, this triggers immediately.
+                // Real-time listener for User Data (Identity & Ban Status)
                 const myUserRef = ref(db, 'users/' + myUid);
                 onValue(myUserRef, (snapshot) => {
                     const data = snapshot.val();
@@ -290,19 +301,24 @@
                         myPfp = data.pfp || myPfp;
                         displayNameLink.textContent = myIdentity;
 
-                        // Check if I am Founder (for UI adjustments)
                         if(FOUNDERS.includes(myIdentity)) {
                            inputField.placeholder = "Type... (Admin Access)";
                         }
                     } else {
-                        // Fallback if DB entry missing
+                        // Fallback if no database entry yet
                         myIdentity = user.email ? user.email.split('@')[0] : "Anon";
                         displayNameLink.textContent = myIdentity;
                     }
                 });
 
-                // Load Messages only if logged in
+                // Load Messages
                 loadMessages();
+                
+                // Determine User Count (Approximate by checking DB users)
+                // Note: True "online" status requires more complex presence system
+                onValue(ref(db, 'users'), (snap) => {
+                    if(snap.exists()) userCountSpan.textContent = Object.keys(snap.val()).length;
+                });
 
             } else {
                 window.location.href = 'index.html';
@@ -312,30 +328,39 @@
         function showBanScreen() {
             banScreen.style.display = 'flex';
             document.getElementById('chat-container').style.display = 'none';
-            signOut(auth); // Log them out
+            signOut(auth); 
         }
 
-        // --- 2. SEND MESSAGE & ADMIN COMMANDS ---
+        // --- 2. SEND MESSAGE & COMMANDS ---
         async function sendMessage() {
             const text = inputField.value.trim();
             if (!text) return;
 
-            // --- BAN COMMAND (Admins Only) ---
-            // Usage: /ban [username]
+            // --- BAN COMMAND ---
             if (text.startsWith('/ban ')) {
                 if (FOUNDERS.includes(myIdentity)) {
                     const targetName = text.substring(5).trim();
-                    banUser(targetName);
+                    modifyBanStatus(targetName, true); // True = Ban
                     inputField.value = '';
                     return;
                 } else {
-                    alert("You do not have permission to ban users.");
-                    inputField.value = '';
-                    return;
+                    alert("No permission."); return;
                 }
             }
 
-            // Normal Message Send
+            // --- UNBAN COMMAND ---
+            if (text.startsWith('/unban ')) {
+                if (FOUNDERS.includes(myIdentity)) {
+                    const targetName = text.substring(7).trim();
+                    modifyBanStatus(targetName, false); // False = Unban
+                    inputField.value = '';
+                    return;
+                } else {
+                    alert("No permission."); return;
+                }
+            }
+
+            // Normal Message
             const messagesRef = ref(db, 'messages');
             await push(messagesRef, {
                 username: myIdentity,
@@ -346,47 +371,42 @@
             inputField.value = '';
         }
 
-        // Admin Function to Find & Ban User
-        async function banUser(targetUsername) {
+        // UNIFIED BAN/UNBAN FUNCTION
+        async function modifyBanStatus(targetUsername, shouldBan) {
             const usersRef = ref(db, 'users');
             try {
-                // We have to search for the UID associated with the username
                 const snapshot = await get(usersRef);
                 if (snapshot.exists()) {
                     const users = snapshot.val();
                     let targetUid = null;
                     
-                    // Iterate to find matching username
+                    // Find UID by Username
                     for (const [key, user] of Object.entries(users)) {
                         if (user.username === targetUsername) {
-                            targetUid = user.uid; // Assuming UID is stored, or key is UID
-                            if(!targetUid) targetUid = key; // Fallback if key is UID
+                            targetUid = user.uid || key; 
                             break;
                         }
                     }
 
                     if (targetUid) {
-                        // Determine if key was username or uid structure. 
-                        // Based on standard firebase, usually 'users/UID'.
-                        // Let's try to update the exact path found.
+                        // Update DB: Set banned to true or null (removes it)
+                        await update(ref(db, `users/${targetUid}`), { banned: shouldBan ? true : null });
                         
-                        await update(ref(db, `users/${targetUid}`), { banned: true });
-                        
-                        // Send system message
+                        // System Message
+                        const actionText = shouldBan ? "BANNED" : "UNBANNED";
                         push(ref(db, 'messages'), {
                             username: "SYSTEM",
-                            text: `USER [${targetUsername}] HAS BEEN BANNED.`,
+                            text: `USER [${targetUsername}] HAS BEEN ${actionText}.`,
                             timestamp: Date.now(),
                             isSystem: true
                         });
-                        alert(`User ${targetUsername} banned successfully.`);
+                        alert(`User ${targetUsername} ${actionText.toLowerCase()}.`);
                     } else {
                         alert("User not found.");
                     }
                 }
             } catch (error) {
-                console.error("Ban failed:", error);
-                alert("Error executing ban.");
+                console.error("Command failed:", error);
             }
         }
 
@@ -403,33 +423,32 @@
             const div = document.createElement('div');
             div.className = 'message-row';
 
-            // Check if sender is founder for styling
-            const isFounder = FOUNDERS.includes(msg.username);
-            const founderClass = isFounder ? 'founder' : '';
-            
-            // System message styling
             if (msg.isSystem) {
+                // System message style
                 div.innerHTML = `
-                    <div style="color: #ef4444; width:100%; text-align:center; border-top:1px dashed #333; border-bottom:1px dashed #333; padding:5px;">
+                    <div class="system-msg">
                         ${msg.text}
                     </div>
                 `;
             } else {
+                // User message style
                 div.innerHTML = `
-                    <img src="${msg.pfp || 'https://placehold.co/40x40'}" class="msg-avatar ${founderClass}">
+                    <img src="${msg.pfp || 'https://placehold.co/40x40'}" class="msg-avatar">
                     <div class="message-content">
-                        <span class="msg-username ${founderClass}">${msg.username}</span>
+                        <span class="msg-username">${msg.username}</span>
                         <span class="msg-text">${escapeHtml(msg.text)}</span>
                     </div>
                 `;
             }
-
             messagesDiv.appendChild(div);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
         function escapeHtml(text) {
             if (!text) return text;
+            // Allow img tags if they are uploaded images, otherwise escape
+            if(text.startsWith('<img src="data:image')) return text;
+
             return text
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
@@ -438,36 +457,38 @@
                 .replace(/'/g, "&#039;");
         }
 
-        // --- 4. IMAGE UPLOAD LOGIC ---
+        // --- 4. IMAGE UPLOAD ---
+        // Attaching to window so the file input onchange works
         window.sendImage = function(base64Data) {
              const messagesRef = ref(db, 'messages');
              push(messagesRef, {
                 username: myIdentity,
-                text: `<img src="${base64Data}" style="max-width: 200px; border: 1px solid #666; border-radius: 4px;">`, // Simple embedding
+                text: `<img src="${base64Data}" style="max-width: 200px; border: 1px solid #666; border-radius: 4px;">`, 
                 pfp: myPfp,
                 timestamp: Date.now()
             });
         };
 
-        // --- LISTENERS ---
-        sendBtn.addEventListener('click', sendMessage);
-        inputField.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
-
-        // Logout Global
+        // --- 5. LOGOUT ---
         window.logout = function() {
             signOut(auth).then(() => {
                 window.location.href = 'index.html';
             });
         }
+
+        // --- EVENT LISTENERS ---
+        sendBtn.addEventListener('click', sendMessage);
+        inputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
     </script>
-    
+
     <script>
-        // UI Helpers
         function toggleMenu() { document.getElementById("user-dropdown").classList.toggle("show"); }
         window.onclick = function(event) { if (!event.target.closest('#user-display')) { document.getElementById("user-dropdown").classList.remove('show'); } }
         
+        // Image logic
         const fileInput = document.getElementById('image-upload');
         fileInput.addEventListener('change', function() {
             if (this.files && this.files[0]) {
