@@ -248,48 +248,40 @@
             });
         };
 
-        // --- 4. RENDER UI ---
-        async function fetchUsers() {
+async function fetchUsers() {
             const usersRef = ref(db, 'users');
+            const grid = document.getElementById('userGrid'); // Make sure we have the element
+
             try {
+                // Try to get data
                 const snapshot = await get(usersRef);
                 grid.innerHTML = '';
                 
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    // Convert object to array
-                    allUsers = Object.keys(data).map(key => {
-                        return { username: key, ...data[key] };
-                    });
-
-                    // DEBUG: Check what we are getting
-                    console.log("Users fetched:", allUsers);
-
-                    // Find myself
-                    const me = allUsers.find(u => u.uid === myUid);
+                    allUsers = Object.keys(data).map(key => ({ username: key, ...data[key] }));
                     
+                    // Identify myself
+                    const me = allUsers.find(u => u.uid === myUid);
                     if (me) {
                         myIdentity = me.username;
-                        statusLabel.innerText = `LOGGED IN AS: ${myIdentity}`;
+                        document.getElementById('who-am-i').innerText = `LOGGED IN AS: ${myIdentity}`;
                         listenForCalls();
-                    } else {
-                        // FIXED: Handle case where UID is not in DB
-                        console.error("FATAL: Your Auth UID does not match any 'uid' field in the 'users' database.");
-                        statusLabel.innerText = "ERROR: UID NOT IN DB";
-                        statusLabel.classList.add('error');
-                        
-                        // Fallback attempt to use keys if logic fails, assumes myIdentity might be email prefix? 
-                        // For now we just alert so you know why it fails
-                        // myIdentity = "Guest";
                     }
-
+                    
                     renderList(allUsers);
                 } else {
-                    grid.innerHTML = 'NO USERS FOUND IN DATABASE';
+                    grid.innerHTML = '<div style="font-size: 1.5rem; color: #facc15;">DATABASE IS EMPTY (No "users" node found)</div>';
                 }
             } catch (e) {
-                console.error("Database Error:", e);
-                grid.innerHTML = `<div style="color:red">DB ERROR: ${e.message}</div>`;
+                // IF ERROR, SHOW IT ON SCREEN
+                console.error(e);
+                grid.innerHTML = `
+                    <div style="color: #ef4444; font-size: 1.5rem; text-align: center;">
+                        ERROR LOADING DATA:<br>
+                        <span style="font-size: 1rem; color: #fff;">${e.message}</span>
+                    </div>
+                `;
             }
         }
 
