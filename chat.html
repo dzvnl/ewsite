@@ -9,6 +9,7 @@
     <style>
         body {
             font-family: 'Special Elite', monospace; 
+            /* Note: Ensure this image exists in your folder */
             background: url('IMG_4928.jpeg') no-repeat center center fixed;
             background-size: cover;
             height: 100vh;
@@ -17,11 +18,12 @@
             justify-content: center;
             align-items: center;
             padding: 10px;
+            overflow: hidden; /* Prevents scrollbars on body */
         }
 
         /* --- BAN SCREEN OVERLAY --- */
         #ban-screen {
-            display: none; /* Hidden by default */
+            display: none; 
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95);
@@ -37,10 +39,10 @@
 
         /* --- CHAT CONTAINER --- */
         #chat-container {
-            width: 800%;
+            width: 100%; /* FIXED: Was 800% */
             max-width: 800px;
             height: 85vh;
-            background: rgba(0, 0, 0, 0.3); 
+            background: rgba(0, 0, 0, 0.6); /* Slightly darker for better readability */
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 2px solid #969696;
@@ -103,8 +105,17 @@
 
         .msg-text {
             word-wrap: break-word;
+            white-space: pre-wrap; /* Preserves formatting */
         }
         
+        .msg-image {
+            max-width: 200px;
+            border: 1px solid #666;
+            border-radius: 4px;
+            margin-top: 5px;
+            cursor: pointer;
+        }
+
         /* System Message Style */
         .system-msg {
             color: #ef4444;
@@ -114,6 +125,7 @@
             border-bottom: 1px dashed #444;
             padding: 5px;
             font-size: 0.9rem;
+            margin: 5px 0;
         }
 
         /* ------------------------------------ */
@@ -123,7 +135,7 @@
             padding: 10px;
             display: flex;
             gap: 8px;
-            background: transparent; 
+            background: rgba(0, 0, 0, 0.4); 
             align-items: center; 
             flex-shrink: 0; 
         }
@@ -170,6 +182,7 @@
             background: rgba(0,0,0,0.5);
             padding: 2px 6px;
             border-radius: 4px;
+            pointer-events: none;
         }
         .dot { width: 9px; height: 9px; background: #4ade80; border-radius: 100%; box-shadow: 0 0 5px #4ade80; }
         
@@ -259,7 +272,6 @@
             messagingSenderId: "282495574514",
             appId: "1:282495574514:web:e2781da630d93fc1ce8b6b",
             measurementId: "G-GTN3TL1P2K"
-
         };
 
         const app = initializeApp(firebaseConfig);
@@ -287,8 +299,6 @@
             if (user) {
                 myUid = user.uid;
 
-                // We listen to the entire user list to manually find the matching UID
-                // This bypasses the need for complex .indexOn rules in Firebase
                 const usersRef = ref(db, 'users');
                 
                 onValue(usersRef, (snapshot) => {
@@ -354,7 +364,6 @@
         }
 
         // --- 2. UI FUNCTIONS (Menu & Dropdown) ---
-        // Attached to window so the HTML onclick="" works
         window.toggleMenu = function() {
             document.getElementById("user-dropdown").classList.toggle("show");
         }
@@ -415,6 +424,7 @@
 
         // BAN FUNCTION
         async function modifyBanStatus(targetUsername, shouldBan) {
+            // Note: This relies on the "users" node keys being the usernames
             const targetUserRef = ref(db, `users/${targetUsername}`);
             
             try {
@@ -456,24 +466,32 @@
             const displayUser = msg.username || "Unknown";
 
             if (msg.isSystem) {
-                div.innerHTML = `<div class="system-msg">${msg.text}</div>`;
+                div.innerHTML = `<div class="system-msg">${escapeHtml(msg.text)}</div>`;
             } else {
+                let contentHtml = `<span class="msg-text">${escapeHtml(msg.text || "")}</span>`;
+                
+                // If there is an image property, render it separately
+                if (msg.image) {
+                    contentHtml += `<br><img src="${msg.image}" class="msg-image">`;
+                }
+
                 div.innerHTML = `
                     <img src="${msg.pfp || 'https://placehold.co/40x40'}" class="msg-avatar">
                     <div class="message-content">
-                        <span class="msg-username">${displayUser}</span>
-                        <span class="msg-text">${escapeHtml(msg.text)}</span>
+                        <span class="msg-username">${escapeHtml(displayUser)}</span>
+                        ${contentHtml}
                     </div>
                 `;
             }
             messagesDiv.appendChild(div);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            // Allow small delay for images to render height before scrolling
+            setTimeout(() => {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }, 50);
         }
 
         function escapeHtml(text) {
             if (!text) return "";
-            if(text.startsWith('<img src="data:image')) return text;
-
             return text
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
@@ -486,9 +504,11 @@
         // Logic to send base64
         window.sendImage = function(base64Data) {
              const messagesRef = ref(db, 'messages');
+             // Send as a dedicated 'image' property, NOT inside 'text'
              push(messagesRef, {
                 username: myIdentity,
-                text: `<img src="${base64Data}" style="max-width: 200px; border: 1px solid #666; border-radius: 4px;">`, 
+                text: '', // Empty text for image-only messages
+                image: base64Data, 
                 pfp: myPfp,
                 timestamp: Date.now()
             });
@@ -499,11 +519,20 @@
         if (fileInput) {
             fileInput.addEventListener('change', function() {
                 if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    
+                    // Simple Size Limit (2MB) to prevent database lockups
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert("File too large. Please upload images under 2MB.");
+                        this.value = ''; // Reset input
+                        return;
+                    }
+
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         window.sendImage(e.target.result);
                     };
-                    reader.readAsDataURL(this.files[0]);
+                    reader.readAsDataURL(file);
                 }
             });
         }
