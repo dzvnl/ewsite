@@ -244,9 +244,9 @@
         </div>
     </div>
 
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, get, update, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref, push, onChildAdded, get, update, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
         // --- CONFIG ---
@@ -280,42 +280,46 @@
         const banScreen = document.getElementById('ban-screen');
         const userCountSpan = document.getElementById('user-count');
 
-        // --- 1. AUTH & BAN CHECK ---
+        // --- 1. AUTH & IDENTITY CHECK ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 myUid = user.uid;
-                
-                // Real-time listener for User Data (Identity & Ban Status)
-                const myUserRef = ref(db, 'users/' + myUid);
-                onValue(myUserRef, (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
+
+                // CORRECTED LOOKUP: Find which user has this UID
+                const usersRef = ref(db, 'users');
+                const myQuery = query(usersRef, orderByChild('uid'), equalTo(myUid));
+
+                onValue(myQuery, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        // The key of the object is the Username
+                        const usernameKey = Object.keys(data)[0]; 
+                        const userData = data[usernameKey];
+
                         // Check Ban
-                        if (data.banned === true) {
+                        if (userData.banned === true) {
                             showBanScreen();
                             return;
                         }
-                        
+
                         // Set Identity
-                        myIdentity = data.username || "Guest";
-                        myPfp = data.pfp || myPfp;
+                        myIdentity = usernameKey; // The DB key IS the username
+                        myPfp = userData.pfp || myPfp;
                         displayNameLink.textContent = myIdentity;
 
-                        if(FOUNDERS.includes(myIdentity)) {
+                        if (FOUNDERS.includes(myIdentity)) {
                            inputField.placeholder = "Type... (Admin Access)";
                         }
                     } else {
-                        // Fallback if no database entry yet
+                        // If auth exists but no DB record found
                         myIdentity = user.email ? user.email.split('@')[0] : "Anon";
                         displayNameLink.textContent = myIdentity;
                     }
                 });
 
-                // Load Messages
                 loadMessages();
                 
-                // Determine User Count (Approximate by checking DB users)
-                // Note: True "online" status requires more complex presence system
+                // User Count
                 onValue(ref(db, 'users'), (snap) => {
                     if(snap.exists()) userCountSpan.textContent = Object.keys(snap.val()).length;
                 });
@@ -335,6 +339,7 @@
         async function sendMessage() {
             const text = inputField.value.trim();
             if (!text) return;
+            if (!myIdentity) { alert("Still loading identity..."); return; }
 
             // --- BAN COMMAND ---
             if (text.startsWith('/ban ')) {
@@ -371,42 +376,33 @@
             inputField.value = '';
         }
 
-        // UNIFIED BAN/UNBAN FUNCTION
+        // CORRECTED BAN FUNCTION
         async function modifyBanStatus(targetUsername, shouldBan) {
-            const usersRef = ref(db, 'users');
+            // Since Usernames ARE keys, we can target them directly
+            const targetUserRef = ref(db, `users/${targetUsername}`);
+            
             try {
-                const snapshot = await get(usersRef);
+                const snapshot = await get(targetUserRef);
+                
                 if (snapshot.exists()) {
-                    const users = snapshot.val();
-                    let targetUid = null;
+                    // Update the user directly
+                    await update(targetUserRef, { banned: shouldBan ? true : null });
                     
-                    // Find UID by Username
-                    for (const [key, user] of Object.entries(users)) {
-                        if (user.username === targetUsername) {
-                            targetUid = user.uid || key; 
-                            break;
-                        }
-                    }
-
-                    if (targetUid) {
-                        // Update DB: Set banned to true or null (removes it)
-                        await update(ref(db, `users/${targetUid}`), { banned: shouldBan ? true : null });
-                        
-                        // System Message
-                        const actionText = shouldBan ? "BANNED" : "UNBANNED";
-                        push(ref(db, 'messages'), {
-                            username: "SYSTEM",
-                            text: `USER [${targetUsername}] HAS BEEN ${actionText}.`,
-                            timestamp: Date.now(),
-                            isSystem: true
-                        });
-                        alert(`User ${targetUsername} ${actionText.toLowerCase()}.`);
-                    } else {
-                        alert("User not found.");
-                    }
+                    // System Message
+                    const actionText = shouldBan ? "BANNED" : "UNBANNED";
+                    push(ref(db, 'messages'), {
+                        username: "SYSTEM",
+                        text: `USER [${targetUsername}] HAS BEEN ${actionText}.`,
+                        timestamp: Date.now(),
+                        isSystem: true
+                    });
+                    alert(`User ${targetUsername} ${actionText.toLowerCase()}.`);
+                } else {
+                    alert(`User '${targetUsername}' not found in database.`);
                 }
             } catch (error) {
                 console.error("Command failed:", error);
+                alert("Error executing command.");
             }
         }
 
@@ -423,19 +419,20 @@
             const div = document.createElement('div');
             div.className = 'message-row';
 
+            // Handle cases where username might be missing in old messages
+            const displayUser = msg.username || "Unknown";
+
             if (msg.isSystem) {
-                // System message style
                 div.innerHTML = `
                     <div class="system-msg">
                         ${msg.text}
                     </div>
                 `;
             } else {
-                // User message style
                 div.innerHTML = `
                     <img src="${msg.pfp || 'https://placehold.co/40x40'}" class="msg-avatar">
                     <div class="message-content">
-                        <span class="msg-username">${msg.username}</span>
+                        <span class="msg-username">${displayUser}</span>
                         <span class="msg-text">${escapeHtml(msg.text)}</span>
                     </div>
                 `;
@@ -445,8 +442,7 @@
         }
 
         function escapeHtml(text) {
-            if (!text) return text;
-            // Allow img tags if they are uploaded images, otherwise escape
+            if (!text) return "";
             if(text.startsWith('<img src="data:image')) return text;
 
             return text
@@ -458,7 +454,6 @@
         }
 
         // --- 4. IMAGE UPLOAD ---
-        // Attaching to window so the file input onchange works
         window.sendImage = function(base64Data) {
              const messagesRef = ref(db, 'messages');
              push(messagesRef, {
@@ -481,26 +476,6 @@
         inputField.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
-
-    </script>
-
-    <script>
-        function toggleMenu() { document.getElementById("user-dropdown").classList.toggle("show"); }
-        window.onclick = function(event) { if (!event.target.closest('#user-display')) { document.getElementById("user-dropdown").classList.remove('show'); } }
-        
-        // Image logic
-        const fileInput = document.getElementById('image-upload');
-        fileInput.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                const file = this.files[0];
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    if (window.sendImage) window.sendImage(e.target.result);
-                };
-                reader.readAsDataURL(file);
-                this.value = '';
-            }
-        });
-    </script>
+</script>
 </body>
 </html>
