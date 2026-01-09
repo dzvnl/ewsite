@@ -206,3 +206,84 @@ function escapeHtml(text) {
     if (!text) return text;
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+
+import { getDatabase, ref, set, remove, onValue, goOffline } from "firebase/database"; 
+// Make sure 'goOffline' is imported!
+
+const db = getDatabase();
+const myUsername = localStorage.getItem('username'); // Or however you store the current user
+const ADMINS = ["futtbucker67", "root"];
+
+// --- 1. THE BAN "KILL SWITCH" LISTENER ---
+// This runs automatically. If the DB says I'm banned, it nukes the connection.
+function initBanSystem() {
+    if (!myUsername) return;
+
+    const banRef = ref(db, `banned_users/${myUsername}`);
+    
+    onValue(banRef, (snapshot) => {
+        if (snapshot.val() === true) {
+            // EXECUTE "TRUE" DISCONNECT
+            console.warn("YOU HAVE BEEN BANNED. DISCONNECTING.");
+            
+            // 1. Cut the Firebase WebSocket connection immediately
+            goOffline(db); 
+            
+            // 2. Clear local credentials so they can't just refresh
+            localStorage.removeItem('username');
+            
+            // 3. Physically redirect them away from the site
+            // You can change "about:blank" to "google.com" or an error page
+            window.location.href = "about:blank"; 
+        }
+    });
+}
+
+// Call this immediately when script loads
+initBanSystem();
+
+
+// --- 2. COMMAND HANDLING ---
+// Replace or update your existing send() function
+window.send = function() {
+    const input = document.getElementById('msg-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    // Check for Admin Commands
+    if (msg.startsWith("/")) {
+        handleCommand(msg);
+        input.value = ""; // Clear input so command isn't sent as chat
+        return; 
+    }
+
+    // ... Your existing code to push message to DB ...
+    // push(ref(db, 'messages'), { ... })
+};
+
+function handleCommand(msg) {
+    // Security: Stop non-admins from even trying
+    if (!ADMINS.includes(myUsername)) {
+        return; // Silently fail or alert("Permission Denied")
+    }
+
+    const parts = msg.split(" ");
+    const command = parts[0].toLowerCase();
+    const targetUser = parts.slice(1).join(" "); // Get username after space
+
+    if (!targetUser) {
+        alert("Please specify a user. E.g., /ban John");
+        return;
+    }
+
+    if (command === "/ban") {
+        // Set user's status to banned in DB
+        set(ref(db, `banned_users/${targetUser}`), true);
+        alert(`${targetUser} has been banned.`);
+    } 
+    else if (command === "/unban") {
+        // Remove ban status
+        remove(ref(db, `banned_users/${targetUser}`));
+        alert(`${targetUser} has been unbanned.`);
+    }
+}
