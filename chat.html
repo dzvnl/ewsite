@@ -1,554 +1,468 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>canvas</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+
     <style>
+
         body {
+
             font-family: 'Special Elite', monospace; 
-            /* Note: Ensure this image exists in your folder */
+
             background: url('IMG_4928.jpeg') no-repeat center center fixed;
+
             background-size: cover;
+
             height: 100vh;
+
             margin: 0;
+
             display: flex;
+
             justify-content: center;
+
             align-items: center;
+
             padding: 10px;
-            overflow: hidden; /* Prevents scrollbars on body */
+
         }
 
-        /* --- BAN SCREEN OVERLAY --- */
-        #ban-screen {
-            display: none; 
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
-            z-index: 9999;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: #ef4444;
-            text-align: center;
-        }
-        #ban-screen h1 { font-size: 4rem; margin: 0; text-shadow: 0 0 20px red; }
-        #ban-screen p { font-size: 1.5rem; color: #fff; }
 
-        /* --- CHAT CONTAINER --- */
+
         #chat-container {
-            width: 100%; /* FIXED: Was 800% */
+
+            width: 800%;
+
             max-width: 800px;
+
             height: 85vh;
-            background: rgba(0, 0, 0, 0.6); /* Slightly darker for better readability */
+
+            background: rgba(0, 0, 0, 0.3); 
+
             backdrop-filter: blur(10px);
+
             -webkit-backdrop-filter: blur(10px);
+
             border: 2px solid #969696;
+
             display: flex;
+
             flex-direction: column;
+
             position: relative;
+
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
 
-            /* Resizable Properties */
-            resize: both;        
-            overflow: hidden;    
-            min-width: 300px;    
-            min-height: 400px;   
-            max-height: 95vh;    
-            max-width: 95vw;     
+
+
+            /* --- NEW: Resizable Properties --- */
+
+            resize: both;        /* Allows dragging corners */
+
+            overflow: hidden;    /* Required for resize handle to show properly */
+
+            min-width: 300px;    /* Prevents it from getting too small */
+
+            min-height: 400px;   /* Prevents it from getting too small */
+
+            max-height: 95vh;    /* Stops it from going off screen */
+
+            max-width: 95vw;     /* Stops it from going off screen */
+
         }
+
+
 
         #chat-messages {
+
             flex-grow: 1;
+
             overflow-y: auto;
+
             padding: 15px;
+
             color: #e5e5e5;
+
             font-size: 1.1rem;
+
             line-height: 1.2;
+
             text-shadow: 1px 1px 2px black; 
-            display: flex;             
-            flex-direction: column;    
-            gap: 12px;                  
+
+            display: flex;            
+
+            flex-direction: column;  
+
+            gap: 12px;                
+
         }
+
+
 
         /* --- Message & Avatar Styles --- */
+
         .message-row {
+
             display: flex;
+
             align-items: flex-start;
+
             gap: 10px;
+
         }
+
+
 
         .msg-avatar {
+
             width: 40px;
+
             height: 40px;
-            border-radius: 50%;        
+
+            border-radius: 50%;       
+
             object-fit: cover;        
+
             border: 2px solid #facc15; 
-            flex-shrink: 0;            
+
+            flex-shrink: 0;           
+
             background: #000;         
+
         }
+
+
 
         .message-content {
+
             display: flex;
+
             flex-direction: column;
+
             max-width: 85%;
+
         }
+
+
 
         .msg-username {
+
             color: #facc15;
+
             font-size: 0.8rem;
+
             margin-bottom: 2px;
+
             opacity: 0.8;
+
         }
+
+
 
         .msg-text {
-            word-wrap: break-word;
-            white-space: pre-wrap; /* Preserves formatting */
-        }
-        
-        .msg-image {
-            max-width: 200px;
-            border: 1px solid #666;
-            border-radius: 4px;
-            margin-top: 5px;
-            cursor: pointer;
-        }
 
-        /* System Message Style */
-        .system-msg {
-            color: #ef4444;
-            width: 100%;
-            text-align: center;
-            border-top: 1px dashed #444;
-            border-bottom: 1px dashed #444;
-            padding: 5px;
-            font-size: 0.9rem;
-            margin: 5px 0;
+            word-wrap: break-word;
+
         }
 
         /* ------------------------------------ */
 
+
+
         #chat-input-area {
+
             border-top: 1px dotted #999;
+
             padding: 10px;
+
             display: flex;
+
             gap: 8px;
-            background: rgba(0, 0, 0, 0.4); 
+
+            background: transparent; 
+
             align-items: center; 
+
+            /* Ensure input area stays at bottom when resizing */
+
             flex-shrink: 0; 
+
         }
+
+
 
         input[type="text"] {
+
             flex-grow: 1;
+
             background: rgba(0, 0, 0, 0.6);
+
             border: 1px solid #666;
+
             color: #facc15; 
+
             padding: 6px 10px;
+
             outline: none;
+
             font-size: 1rem;
+
             font-family: 'Special Elite', monospace; 
+
         }
+
+
 
         button {
+
             font-family: 'Special Elite', monospace; 
+
             background: none;
+
             border: 1px solid #facc15;
+
             cursor: pointer;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
         }
+
         button:hover {
+
             background: rgba(250, 204, 21, 0.2);
+
         }
+
+
 
         .upload-icon {
+
             width: 20px;
+
             height: 20px;
+
             fill: #facc15;
+
             filter: drop-shadow(1px 1px 1px black);
+
         }
+
+
 
         .online-indicator {
+
             position: absolute;
+
             top: 12px;
+
             left: 12px;
+
             display: flex;
+
             align-items: center;
+
             gap: 6px;
+
             color: #4ade80;
+
             background: rgba(0,0,0,0.5);
+
             padding: 2px 6px;
+
             border-radius: 4px;
-            pointer-events: none;
+
         }
+
         .dot { width: 9px; height: 9px; background: #4ade80; border-radius: 100%; box-shadow: 0 0 5px #4ade80; }
+
         
+
         .user-menu { position: absolute; top: 8px; right: 12px; }
+
         #user-display { background: none; border: none; cursor: pointer; padding: 4px; }
+
         .person-icon { width: 24px; height: 24px; fill: #facc15; filter: drop-shadow(1px 1px 2px black); }
 
+
+
         .dropdown {
+
             display: none;
+
             position: absolute;
+
             right: 0;
+
             top: 100%;
+
             background: rgba(26, 26, 26, 0.95);
+
             border: 1px solid #969696;
+
             min-width: 130px;
+
             z-index: 100;
+
         }
+
         .dropdown a {
+
             display: block;
+
             padding: 10px;
+
             color: #969696;
+
             text-decoration: none;
+
             font-size: 1rem;
+
             border-bottom: 1px solid #333;
+
         }
+
         .dropdown a:last-child { border-bottom: none; }
+
         .dropdown a:hover { background: #333; color: #facc15; }
+
         .show { display: block; }
+
     </style>
+
 </head>
+
 <body>
 
-    <div id="ban-screen">
-        <h1>BANNED</h1>
-        <p>CONNECTION TERMINATED BY ADMIN.</p>
-    </div>
+
 
     <div id="chat-container">
+
         <div class="online-indicator">
+
             <div class="dot"></div>
+
             <span id="user-count">0</span>
+
         </div>
 
+
+
         <div class="user-menu">
+
             <button id="user-display" onclick="toggleMenu()">
+
                 <svg class="person-icon" viewBox="0 0 24 24">
+
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+
                 </svg>
+
             </button>
+
             <div id="user-dropdown" class="dropdown">
-                <a href="#" id="display-name-link" style="color:#fff; pointer-events:none;">Loading...</a>
+
+                <a href="folk" id="display-name" style="color:#fff; pointer-events:none;"></a>
+
                 <a href="settings">settings</a>
-                <a href="users.html">users</a>
+
+                <a href="users">users</a>
+
                 <a href="#" onclick="logout()">logout</a>
+
             </div>
+
         </div>
+
+
 
         <div id="chat-messages"></div>
 
+
+
         <div id="chat-input-area">
+
             <input type="file" id="image-upload" accept="image/*" style="display: none;">
+
             
+
             <input type="text" id="msg-input" placeholder="Type..." autocomplete="off">
+
             
+
             <button onclick="document.getElementById('image-upload').click()" title="Upload Image" style="padding: 5px 10px;">
+
                 <svg class="upload-icon" viewBox="0 0 24 24">
+
                     <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+
                 </svg>
+
             </button>
 
-            <button id="send-btn" style="color: #facc15; padding: 6px 15px;">[SEND]</button>
+
+
+            <button onclick="send()" style="color: #facc15; padding: 6px 15px;">[SEND]</button>
+
         </div>
+
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, get, update, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-        // --- CONFIG ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
-            authDomain: "ewsitechat.firebaseapp.com",
-            databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
-            projectId: "ewsitechat",
-            storageBucket: "ewsitechat.firebasestorage.app",
-            messagingSenderId: "282495574514",
-            appId: "1:282495574514:web:e2781da630d93fc1ce8b6b",
-            measurementId: "G-GTN3TL1P2K"
-        };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const auth = getAuth(app);
+    <script type="module" src="chat.js"></script>
 
-        // --- GLOBAL VARIABLES ---
-        let myIdentity = null;
-        let myUid = null;
-        let myPfp = 'https://placehold.co/40x40/000/fff?text=U';
+    <script>
+
+        function toggleMenu() { document.getElementById("user-dropdown").classList.toggle("show"); }
+
+        window.onclick = function(event) { if (!event.target.closest('#user-display')) { document.getElementById("user-dropdown").classList.remove('show'); } }
+
+        function logout() { localStorage.removeItem('username'); window.location.href = 'index.html'; }
+
         
-        // ADMIN LIST
-        const FOUNDERS = ['root', '-nl', 'futtbucker67'];
-        
-        // DOM ELEMENTS
-        const messagesDiv = document.getElementById('chat-messages');
-        const inputField = document.getElementById('msg-input');
-        const sendBtn = document.getElementById('send-btn');
-        const displayNameLink = document.getElementById('display-name-link');
-        const banScreen = document.getElementById('ban-screen');
-        const userCountSpan = document.getElementById('user-count');
 
-        // --- 1. AUTH & ROBUST IDENTITY CHECK ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                myUid = user.uid;
+        // Image logic
 
-                const usersRef = ref(db, 'users');
-                
-                onValue(usersRef, (snapshot) => {
-                    if (snapshot.exists()) {
-                        const allUsers = snapshot.val();
-                        let foundKey = null;
-                        let foundData = null;
-
-                        // Loop through all users to find YOU
-                        for (const [key, data] of Object.entries(allUsers)) {
-                            // Match by UID or fallback to Email
-                            if (data.uid === myUid || (user.email && data.email === user.email)) {
-                                foundKey = key;
-                                foundData = data;
-                                break;
-                            }
-                        }
-
-                        if (foundKey) {
-                            // User found!
-                            myIdentity = foundKey;
-                            myPfp = foundData.pfp || myPfp;
-                            displayNameLink.textContent = myIdentity;
-
-                            // Check Ban Status
-                            if (foundData.banned === true) {
-                                showBanScreen();
-                                return;
-                            }
-
-                            // DB REPAIR: If matched by email but UID was missing, fix it now
-                            if (foundData.uid !== myUid) {
-                                console.log("Linking UID to username in database...");
-                                update(ref(db, `users/${foundKey}`), { uid: myUid });
-                            }
-
-                            // Admin Check
-                            if (FOUNDERS.includes(myIdentity)) {
-                               inputField.placeholder = "Type... (Admin Access)";
-                            }
-                        } else {
-                            // Auth successful, but no user record found
-                            myIdentity = user.email ? user.email.split('@')[0] : "Anon";
-                            displayNameLink.textContent = myIdentity + " (Guest)";
-                        }
-                        
-                        // Update User Count
-                        userCountSpan.textContent = Object.keys(allUsers).length;
-                    }
-                });
-
-                loadMessages();
-
-            } else {
-                window.location.href = 'index.html';
-            }
-        });
-
-        function showBanScreen() {
-            banScreen.style.display = 'flex';
-            document.getElementById('chat-container').style.display = 'none';
-            signOut(auth); 
-        }
-
-        // --- 2. UI FUNCTIONS (Menu & Dropdown) ---
-        window.toggleMenu = function() {
-            document.getElementById("user-dropdown").classList.toggle("show");
-        }
-
-        // Close dropdown if clicked outside
-        window.onclick = function(event) {
-            if (!event.target.matches('#user-display') && !event.target.closest('#user-display')) {
-                var dropdowns = document.getElementsByClassName("dropdown");
-                for (var i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
-                }
-            }
-        }
-
-        // --- 3. SEND MESSAGE & COMMANDS ---
-        async function sendMessage() {
-            const text = inputField.value.trim();
-            if (!text) return;
-            if (!myIdentity) { alert("Still loading identity..."); return; }
-
-            // --- BAN COMMAND ---
-            if (text.startsWith('/ban ')) {
-                if (FOUNDERS.includes(myIdentity)) {
-                    const targetName = text.substring(5).trim();
-                    modifyBanStatus(targetName, true);
-                    inputField.value = '';
-                    return;
-                } else {
-                    alert("No permission."); return;
-                }
-            }
-
-            // --- UNBAN COMMAND ---
-            if (text.startsWith('/unban ')) {
-                if (FOUNDERS.includes(myIdentity)) {
-                    const targetName = text.substring(7).trim();
-                    modifyBanStatus(targetName, false);
-                    inputField.value = '';
-                    return;
-                } else {
-                    alert("No permission."); return;
-                }
-            }
-
-            // Normal Message
-            const messagesRef = ref(db, 'messages');
-            await push(messagesRef, {
-                username: myIdentity,
-                text: text,
-                pfp: myPfp,
-                timestamp: Date.now()
-            });
-            inputField.value = '';
-        }
-
-        // BAN FUNCTION
-        async function modifyBanStatus(targetUsername, shouldBan) {
-            // Note: This relies on the "users" node keys being the usernames
-            const targetUserRef = ref(db, `users/${targetUsername}`);
-            
-            try {
-                const snapshot = await get(targetUserRef);
-                if (snapshot.exists()) {
-                    await update(targetUserRef, { banned: shouldBan ? true : null });
-                    
-                    const actionText = shouldBan ? "BANNED" : "UNBANNED";
-                    // System Notification
-                    push(ref(db, 'messages'), {
-                        username: "SYSTEM",
-                        text: `USER [${targetUsername}] HAS BEEN ${actionText}.`,
-                        timestamp: Date.now(),
-                        isSystem: true
-                    });
-                    alert(`User ${targetUsername} ${actionText.toLowerCase()}.`);
-                } else {
-                    alert(`User '${targetUsername}' not found in database.`);
-                }
-            } catch (error) {
-                console.error("Command failed:", error);
-                alert("Error executing command.");
-            }
-        }
-
-        // --- 4. DISPLAY MESSAGES ---
-        function loadMessages() {
-            const messagesRef = ref(db, 'messages');
-            onChildAdded(messagesRef, (snapshot) => {
-                const msg = snapshot.val();
-                renderMessage(msg);
-            });
-        }
-
-        function renderMessage(msg) {
-            const div = document.createElement('div');
-            div.className = 'message-row';
-
-            const displayUser = msg.username || "Unknown";
-
-            if (msg.isSystem) {
-                div.innerHTML = `<div class="system-msg">${escapeHtml(msg.text)}</div>`;
-            } else {
-                let contentHtml = `<span class="msg-text">${escapeHtml(msg.text || "")}</span>`;
-                
-                // If there is an image property, render it separately
-                if (msg.image) {
-                    contentHtml += `<br><img src="${msg.image}" class="msg-image">`;
-                }
-
-                div.innerHTML = `
-                    <img src="${msg.pfp || 'https://placehold.co/40x40'}" class="msg-avatar">
-                    <div class="message-content">
-                        <span class="msg-username">${escapeHtml(displayUser)}</span>
-                        ${contentHtml}
-                    </div>
-                `;
-            }
-            messagesDiv.appendChild(div);
-            // Allow small delay for images to render height before scrolling
-            setTimeout(() => {
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }, 50);
-        }
-
-        function escapeHtml(text) {
-            if (!text) return "";
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        // --- 5. IMAGE UPLOAD LOGIC ---
-        // Logic to send base64
-        window.sendImage = function(base64Data) {
-             const messagesRef = ref(db, 'messages');
-             // Send as a dedicated 'image' property, NOT inside 'text'
-             push(messagesRef, {
-                username: myIdentity,
-                text: '', // Empty text for image-only messages
-                image: base64Data, 
-                pfp: myPfp,
-                timestamp: Date.now()
-            });
-        };
-
-        // Event Listener for the hidden file input
         const fileInput = document.getElementById('image-upload');
-        if (fileInput) {
-            fileInput.addEventListener('change', function() {
-                if (this.files && this.files[0]) {
-                    const file = this.files[0];
-                    
-                    // Simple Size Limit (2MB) to prevent database lockups
-                    if (file.size > 2 * 1024 * 1024) {
-                        alert("File too large. Please upload images under 2MB.");
-                        this.value = ''; // Reset input
-                        return;
-                    }
 
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        window.sendImage(e.target.result);
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
+        fileInput.addEventListener('change', function() {
 
-        // --- 6. LOGOUT ---
-        window.logout = function() {
-            signOut(auth).then(() => {
-                window.location.href = 'index.html';
-            });
-        }
+            if (this.files && this.files[0]) {
 
-        // --- EVENT LISTENERS ---
-        sendBtn.addEventListener('click', sendMessage);
-        inputField.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
+                const file = this.files[0];
+
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+
+                    if (window.sendImage) window.sendImage(e.target.result);
+
+                };
+
+                reader.readAsDataURL(file);
+
+                this.value = '';
+
+            }
+
         });
+
     </script>
+
 </body>
 </html>
