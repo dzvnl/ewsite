@@ -3,10 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Users Directory</title>
+    <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --neon-green: #22c55e;
+            --neon-yellow: #facc15;
+            --neon-red: #ef4444;
+            --neon-purple: #c084fc;
+            --bg-overlay: rgba(0, 0, 0, 0.85);
+        }
+
         body {
             font-family: 'VT323', monospace;
             color: #e5e5e5;
@@ -19,6 +27,16 @@
             padding: 20px;
         }
 
+        /* Scanline effect */
+        body::before {
+            content: "";
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
         .header-container {
             width: 100%;
             max-width: 900px;
@@ -28,18 +46,19 @@
             display: flex;
             justify-content: space-between;
             align-items: end;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
-        h1 { font-size: 3rem; color: #facc15; margin: 0; line-height: 1; text-shadow: 0 0 10px rgba(250, 204, 21, 0.3); }
+        h1 { font-size: 3rem; color: var(--neon-yellow); margin: 0; line-height: 1; text-shadow: 0 0 10px rgba(250, 204, 21, 0.3); }
 
         .status-bar {
             font-size: 1.5rem;
-            color: #22c55e;
-            text-shadow: 0 0 5px #22c55e;
-            margin-bottom: 10px;
-            text-align: right;
+            color: var(--neon-green);
+            text-shadow: 0 0 5px var(--neon-green);
+            margin-top: 5px;
         }
-        .status-bar.error { color: #ef4444; text-shadow: 0 0 5px #ef4444; }
+        .status-bar.error { color: var(--neon-red); text-shadow: 0 0 5px var(--neon-red); }
 
         .filter-input {
             background: #111;
@@ -48,9 +67,10 @@
             font-family: 'VT323';
             font-size: 1.5rem;
             padding: 5px 10px;
-            width: 250px;
+            width: 100%;
+            max-width: 250px;
         }
-        .filter-input:focus { outline: none; border-color: #facc15; }
+        .filter-input:focus { outline: none; border-color: var(--neon-yellow); box-shadow: 0 0 8px var(--neon-yellow); }
 
         .user-grid {
             display: grid;
@@ -59,10 +79,11 @@
             width: 100%;
             max-width: 900px;
             margin: 0 auto;
+            padding-bottom: 50px;
         }
 
         .user-card {
-            background: rgba(0,0,0,0.8);
+            background: var(--bg-overlay);
             border: 1px solid #333;
             padding: 15px;
             display: flex;
@@ -72,40 +93,49 @@
             position: relative; 
             overflow: hidden;
         }
-        .user-card:hover { border-color: #facc15; transform: translateY(-2px); }
-        .user-card.is-founder { border-color: #c084fc; }
-        .user-card.is-admin { border-color: #ef4444; }
+        .user-card:hover { border-color: var(--neon-yellow); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .user-card.is-founder { border-color: var(--neon-purple); box-shadow: 0 0 5px rgba(192, 132, 252, 0.2); }
+        .user-card.is-me { border-color: var(--neon-green); }
 
         .card-pfp { width: 80px; height: 80px; object-fit: cover; border: 1px solid #555; margin-bottom: 10px; background: #000; }
-        .card-name { font-size: 1.5rem; color: #fff; margin-bottom: 5px; }
+        .card-name { font-size: 1.5rem; color: #fff; margin-bottom: 5px; text-align: center; word-break: break-all; }
+        .card-bio { font-size: 1rem; color: #aaa; text-align: center; margin-bottom: 10px; min-height: 1.2em; }
+        
         .card-role { font-size: 1rem; text-transform: uppercase; padding: 0 5px; margin-bottom: 5px; }
-        .role-founder { color: #c084fc; border: 1px solid #c084fc; }
-        .role-admin { color: #ef4444; border: 1px solid #ef4444; }
+        .role-founder { color: var(--neon-purple); border: 1px solid var(--neon-purple); }
 
         /* BUTTONS */
         .btn-group {
             display: flex;
             gap: 10px;
-            margin-top: 10px;
+            margin-top: auto; /* Pushes button to bottom */
             width: 100%;
             justify-content: center;
         }
         
         .action-btn {
             font-family: 'VT323';
-            font-size: 1rem;
+            font-size: 1.2rem;
             padding: 5px 10px;
             cursor: pointer;
             border: none;
             text-transform: uppercase;
+            width: 100%;
+            transition: 0.2s;
         }
 
-        .btn-call { background: #22c55e; color: #000; width: 100%; }
-        .btn-call:hover { background: #4ade80; }
-        .btn-call:disabled { background: #333; color: #666; cursor: not-allowed; }
+        .btn-call { background: var(--neon-green); color: #000; }
+        .btn-call:hover { background: #4ade80; box-shadow: 0 0 10px var(--neon-green); }
+        
+        .btn-call.disabled { 
+            background: #333; 
+            color: #666; 
+            cursor: not-allowed; 
+            box-shadow: none;
+        }
 
         .nav-back { display: block; width: 100%; max-width: 900px; margin: 20px auto; color: #666; text-decoration: none; font-size: 1.2rem; }
-        .nav-back:hover { color: #facc15; }
+        .nav-back:hover { color: var(--neon-yellow); }
 
         /* --- INCOMING CALL MODAL --- */
         #incomingModal {
@@ -116,14 +146,16 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            backdrop-filter: blur(5px);
         }
         .incoming-box {
             background: #111;
-            border: 2px solid #22c55e;
+            border: 2px solid var(--neon-green);
             padding: 40px;
             text-align: center;
             box-shadow: 0 0 50px rgba(34, 197, 94, 0.2);
             animation: shake 0.5s infinite;
+            max-width: 90%;
         }
         @keyframes shake {
             0% { transform: translate(1px, 1px); }
@@ -131,11 +163,11 @@
             100% { transform: translate(1px, 1px); }
         }
         .accept-btn {
-            background: #22c55e; color: #000;
+            background: var(--neon-green); color: #000;
             font-family: 'VT323'; font-size: 2rem;
             padding: 10px 40px; border: none; cursor: pointer; margin-top: 20px;
         }
-        .accept-btn:hover { background: #fff; }
+        .accept-btn:hover { background: #fff; box-shadow: 0 0 20px #fff; }
 
     </style>
 </head>
@@ -145,27 +177,27 @@
 
     <div class="header-container">
         <div>
-            <h1>users</h1>
-            <div id="who-am-i" class="status-bar">CONNECTING...</div>
+            <h1>users_directory</h1>
+            <div id="who-am-i" class="status-bar">INITIALIZING LINK...</div>
         </div>
-        <input type="text" id="filterInput" class="filter-input" placeholder="Filter users...">
+        <input type="text" id="filterInput" class="filter-input" placeholder="> Search users...">
     </div>
 
     <div id="userGrid" class="user-grid">
-        <div style="font-size: 1.5rem; color: #666;">fetching...</div>
+        <div style="font-size: 1.5rem; color: #666;">> Fetching database...</div>
     </div>
 
     <div id="incomingModal">
         <div class="incoming-box">
-            <div style="font-size: 3rem; color: #22c55e;">INCOMING CALL</div>
-            <div id="incomingCaller" style="font-size: 1.5rem; color: #fff;">UNKNOWN</div>
-            <button id="acceptBtn" class="accept-btn">ACCEPT</button>
+            <div style="font-size: 3rem; color: #22c55e;">INCOMING SIGNAL</div>
+            <div id="incomingCaller" style="font-size: 1.5rem; color: #fff; margin-top: 10px;">UNKNOWN</div>
+            <button id="acceptBtn" class="accept-btn">ACCEPT CONNECTION</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, get, push, set, onChildAdded, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref, get, push, set, onChildAdded, update, query, limitToLast, orderByChild } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -177,6 +209,7 @@
             messagingSenderId: "282495574514",
             appId: "1:282495574514:web:e2781da630d93fc1ce8b6b"
         };
+
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
@@ -188,7 +221,7 @@
         
         const FOUNDERS = ['root', '-nl', 'futtbucker67'];
         
-        // Grab elements safely
+        // Grab elements
         const grid = document.getElementById('userGrid');
         const statusLabel = document.getElementById('who-am-i');
         const filterInput = document.getElementById('filterInput');
@@ -203,10 +236,10 @@
             } else {
                 console.log("No user found.");
                 if(statusLabel) {
-                    statusLabel.innerText = "NOT LOGGED IN";
+                    statusLabel.innerText = "ERROR: NOT AUTHENTICATED";
                     statusLabel.classList.add('error');
                 }
-                // Uncomment to force redirect:
+                // Optional: Redirect to login
                 // window.location.href = 'index.html';
             }
         });
@@ -218,17 +251,23 @@
             listenerActive = true;
             console.log("Call listener activated for:", myIdentity);
 
-            const callsRef = ref(db, 'calls');
+            // OPTIMIZATION: Only listen to the last 10 calls to avoid downloading full history
+            const callsRef = query(ref(db, 'calls'), limitToLast(10));
+
             onChildAdded(callsRef, (snapshot) => {
                 const call = snapshot.val();
                 const callId = snapshot.key;
 
+                // Check if call is for me, is dialing, and is recent (within 30 seconds)
                 if (call.recipient === myIdentity && call.status === 'dialing') {
-                    if (Date.now() - call.timestamp < 30000) {
+                    const timeDiff = Date.now() - call.timestamp;
+                    if (timeDiff < 30000) {
                         document.getElementById('incomingCaller').innerText = `FROM: ${call.callerName || 'UNKNOWN'}`;
                         modal.style.display = 'flex';
 
-                        document.getElementById('acceptBtn').onclick = () => {
+                        // Handle Acceptance
+                        const acceptBtn = document.getElementById('acceptBtn');
+                        acceptBtn.onclick = () => {
                             update(ref(db, `calls/${callId}`), { status: 'active' });
                             window.location.href = `call.html?room=${callId}&recipient=${myIdentity}`;
                         };
@@ -237,31 +276,35 @@
             });
         }
 
-        // --- 3. MAKE CALL ---
-        window.initiateCall = (targetUser) => {
+        // --- 3. MAKE CALL LOGIC ---
+        // We do not attach this to window anymore. We use event delegation in renderList/Grid.
+        async function initiateCall(targetUser) {
             console.log(`Attempting to call: ${targetUser} from ${myIdentity}`);
 
             if (!myIdentity) {
-                alert("Loading identity... please wait.");
+                alert("System identifying... please wait.");
                 return;
             }
             if (targetUser === myIdentity) {
-                alert("You cannot call yourself.");
-                return;
+                return; // Should be blocked by UI, but double check
             }
 
             const callRef = push(ref(db, 'calls'));
             const callId = callRef.key;
 
-            set(callRef, {
-                caller: myUid,
-                callerName: myIdentity,
-                recipient: targetUser,
-                status: 'dialing',
-                timestamp: Date.now()
-            }).then(() => {
+            try {
+                await set(callRef, {
+                    caller: myUid,
+                    callerName: myIdentity,
+                    recipient: targetUser,
+                    status: 'dialing',
+                    timestamp: Date.now()
+                });
                 window.location.href = `call.html?room=${callId}&recipient=${targetUser}`;
-            });
+            } catch (error) {
+                console.error("Call failed:", error);
+                alert("Signal failed. Check console.");
+            }
         };
 
         // --- 4. FETCH USERS ---
@@ -280,7 +323,10 @@
                     const me = allUsers.find(u => u.uid === myUid);
                     if (me) {
                         myIdentity = me.username;
-                        if(statusLabel) statusLabel.innerText = `LOGGED IN AS: ${myIdentity}`;
+                        if(statusLabel) {
+                            statusLabel.innerText = `ID: ${myIdentity}`;
+                            statusLabel.classList.remove('error');
+                        }
                         listenForCalls();
                     } else {
                         if(statusLabel) {
@@ -291,17 +337,25 @@
                     
                     renderList(allUsers);
                 } else {
-                    grid.innerHTML = '<div style="font-size: 1.5rem; color: #facc15;">DATABASE IS EMPTY</div>';
+                    grid.innerHTML = '<div style="font-size: 1.5rem; color: #facc15;">DATABASE EMPTY</div>';
                 }
             } catch (e) {
                 console.error(e);
                 grid.innerHTML = `
-                    <div style="color: #ef4444; font-size: 1.5rem; text-align: center;">
-                        PERMISSION DENIED<br>
+                    <div style="color: #ef4444; font-size: 1.5rem; text-align: center; grid-column: 1/-1;">
+                        ACCESS DENIED<br>
                         <span style="font-size: 1rem; color: #fff;">Check Firebase Rules</span>
                     </div>
                 `;
             }
+        }
+
+        // Security: Prevent XSS
+        function sanitize(str) {
+            if(!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
         }
 
         function renderList(users) {
@@ -321,30 +375,48 @@
 
                 if (FOUNDERS.includes(user.username)) {
                     roleHTML = '<div class="card-role role-founder">founder</div>';
-                    borderClass = 'is-founder';
+                    borderClass += ' is-founder';
+                }
+                if (user.username === myIdentity) {
+                    borderClass += ' is-me';
                 }
 
                 card.className = `user-card ${borderClass}`;
                 
-                const pfpSrc = user.pfp ? user.pfp : 'https://placehold.co/100x100/111/444?text=?';
-                const bioText = user.bio || 'No bio established.';
+                const pfpSrc = user.pfp ? sanitize(user.pfp) : 'https://placehold.co/100x100/111/444?text=?';
+                const bioText = user.bio ? sanitize(user.bio) : 'No bio established.';
+                const safeName = sanitize(user.username);
                 const isMe = user.username === myIdentity;
-                const btnState = isMe ? 'disabled' : `onclick="initiateCall('${user.username}')"`;
+                
+                // Button Logic
+                const btnClass = isMe ? 'action-btn btn-call disabled' : 'action-btn btn-call call-trigger';
+                const btnText = isMe ? 'YOU' : 'INITIATE CALL';
+                const dataAttr = isMe ? '' : `data-user="${safeName}"`;
 
                 card.innerHTML = `
-                    <img src="${pfpSrc}" class="card-pfp" onerror="this.src='https://placehold.co/100x100/111/444?text=ERROR'">
+                    <img src="${pfpSrc}" class="card-pfp" onerror="this.src='https://placehold.co/100x100/111/444?text=ERR'">
                     ${roleHTML}
-                    <div class="card-name">${user.username}</div>
+                    <div class="card-name">${safeName}</div>
                     <div class="card-bio">${bioText}</div>
                     <div class="btn-group">
-                        <button class="action-btn btn-call" ${btnState}>
-                            ${isMe ? 'YOU' : 'CALL'}
+                        <button class="${btnClass}" ${dataAttr}>
+                            ${btnText}
                         </button>
                     </div>
                 `;
                 grid.appendChild(card);
             });
         }
+        
+        // Event Delegation for Buttons (Better than inline onclick)
+        grid.addEventListener('click', (e) => {
+            if (e.target.classList.contains('call-trigger')) {
+                const targetUser = e.target.getAttribute('data-user');
+                if (targetUser) {
+                    initiateCall(targetUser);
+                }
+            }
+        });
         
         // Filter Logic
         if(filterInput) {
@@ -355,8 +427,12 @@
             });
         }
         
-        // Background
-        const bgs = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg'];
+        // Backgrounds (Swapped local paths for Unsplash placeholders)
+        const bgs = [
+            'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop', // Cyberpunk
+            'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop', // Chips
+            'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2070&auto=format&fit=crop'  // Matrix code
+        ];
         document.body.style.backgroundImage = `url('${bgs[Math.floor(Math.random()*bgs.length)]}')`;
 
     </script>
