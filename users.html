@@ -86,6 +86,8 @@
             display: flex;
             gap: 10px;
             margin-top: 10px;
+            width: 100%;
+            justify-content: center;
         }
         
         .action-btn {
@@ -97,11 +99,8 @@
             text-transform: uppercase;
         }
 
-        .btn-call { background: #22c55e; color: #000; }
+        .btn-call { background: #22c55e; color: #000; width: 100%; }
         .btn-call:hover { background: #4ade80; }
-
-        .btn-login { background: #333; color: #fff; border: 1px solid #666; }
-        .btn-login:hover { background: #facc15; color: #000; }
 
         .nav-back { display: block; width: 100%; max-width: 900px; margin: 20px auto; color: #666; text-decoration: none; font-size: 1.2rem; }
         .nav-back:hover { color: #facc15; }
@@ -145,7 +144,7 @@
     <div class="header-container">
         <div>
             <h1>users</h1>
-            <div id="who-am-i" class="status-bar">YOU ARE: GUEST</div>
+            <div id="who-am-i" class="status-bar">CONNECTING...</div>
         </div>
         <input type="text" id="filterInput" class="filter-input" placeholder="Filter users...">
     </div>
@@ -165,7 +164,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getDatabase, ref, get, push, set, onChildAdded, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
@@ -180,43 +179,44 @@
         const db = getDatabase(app);
         const auth = getAuth(app);
 
-        // Ensure we have a connection to Firebase
-        signInAnonymously(auth).catch(console.error);
-
         // --- GLOBAL STATE ---
         let myIdentity = null;
+        let myUid = null;
         let allUsers = [];
         
         const FOUNDERS = ['root', '-nl', 'futtbucker67'];
-        const ADMINS = ['root', 'fb67', '-nl'];
         const grid = document.getElementById('userGrid');
         const statusLabel = document.getElementById('who-am-i');
         const modal = document.getElementById('incomingModal');
-        
-        // --- 1. SET IDENTITY ---
-        window.loginAs = (username) => {
-            myIdentity = username;
-            statusLabel.innerText = `YOU ARE: ${username}`;
-            console.log("Identity set to:", myIdentity);
-            
-            // Re-render grid to update button states if you want, 
-            // but primarily we just start listening now.
-            listenForCalls();
-        };
+
+        // --- 1. AUTH CHECK ---
+        // This replaces the 'Guest' login. 
+        // Logic: Check if user is logged in. If not, kick them out.
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is authenticated
+                console.log("Authenticated as UID:", user.uid);
+                myUid = user.uid;
+                
+                // Now fetch users to find match
+                fetchUsers();
+            } else {
+                // User is NOT authenticated. Redirect to login/home.
+                console.log("No user found. Redirecting...");
+                window.location.href = "index.html";
+            }
+        });
 
         // --- 2. LISTEN FOR CALLS ---
         let listenerActive = false;
         function listenForCalls() {
-            if(listenerActive) return; // Don't attach twice
+            if(listenerActive) return; 
             listenerActive = true;
 
             const callsRef = ref(db, 'calls');
             onChildAdded(callsRef, (snapshot) => {
                 const call = snapshot.val();
                 const callId = snapshot.key;
-
-                // Debug log to see what's happening
-                console.log("New call detected:", call);
 
                 // Check if call is for ME, is DIALING, and is NEW ( < 30 secs old)
                 if (call.recipient === myIdentity && call.status === 'dialing') {
@@ -227,9 +227,7 @@
                         modal.style.display = 'flex';
 
                         document.getElementById('acceptBtn').onclick = () => {
-                            // Update DB to say "Active"
                             update(ref(db, `calls/${callId}`), { status: 'active' });
-                            // Go to room
                             window.location.href = `call.html?room=${callId}&recipient=${myIdentity}`;
                         };
                     }
@@ -240,7 +238,7 @@
         // --- 3. MAKE CALL ---
         window.initiateCall = (targetUser) => {
             if (!myIdentity) {
-                alert("Please click 'LOGIN AS' on your own card first!");
+                alert("Loading identity... please wait.");
                 return;
             }
             if (targetUser === myIdentity) {
@@ -252,7 +250,7 @@
             const callId = callRef.key;
 
             set(callRef, {
-                caller: auth.currentUser ? auth.currentUser.uid : 'anon',
+                caller: myUid,
                 callerName: myIdentity,
                 recipient: targetUser,
                 status: 'dialing',
@@ -268,9 +266,26 @@
             try {
                 const snapshot = await get(usersRef);
                 grid.innerHTML = '';
+                
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     allUsers = Object.keys(data).map(key => ({ username: key, ...data[key] }));
+
+                    // Determine My Identity
+                    // We look for a user in the DB whose 'uid' field matches auth.currentUser.uid
+                    // If your DB doesn't have UIDs inside the user object yet, this part might need adjustment.
+                    const me = allUsers.find(u => u.uid === myUid);
+                    
+                    if (me) {
+                        myIdentity = me.username;
+                        statusLabel.innerText = `LOGGED IN AS: ${myIdentity}`;
+                        listenForCalls();
+                    } else {
+                        // Fallback if user is in Auth but not in DB structure yet
+                        myIdentity = auth.currentUser.email || "Unknown"; 
+                        statusLabel.innerText = `LOGGED IN AS: ${myIdentity}`;
+                    }
+
                     renderList(allUsers);
                 } else {
                     grid.innerHTML = 'NO USERS FOUND';
@@ -291,6 +306,8 @@
             });
 
             users.forEach(user => {
+                // Don't show myself in the list? (Optional, currently showing everyone)
+                
                 const card = document.createElement('div');
                 let roleHTML = '';
                 let borderClass = '';
@@ -305,6 +322,11 @@
                 const pfpSrc = user.pfp || 'https://placehold.co/100x100/111/444?text=?';
                 const bioText = user.bio || 'No bio established.';
 
+                // Removed Login As Button
+                // Added check: Disable call button if it's me
+                const isMe = user.username === myIdentity;
+                const btnState = isMe ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="initiateCall('${user.username}')"`;
+
                 card.innerHTML = `
                     <img src="${pfpSrc}" class="card-pfp">
                     ${roleHTML}
@@ -312,15 +334,19 @@
                     <div class="card-bio">${bioText}</div>
                     
                     <div class="btn-group">
-                        <button class="action-btn btn-login" onclick="loginAs('${user.username}')">LOGIN AS</button>
-                        <button class="action-btn btn-call" onclick="initiateCall('${user.username}')">CALL</button>
+                        <button class="action-btn btn-call" ${btnState}>CALL</button>
                     </div>
                 `;
                 grid.appendChild(card);
             });
         }
-
-        fetchUsers();
+        
+        // Filter Logic
+        document.getElementById('filterInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allUsers.filter(u => u.username.toLowerCase().includes(term));
+            renderList(filtered);
+        });
         
         // Background
         const bgs = ['IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg'];
