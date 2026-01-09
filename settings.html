@@ -18,6 +18,16 @@
             background-image: url('IMG_4928.jpeg');
             background-size: cover;
             overflow: hidden;
+            margin: 0;
+        }
+
+        /* Overlay to darken background image */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: -1;
         }
 
         .settings-panel {
@@ -29,14 +39,129 @@
             box-shadow: 0 0 40px rgba(0,0,0,0.9);
             position: relative;
             overflow: hidden; /* Keeps the overlay inside */
+            border-radius: 4px;
         }
 
+        .title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        h2 { font-size: 2rem; margin: 0; color: #facc15; text-shadow: 0 0 5px #facc15; }
+
+        .admin-toggle {
+            cursor: pointer; font-size: 1.5rem; color: #333; user-select: none;
+            transition: color 0.3s;
+        }
+        .admin-toggle:hover { color: #facc15; }
+
+        .preview-container { text-align: center; margin-bottom: 20px; }
+        .pfp-preview {
+            width: 100px; height: 100px; border-radius: 50%;
+            border: 2px solid #444; object-fit: cover;
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.2);
+        }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; color: #888; margin-bottom: 5px; font-size: 1.1rem; }
+        
+        input[type="text"], textarea {
+            width: 100%; background: #000; border: 1px solid #333;
+            color: #fff; padding: 8px; font-family: 'VT323', monospace;
+            font-size: 1.2rem; outline: none;
+        }
+        input[type="text"]:focus, textarea:focus { border-color: #facc15; }
+
+        input[type="file"] { display: none; }
+        .file-upload-btn {
+            display: block; width: 100%; text-align: center;
+            border: 1px dashed #444; padding: 10px; cursor: pointer;
+            color: #666; transition: 0.2s;
+        }
+        .file-upload-btn:hover { border-color: #888; color: #aaa; }
+
+        .btn-row { display: flex; justify-content: space-between; margin-top: 20px; gap: 10px; }
+        button {
+            flex: 1; padding: 10px; font-family: 'VT323', monospace;
+            font-size: 1.3rem; border: none; cursor: pointer;
+            text-transform: uppercase;
+        }
+        .btn-cancel { background: #222; color: #888; }
+        .btn-cancel:hover { background: #333; color: #fff; }
+        
+        .btn-save { background: #facc15; color: #000; font-weight: bold; }
+        .btn-save:hover { background: #eab308; box-shadow: 0 0 10px #eab308; }
+
+        .status-msg { text-align: center; margin-top: 15px; font-size: 1.2rem; height: 1.5rem; }
+        .status-msg.success { color: #4ade80; }
+        .status-msg.error { color: #f87171; }
+
+        /* --- ADMIN PANEL --- */
+        .admin-panel {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0a0a0a; z-index: 50; padding: 30px;
+            transform: translateY(100%); transition: transform 0.3s ease-in-out;
+            display: flex; flex-direction: column;
+        }
+        .admin-panel.open { transform: translateY(0); }
+        
+        .admin-title { color: #f87171; text-shadow: 0 0 5px red; margin-bottom: 10px; }
+        
+        .user-list {
+            flex-grow: 1; overflow-y: auto; border: 1px solid #333;
+            margin-bottom: 15px; padding: 5px;
+        }
+        .user-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px; border-bottom: 1px solid #222;
+        }
+        .ban-btn {
+            background: #440000; color: #f87171; border: 1px solid #660000;
+            padding: 2px 8px; font-size: 1rem; flex: 0;
+        }
+        .ban-btn:hover { background: red; color: white; }
+        .banned-badge { color: #666; font-style: italic; font-size: 0.9rem; }
+
+        /* --- BAN SCREEN OVERLAY --- */
+        #ban-screen {
+            display: none; /* Toggled by JS */
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: black; z-index: 9999;
+            flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; color: red;
+        }
+        .ban-glitch { font-size: 4rem; text-shadow: 2px 2px 0px white; animation: shake 0.5s infinite; }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ban-screen">
+        <h1 class="ban-glitch">CRITICAL ERROR</h1>
+        <p>ACCESS PERMANENTLY REVOKED</p>
+    </div>
 
     <div class="settings-panel">
         
         <div class="title-row">
             <h2>settings</h2>
-            <div id="btn-admin-open" class="admin-toggle">+</div>
+            <div id="btn-admin-open" class="admin-toggle" title="Admin Control">+</div>
         </div>
 
         <div class="preview-container">
@@ -45,12 +170,12 @@
 
         <div class="form-group">
             <label>username</label>
-            <input type="text" id="inp-username">
+            <input type="text" id="inp-username" maxlength="15">
         </div>
 
         <div class="form-group">
             <label>bio</label>
-            <textarea id="inp-bio" rows="2"></textarea>
+            <textarea id="inp-bio" rows="2" maxlength="100"></textarea>
         </div>
 
         <div class="form-group">
@@ -103,11 +228,10 @@
         if(!currentName) window.location.href = 'login.html';
 
         // --- 1. BAN ENFORCER ---
-        // This listens to your OWN account. If an admin bans you, this triggers immediately.
         onValue(ref(db, 'users/' + currentName + '/banned'), (snapshot) => {
             if (snapshot.exists() && snapshot.val() === true) {
                 document.getElementById('ban-screen').style.display = 'flex';
-                // Optional: Force delete local storage so they can't easily re-log
+                // Optional: clear session
                 // localStorage.clear(); 
             }
         });
@@ -174,7 +298,6 @@
                     const nameSpan = document.createElement('span');
                     nameSpan.innerText = user.username;
                     
-                    // Check if already banned
                     if(user.banned) {
                         const badge = document.createElement('div');
                         badge.className = 'banned-badge';
@@ -185,7 +308,7 @@
                         const banBtn = document.createElement('button');
                         banBtn.className = 'ban-btn';
                         banBtn.innerText = "BAN";
-                        banBtn.onclick = () => banUser(user.username);
+                        banBtn.onclick = () => window.banUser(user.username);
                         
                         div.appendChild(nameSpan);
                         div.appendChild(banBtn);
@@ -196,25 +319,22 @@
             }
         }
 
-        // Ban Function
+        // Ban Function (Attached to window for inline onclick access if needed)
         window.banUser = async (targetName) => {
             if(!confirm(`Are you sure you want to DESTROY ${targetName}?`)) return;
             
             try {
-                // Set banned = true in Firebase
                 await update(ref(db, 'users/' + targetName), {
                     banned: true
                 });
-                
-                // Refresh list to show the ban
-                loadAllUsers();
+                loadAllUsers(); // Refresh list
             } catch(e) {
                 alert("Error banning user.");
             }
         };
 
 
-        // --- SAVE SETTINGS LOGIC (Existing) ---
+        // --- SAVE SETTINGS LOGIC ---
         window.saveSettings = async () => {
             const newName = document.getElementById('inp-username').value.trim();
             const newBio = document.getElementById('inp-bio').value;
@@ -226,6 +346,7 @@
             status.className = "status-msg";
 
             try {
+                // If name hasn't changed, just update bio/pfp
                 if(newName === currentName) {
                     await update(ref(db, 'users/' + currentName), {
                         bio: newBio,
