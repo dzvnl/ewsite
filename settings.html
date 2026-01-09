@@ -17,6 +17,7 @@
             justify-content: center;
             background-image: url('IMG_4928.jpeg');
             background-size: cover;
+            overflow: hidden;
         }
 
         .settings-panel {
@@ -26,9 +27,29 @@
             max-width: 500px;
             padding: 30px;
             box-shadow: 0 0 40px rgba(0,0,0,0.9);
+            position: relative;
+            overflow: hidden; /* Keeps the overlay inside */
         }
 
-        h2 { color: #facc15; font-size: 2rem; border-bottom: 1px solid #333; margin-bottom: 20px; }
+        /* Title Area with the + button */
+        .title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            margin-bottom: 20px;
+        }
+
+        h2 { color: #facc15; font-size: 2rem; margin: 0; padding-bottom: 5px; }
+
+        .admin-toggle {
+            color: #333;
+            cursor: pointer;
+            font-size: 1.5rem;
+            padding: 0 10px;
+            transition: color 0.3s;
+        }
+        .admin-toggle:hover { color: #facc15; }
         
         .form-group { margin-bottom: 15px; }
         label { color: #888; display: block; margin-bottom: 5px; }
@@ -45,63 +66,95 @@
         }
         input:focus, textarea:focus { border-color: #facc15; }
 
-        /* Custom File Input Styling */
-        input[type="file"] {
-            display: none; /* Hide the ugly default button */
-        }
+        input[type="file"] { display: none; }
         .file-upload-btn {
-            display: block;
-            width: 100%;
-            background: #222;
-            border: 1px dashed #666;
-            color: #ccc;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            font-size: 1.2rem;
+            display: block; width: 100%; background: #222; border: 1px dashed #666;
+            color: #ccc; padding: 15px; text-align: center; cursor: pointer; font-size: 1.2rem;
         }
         .file-upload-btn:hover { border-color: #facc15; color: #facc15; }
 
-        .preview-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
+        .preview-container { display: flex; justify-content: center; margin-bottom: 20px; }
         .pfp-preview {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            border: 2px solid #facc15;
-            object-fit: cover;
-            background: #000;
+            width: 100px; height: 100px; border-radius: 50%;
+            border: 2px solid #facc15; object-fit: cover; background: #000;
         }
 
         .btn-row { display: flex; gap: 10px; margin-top: 20px; }
-        
         button {
-            flex: 1;
-            padding: 10px;
-            font-family: 'VT323', monospace;
-            font-size: 1.3rem;
-            cursor: pointer;
-            border: none;
+            flex: 1; padding: 10px; font-family: 'VT323', monospace;
+            font-size: 1.3rem; cursor: pointer; border: none;
         }
-        
         .btn-save { background: #facc15; color: #000; }
         .btn-save:hover { background: #fff; }
-        
         .btn-cancel { background: #333; color: #ccc; }
         .btn-cancel:hover { background: #444; color: #fff; }
 
         .status-msg { margin-top: 10px; text-align: center; height: 20px; }
         .error { color: #ef4444; }
         .success { color: #4ade80; }
+
+        /* --- ADMIN PANEL STYLES --- */
+        .admin-panel {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(20, 0, 0, 0.98); /* Slightly red tint */
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+            transition: transform 0.3s ease-in-out;
+            transform: translateY(-100%); /* Hidden by default */
+        }
+        .admin-panel.open { transform: translateY(0); }
+
+        .admin-title { color: #ef4444; font-size: 2rem; border-bottom: 1px solid #552222; margin-bottom: 20px; }
+        
+        .user-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            border: 1px solid #331111;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #111;
+            border-bottom: 1px solid #333;
+            padding: 8px;
+            margin-bottom: 5px;
+        }
+        .user-item span { color: #ccc; }
+        .ban-btn {
+            background: #ef4444; color: white; border: none;
+            padding: 2px 10px; font-size: 1rem; cursor: pointer;
+            width: auto; flex: none;
+        }
+        .ban-btn:hover { background: #ff0000; }
+        .banned-badge { color: #ef4444; font-weight: bold; border: 1px solid #ef4444; padding: 2px 5px; }
+
+        /* --- BANNED SCREEN OVERLAY --- */
+        #ban-screen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #500; color: #fff; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 3rem; z-index: 9999; display: none;
+            text-shadow: 2px 2px #000;
+        }
     </style>
 </head>
 <body>
 
+    <div id="ban-screen">CONNECTION TERMINATED // BANNED</div>
+
     <div class="settings-panel">
-        <h2>settings</h2>
+        
+        <div class="title-row">
+            <h2>settings</h2>
+            <div id="btn-admin-open" class="admin-toggle">+</div>
+        </div>
 
         <div class="preview-container">
             <img id="img-preview" src="https://via.placeholder.com/100" class="pfp-preview">
@@ -131,11 +184,25 @@
         </div>
 
         <div id="status" class="status-msg"></div>
+
+        <div id="admin-panel" class="admin-panel">
+            <h2 class="admin-title">ADMIN CONTROL</h2>
+            <p style="color:#666; margin-bottom:10px;">Select user to ban:</p>
+            
+            <div id="user-list-container" class="user-list">
+                <div style="text-align:center; color:#555">loading...</div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-cancel" id="btn-admin-close">close</button>
+            </div>
+        </div>
+
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref, get, set, update, remove, push, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
@@ -149,22 +216,29 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Current user
         const currentName = localStorage.getItem('username');
         if(!currentName) window.location.href = 'login.html';
 
-        // Variable to hold the final image string
+        // --- 1. BAN ENFORCER ---
+        // This listens to your OWN account. If an admin bans you, this triggers immediately.
+        onValue(ref(db, 'users/' + currentName + '/banned'), (snapshot) => {
+            if (snapshot.exists() && snapshot.val() === true) {
+                document.getElementById('ban-screen').style.display = 'flex';
+                // Optional: Force delete local storage so they can't easily re-log
+                // localStorage.clear(); 
+            }
+        });
+
+        // Variable for image
         let finalPfpString = "";
 
-        // Load Data
+        // Load Settings Data
         const loadData = async () => {
             const snapshot = await get(ref(db, 'users/' + currentName));
             if(snapshot.exists()) {
                 const data = snapshot.val();
                 document.getElementById('inp-username').value = data.username;
                 document.getElementById('inp-bio').value = data.bio || '';
-                
-                // If they have a pic, show it and save it to our variable
                 if (data.pfp) {
                     finalPfpString = data.pfp;
                     document.getElementById('img-preview').src = data.pfp;
@@ -173,28 +247,94 @@
         };
         loadData();
 
-        // --- NEW: Handle File Selection ---
+        // Handle Image Upload
         document.getElementById('inp-file').addEventListener('change', function() {
             if (this.files && this.files[0]) {
                 const file = this.files[0];
                 const reader = new FileReader();
-                
                 reader.onload = function(e) {
-                    // This result is the long text string (Base64)
                     finalPfpString = e.target.result;
-                    // Update the circle immediately
                     document.getElementById('img-preview').src = finalPfpString;
                 };
-                
-                // Start reading the file
                 reader.readAsDataURL(file);
             }
         });
 
+        // --- ADMIN PANEL LOGIC ---
+        
+        // Open
+        document.getElementById('btn-admin-open').onclick = async () => {
+            document.getElementById('admin-panel').classList.add('open');
+            loadAllUsers();
+        };
+
+        // Close
+        document.getElementById('btn-admin-close').onclick = () => {
+            document.getElementById('admin-panel').classList.remove('open');
+        };
+
+        // Load List of Users
+        async function loadAllUsers() {
+            const listDiv = document.getElementById('user-list-container');
+            listDiv.innerHTML = '<div style="text-align:center; color:#555">fetching souls...</div>';
+
+            const snapshot = await get(ref(db, 'users'));
+            listDiv.innerHTML = ''; // Clear loading msg
+
+            if(snapshot.exists()) {
+                const users = snapshot.val();
+                
+                Object.values(users).forEach(user => {
+                    const div = document.createElement('div');
+                    div.className = 'user-item';
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.innerText = user.username;
+                    
+                    // Check if already banned
+                    if(user.banned) {
+                        const badge = document.createElement('div');
+                        badge.className = 'banned-badge';
+                        badge.innerText = "BANNED";
+                        div.appendChild(nameSpan);
+                        div.appendChild(badge);
+                    } else {
+                        const banBtn = document.createElement('button');
+                        banBtn.className = 'ban-btn';
+                        banBtn.innerText = "BAN";
+                        banBtn.onclick = () => banUser(user.username);
+                        
+                        div.appendChild(nameSpan);
+                        div.appendChild(banBtn);
+                    }
+                    
+                    listDiv.appendChild(div);
+                });
+            }
+        }
+
+        // Ban Function
+        window.banUser = async (targetName) => {
+            if(!confirm(`Are you sure you want to DESTROY ${targetName}?`)) return;
+            
+            try {
+                // Set banned = true in Firebase
+                await update(ref(db, 'users/' + targetName), {
+                    banned: true
+                });
+                
+                // Refresh list to show the ban
+                loadAllUsers();
+            } catch(e) {
+                alert("Error banning user.");
+            }
+        };
+
+
+        // --- SAVE SETTINGS LOGIC (Existing) ---
         window.saveSettings = async () => {
             const newName = document.getElementById('inp-username').value.trim();
             const newBio = document.getElementById('inp-bio').value;
-            // We use finalPfpString instead of reading an input box
             const newPfp = finalPfpString; 
             const status = document.getElementById('status');
 
@@ -203,19 +343,18 @@
             status.className = "status-msg";
 
             try {
-                // CASE 1: Name is the same (Simple Update)
                 if(newName === currentName) {
-                    await set(ref(db, 'users/' + currentName + '/bio'), newBio);
-                    await set(ref(db, 'users/' + currentName + '/pfp'), newPfp);
+                    await update(ref(db, 'users/' + currentName), {
+                        bio: newBio,
+                        pfp: newPfp
+                    });
                     status.innerText = "SAVED.";
                     status.className = "status-msg success";
                     setTimeout(() => window.location.href = 'index.html', 1000);
                     return;
                 }
 
-                // CASE 2: Name Change (Complex Migration)
-                
-                // A. Check if new name exists
+                // Name Change Logic
                 const newNameRef = ref(db, 'users/' + newName);
                 const checkSnap = await get(newNameRef);
                 
@@ -225,38 +364,31 @@
                     return;
                 }
 
-                // B. Get Old Data
                 const oldUserRef = ref(db, 'users/' + currentName);
                 const oldSnap = await get(oldUserRef);
                 const oldData = oldSnap.val();
 
-                // C. LOGGING
                 await push(ref(db, 'logs'), {
                     type: "NAME_CHANGE",
                     oldName: currentName,
                     newName: newName,
-                    // removed password logging for safety
                     timestamp: Date.now()
                 });
 
-                // D. Create New User Node
                 await set(newNameRef, {
                     username: newName,
                     password: oldData.password,
                     bio: newBio,
                     pfp: newPfp,
                     joined: oldData.joined || Date.now(),
-                    color: oldData.color || '#facc15'
+                    color: oldData.color || '#facc15',
+                    banned: oldData.banned || false 
                 });
 
-                // E. Delete Old Node
                 await remove(oldUserRef);
-
-                // F. Update Local Storage & Redirect
                 localStorage.setItem('username', newName);
                 status.innerText = "changed. refreshing.";
                 status.className = "status-msg success";
-                
                 setTimeout(() => window.location.href = 'index.html', 1500);
 
             } catch(e) {
