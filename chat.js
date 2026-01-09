@@ -3,7 +3,8 @@
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, set, onDisconnect } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+// Added 'goOffline' to the imports to terminate connections
+import { getDatabase, ref, push, onValue, remove, set, onDisconnect, goOffline } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 console.log("chat loaded.");
 
@@ -31,11 +32,8 @@ const isAdmin = ADMINS.includes(currentUser);
 // Default avatar if none is set
 const DEFAULT_AVATAR = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
 
-// --- NEW FIX: VARIABLE TO HOLD YOUR PFP ---
 let myCurrentAvatar = null; 
 
-// --- NEW FIX: FETCH YOUR PFP FROM DB ---
-// This ensures we have the correct URL from settings, not empty local storage
 const myUserRef = ref(db, 'users/' + currentUser);
 onValue(myUserRef, (snapshot) => {
     const data = snapshot.val();
@@ -53,15 +51,74 @@ const dom = {
 
 if(dom.userDisplay) dom.userDisplay.innerText = currentUser;
 
+// --- NEW FEATURE: BAN ENFORCEMENT ---
+// Watches the 'banned' node. If currentUser is found, kill connection.
+onValue(ref(db, 'banned'), (snapshot) => {
+    const bannedUsers = snapshot.val() || {};
+    
+    // Check if my username is in the banned list
+    if (bannedUsers[currentUser]) {
+        console.warn("User is banned. Terminating connection.");
+        
+        // 1. Kill the Firebase connection
+        goOffline(db);
+        
+        // 2. Wipe the UI
+        document.body.innerHTML = `
+            <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#111; color:red; font-family:sans-serif; flex-direction:column;">
+                <h1 style="font-size:3rem;">BANNED</h1>
+                <p>Your connection to this website has been terminated.</p>
+            </div>
+        `;
+        
+        // 3. Alert the user
+        alert("You have been banned.");
+    }
+});
+
 // --- 1. SEND LOGIC (TEXT) ---
 
 async function sendMessage() {
     const text = dom.input.value.trim();
     if (!text) return; 
 
+    // --- NEW FEATURE: ADMIN COMMANDS ---
+    // Intercept commands starting with /ban or /unban
+    if (text.startsWith('/')) {
+        const parts = text.split(' ');
+        const command = parts[0].toLowerCase();
+        const targetUser = parts.slice(1).join(' '); // Get the name after the command
+
+        if (isAdmin) {
+            if (command === '/ban' && targetUser) {
+                // Set the user as true in the 'banned' node
+                try {
+                    await set(ref(db, 'banned/' + targetUser), true);
+                    alert(`User '${targetUser}' has been banned.`);
+                } catch (err) {
+                    console.error(err);
+                    alert("Error banning user.");
+                }
+                dom.input.value = ''; // Clear input
+                return; // Stop here, don't send as chat message
+            }
+
+            if (command === '/unban' && targetUser) {
+                // Remove the user from the 'banned' node
+                try {
+                    await remove(ref(db, 'banned/' + targetUser));
+                    alert(`User '${targetUser}' has been unbanned.`);
+                } catch (err) {
+                    console.error(err);
+                    alert("Error unbanning user.");
+                }
+                dom.input.value = ''; // Clear input
+                return; // Stop here
+            }
+        }
+    }
+
     const userColor = localStorage.getItem('user_color') || '#facc15';
-    
-    // --- UPDATED: USE THE DB VARIABLE, NOT LOCAL STORAGE ---
     const userAvatar = myCurrentAvatar; 
     
     // Clear input immediately
@@ -75,7 +132,7 @@ async function sendMessage() {
             uuid: currentUuid,
             text: textToSend.substring(0, 300),
             color: userColor,
-            avatar: userAvatar, // SEND AVATAR
+            avatar: userAvatar,
             time: Date.now()
         });
     } catch (e) {
@@ -87,8 +144,6 @@ async function sendMessage() {
 // --- 1.5 SEND LOGIC (IMAGE MESSAGE) ---
 window.sendImage = async function(imageBase64) {
     const userColor = localStorage.getItem('user_color') || '#facc15';
-    
-    // --- UPDATED: USE THE DB VARIABLE ---
     const userAvatar = myCurrentAvatar;
 
     try {
@@ -98,7 +153,7 @@ window.sendImage = async function(imageBase64) {
             text: '', 
             image: imageBase64, 
             color: userColor,
-            avatar: userAvatar, // SEND AVATAR
+            avatar: userAvatar, 
             time: Date.now()
         });
     } catch (e) {
@@ -139,10 +194,8 @@ onValue(ref(db, 'messages'), (snapshot) => {
         const time = new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         const nameColor = msg.color || '#facc15';
         
-        // Determine Avatar URL (Use message avatar, or default if missing)
         const avatarUrl = msg.avatar || DEFAULT_AVATAR;
 
-        // Content: Image or Text?
         let contentHtml = '';
         if (msg.image) {
             contentHtml = `<img src="${msg.image}" style="max-width: 200px; border-radius: 4px; border: 1px solid #555; margin-top:5px;">`;
@@ -150,7 +203,6 @@ onValue(ref(db, 'messages'), (snapshot) => {
             contentHtml = `<span class="msg-text">${escapeHtml(msg.text)}</span>`;
         }
 
-        // New HTML Structure: Avatar on left, Content on right
         el.innerHTML = `
             <img src="${avatarUrl}" class="msg-avatar" alt="pic">
             
