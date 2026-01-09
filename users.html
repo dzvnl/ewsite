@@ -39,6 +39,7 @@
             margin-bottom: 10px;
             text-align: right;
         }
+        .status-bar.error { color: #ef4444; text-shadow: 0 0 5px #ef4444; }
 
         .filter-input {
             background: #111;
@@ -101,6 +102,7 @@
 
         .btn-call { background: #22c55e; color: #000; width: 100%; }
         .btn-call:hover { background: #4ade80; }
+        .btn-call:disabled { background: #333; color: #666; cursor: not-allowed; }
 
         .nav-back { display: block; width: 100%; max-width: 900px; margin: 20px auto; color: #666; text-decoration: none; font-size: 1.2rem; }
         .nav-back:hover { color: #facc15; }
@@ -190,19 +192,16 @@
         const modal = document.getElementById('incomingModal');
 
         // --- 1. AUTH CHECK ---
-        // This replaces the 'Guest' login. 
-        // Logic: Check if user is logged in. If not, kick them out.
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 // User is authenticated
                 console.log("Authenticated as UID:", user.uid);
                 myUid = user.uid;
-                
-                // Now fetch users to find match
                 fetchUsers();
             } else {
-                // User is NOT authenticated. Redirect to login/home.
+                // FIXED: Actually redirect the user if not logged in
                 console.log("No user found. Redirecting...");
+                window.location.href = 'index.html';
             }
         });
 
@@ -211,6 +210,7 @@
         function listenForCalls() {
             if(listenerActive) return; 
             listenerActive = true;
+            console.log("Call listener activated for:", myIdentity);
 
             const callsRef = ref(db, 'calls');
             onChildAdded(callsRef, (snapshot) => {
@@ -235,7 +235,10 @@
         }
 
         // --- 3. MAKE CALL ---
+        // Attached to window so the HTML onclick works
         window.initiateCall = (targetUser) => {
+            console.log(`Attempting to call: ${targetUser} from ${myIdentity}`);
+
             if (!myIdentity) {
                 alert("Loading identity... please wait.");
                 return;
@@ -268,11 +271,15 @@
                 
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    allUsers = Object.keys(data).map(key => ({ username: key, ...data[key] }));
+                    // Convert object to array
+                    allUsers = Object.keys(data).map(key => {
+                        return { username: key, ...data[key] };
+                    });
 
-                    // Determine My Identity
-                    // We look for a user in the DB whose 'uid' field matches auth.currentUser.uid
-                    // If your DB doesn't have UIDs inside the user object yet, this part might need adjustment.
+                    // DEBUG: Check what we are getting
+                    console.log("Users fetched:", allUsers);
+
+                    // Find myself
                     const me = allUsers.find(u => u.uid === myUid);
                     
                     if (me) {
@@ -280,24 +287,29 @@
                         statusLabel.innerText = `LOGGED IN AS: ${myIdentity}`;
                         listenForCalls();
                     } else {
-                        // Fallback if user is in Auth but not in DB structure yet
-                        myIdentity = auth.currentUser.email || "Unknown"; 
-                        statusLabel.innerText = `LOGGED IN AS: ${myIdentity}`;
+                        // FIXED: Handle case where UID is not in DB
+                        console.error("FATAL: Your Auth UID does not match any 'uid' field in the 'users' database.");
+                        statusLabel.innerText = "ERROR: UID NOT IN DB";
+                        statusLabel.classList.add('error');
+                        
+                        // Fallback attempt to use keys if logic fails, assumes myIdentity might be email prefix? 
+                        // For now we just alert so you know why it fails
+                        // myIdentity = "Guest";
                     }
 
                     renderList(allUsers);
                 } else {
-                    grid.innerHTML = 'NO USERS FOUND';
+                    grid.innerHTML = 'NO USERS FOUND IN DATABASE';
                 }
             } catch (e) {
-                console.error(e);
+                console.error("Database Error:", e);
+                grid.innerHTML = `<div style="color:red">DB ERROR: ${e.message}</div>`;
             }
         }
 
         function renderList(users) {
             grid.innerHTML = '';
             
-            // Sorting Logic
             users.sort((a, b) => {
                 const aFounder = FOUNDERS.includes(a.username);
                 const bFounder = FOUNDERS.includes(b.username);
@@ -305,8 +317,6 @@
             });
 
             users.forEach(user => {
-                // Don't show myself in the list? (Optional, currently showing everyone)
-                
                 const card = document.createElement('div');
                 let roleHTML = '';
                 let borderClass = '';
@@ -318,22 +328,24 @@
 
                 card.className = `user-card ${borderClass}`;
                 
-                const pfpSrc = user.pfp || 'https://placehold.co/100x100/111/444?text=?';
+                // Safety check for image
+                const pfpSrc = user.pfp ? user.pfp : 'https://placehold.co/100x100/111/444?text=?';
                 const bioText = user.bio || 'No bio established.';
 
-                // Removed Login As Button
-                // Added check: Disable call button if it's me
                 const isMe = user.username === myIdentity;
-                const btnState = isMe ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="initiateCall('${user.username}')"`;
+                // Cleaner disabled state logic
+                const btnState = isMe ? 'disabled' : `onclick="initiateCall('${user.username}')"`;
 
                 card.innerHTML = `
-                    <img src="${pfpSrc}" class="card-pfp">
+                    <img src="${pfpSrc}" class="card-pfp" onerror="this.src='https://placehold.co/100x100/111/444?text=ERROR'">
                     ${roleHTML}
                     <div class="card-name">${user.username}</div>
                     <div class="card-bio">${bioText}</div>
                     
                     <div class="btn-group">
-                        <button class="action-btn btn-call" ${btnState}>CALL</button>
+                        <button class="action-btn btn-call" ${btnState}>
+                            ${isMe ? 'YOU' : 'CALL'}
+                        </button>
                     </div>
                 `;
                 grid.appendChild(card);
