@@ -191,20 +191,6 @@
         const statusLabel = document.getElementById('who-am-i');
         const modal = document.getElementById('incomingModal');
 
-        // --- 1. AUTH CHECK ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // User is authenticated
-                console.log("Authenticated as UID:", user.uid);
-                myUid = user.uid;
-                fetchUsers();
-            } else {
-                // FIXED: Actually redirect the user if not logged in
-                console.log("No user found. Redirecting...");
-                window.location.href = 'index.html';
-            }
-        });
-
         // --- 2. LISTEN FOR CALLS ---
         let listenerActive = false;
         function listenForCalls() {
