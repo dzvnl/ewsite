@@ -1,5 +1,6 @@
 /*
  * Target: chat.js
+ * Updated with Ban System & Debugging
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -24,16 +25,21 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // --- STATE ---
-const ADMINS = ['root', 'futtbucker67', 'w234'];
+// MAKE SURE YOUR USERNAME IS EXACTLY ONE OF THESE
+const ADMINS = ['root', 'futtbucker67', 'w234']; 
+
 const currentUser = localStorage.getItem('username') || 'no name';
 const currentUuid = localStorage.getItem('account_uuid'); 
 const isAdmin = ADMINS.includes(currentUser);
 
-// Default avatar if none is set
-const DEFAULT_AVATAR = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
+console.log("Current User:", currentUser);
+console.log("Is Admin?", isAdmin);
 
+// Default avatar
+const DEFAULT_AVATAR = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
 let myCurrentAvatar = null; 
 
+// Fetch PFP
 const myUserRef = ref(db, 'users/' + currentUser);
 onValue(myUserRef, (snapshot) => {
     const data = snapshot.val();
@@ -51,78 +57,98 @@ const dom = {
 
 if(dom.userDisplay) dom.userDisplay.innerText = currentUser;
 
-// --- NEW FEATURE: BAN ENFORCEMENT ---
-// Watches the 'banned' node. If currentUser is found, kill connection.
+// --- BAN ENFORCEMENT ---
 onValue(ref(db, 'banned'), (snapshot) => {
     const bannedUsers = snapshot.val() || {};
     
-    // Check if my username is in the banned list
-    if (bannedUsers[currentUser]) {
-        console.warn("User is banned. Terminating connection.");
+    // Check if MY username is in the list
+    if (bannedUsers[currentUser] === true) {
+        console.warn("YOU HAVE BEEN BANNED.");
         
-        // 1. Kill the Firebase connection
+        // 1. Kill Firebase
         goOffline(db);
         
-        // 2. Wipe the UI
+        // 2. Destroy UI
         document.body.innerHTML = `
-            <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#111; color:red; font-family:sans-serif; flex-direction:column;">
-                <h1 style="font-size:3rem;">BANNED</h1>
-                <p>Your connection to this website has been terminated.</p>
+            <div style="
+                display:flex; justify-content:center; align-items:center; 
+                height:100vh; background:black; color:red; 
+                font-family:monospace; flex-direction:column; text-align:center;">
+                <h1 style="font-size:4rem;">TERMINATED</h1>
+                <p>User connection severed by administrator.</p>
             </div>
         `;
-        
-        // 3. Alert the user
-        alert("You have been banned.");
+        alert("You are banned.");
     }
 });
 
-// --- 1. SEND LOGIC (TEXT) ---
-
+// --- SEND LOGIC ---
 async function sendMessage() {
     const text = dom.input.value.trim();
     if (!text) return; 
 
-    // --- NEW FEATURE: ADMIN COMMANDS ---
-    // Intercept commands starting with /ban or /unban
+    // --- ADMIN COMMANDS ---
     if (text.startsWith('/')) {
+        console.log("Command detected:", text);
+        
         const parts = text.split(' ');
         const command = parts[0].toLowerCase();
-        const targetUser = parts.slice(1).join(' '); // Get the name after the command
+        const targetUser = parts.slice(1).join(' '); 
 
-        if (isAdmin) {
-            if (command === '/ban' && targetUser) {
-                // Set the user as true in the 'banned' node
-                try {
-                    await set(ref(db, 'banned/' + targetUser), true);
-                    alert(`User '${targetUser}' has been banned.`);
-                } catch (err) {
-                    console.error(err);
-                    alert("Error banning user.");
-                }
-                dom.input.value = ''; // Clear input
-                return; // Stop here, don't send as chat message
+        if (command === '/ban') {
+            if (!isAdmin) {
+                alert("You are not an admin!");
+                return;
+            }
+            if (!targetUser) {
+                alert("Usage: /ban <username>");
+                return;
+            }
+            
+            // Execute Ban
+            try {
+                console.log(`Attempting to ban: ${targetUser}`);
+                await set(ref(db, 'banned/' + targetUser), true);
+                alert(`SUCCESS: ${targetUser} is banned.`);
+                dom.input.value = ''; 
+                return;
+            } catch (err) {
+                console.error("Ban Failed:", err);
+                alert("Database Error: Check Console (F12)");
+                return;
+            }
+        }
+
+        if (command === '/unban') {
+            if (!isAdmin) {
+                alert("You are not an admin!");
+                return;
+            }
+            if (!targetUser) {
+                alert("Usage: /unban <username>");
+                return;
             }
 
-            if (command === '/unban' && targetUser) {
-                // Remove the user from the 'banned' node
-                try {
-                    await remove(ref(db, 'banned/' + targetUser));
-                    alert(`User '${targetUser}' has been unbanned.`);
-                } catch (err) {
-                    console.error(err);
-                    alert("Error unbanning user.");
-                }
-                dom.input.value = ''; // Clear input
-                return; // Stop here
+            // Execute Unban
+            try {
+                console.log(`Attempting to unban: ${targetUser}`);
+                await remove(ref(db, 'banned/' + targetUser));
+                alert(`SUCCESS: ${targetUser} is unbanned.`);
+                dom.input.value = ''; 
+                return;
+            } catch (err) {
+                console.error("Unban Failed:", err);
+                alert("Database Error: Check Console (F12)");
+                return;
             }
         }
     }
 
+    // --- NORMAL MESSAGE SENDING ---
     const userColor = localStorage.getItem('user_color') || '#facc15';
     const userAvatar = myCurrentAvatar; 
-    
-    // Clear input immediately
     const textToSend = text; 
+    
     dom.input.value = '';
     dom.input.focus();
 
@@ -141,7 +167,7 @@ async function sendMessage() {
     }
 }
 
-// --- 1.5 SEND LOGIC (IMAGE MESSAGE) ---
+// --- IMAGE SENDING ---
 window.sendImage = async function(imageBase64) {
     const userColor = localStorage.getItem('user_color') || '#facc15';
     const userAvatar = myCurrentAvatar;
@@ -158,7 +184,7 @@ window.sendImage = async function(imageBase64) {
         });
     } catch (e) {
         console.error("Image Send Error:", e);
-        alert("Failed to send image (file might be too large)");
+        alert("Failed to send image.");
     }
 };
 
@@ -168,8 +194,7 @@ dom.input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
 });
 
-// --- 2. RECEIVE LOGIC ---
-
+// --- RECEIVE LOGIC ---
 onValue(ref(db, 'messages'), (snapshot) => {
     const data = snapshot.val();
     dom.messages.innerHTML = ''; 
@@ -193,7 +218,6 @@ onValue(ref(db, 'messages'), (snapshot) => {
 
         const time = new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         const nameColor = msg.color || '#facc15';
-        
         const avatarUrl = msg.avatar || DEFAULT_AVATAR;
 
         let contentHtml = '';
@@ -205,7 +229,6 @@ onValue(ref(db, 'messages'), (snapshot) => {
 
         el.innerHTML = `
             <img src="${avatarUrl}" class="msg-avatar" alt="pic">
-            
             <div class="message-content">
                 <div>
                     <span class="msg-username ${ADMINS.includes(msg.user) ? 'admin' : ''}" style="color: ${nameColor}">
@@ -219,12 +242,10 @@ onValue(ref(db, 'messages'), (snapshot) => {
         `;
         dom.messages.appendChild(el);
     });
-
     dom.messages.scrollTop = dom.messages.scrollHeight;
 });
 
-// --- 3. PRESENCE ---
-
+// --- PRESENCE ---
 const connectionsRef = ref(db, 'connections');
 const connectedRef = ref(db, '.info/connected');
 
@@ -232,10 +253,7 @@ onValue(connectedRef, (snap) => {
     if (snap.val() === true) {
         const con = push(connectionsRef);
         onDisconnect(con).remove();
-        set(con, { 
-            user: currentUser, 
-            time: Date.now() 
-        });
+        set(con, { user: currentUser, time: Date.now() });
     }
 });
 
@@ -243,8 +261,7 @@ onValue(connectionsRef, (snap) => {
     dom.count.innerText = snap.size || 0;
 });
 
-// --- 4. ADMIN ---
-
+// --- DELETE BTN ---
 dom.messages.addEventListener('click', (e) => {
     if (e.target.classList.contains('delete-btn') && isAdmin) {
         if(confirm('Delete this message?')) {
