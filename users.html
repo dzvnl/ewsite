@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas</title>
+    <title>Users Directory</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -12,16 +12,13 @@
             --neon-yellow: #facc15;
             --neon-red: #ef4444;
             --neon-purple: #c084fc;
-            --bg-overlay: rgba(0, 0, 0, 0.85);
+            --bg-overlay: rgba(10, 10, 10, 0.95);
         }
 
         body {
             font-family: 'VT323', monospace;
             color: #e5e5e5;
-            background-color: #000;
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            background-color: #000; /* Pure black background */
             min-height: 100vh;
             margin: 0;
             padding: 20px;
@@ -83,7 +80,7 @@
         }
 
         .user-card {
-            background: var(--bg-overlay);
+            background: #111;
             border: 1px solid #333;
             padding: 15px;
             display: flex;
@@ -93,7 +90,7 @@
             position: relative; 
             overflow: hidden;
         }
-        .user-card:hover { border-color: var(--neon-yellow); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .user-card:hover { border-color: var(--neon-yellow); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(250, 204, 21, 0.1); }
         .user-card.is-founder { border-color: var(--neon-purple); box-shadow: 0 0 5px rgba(192, 132, 252, 0.2); }
         .user-card.is-me { border-color: var(--neon-green); }
 
@@ -108,7 +105,7 @@
         .btn-group {
             display: flex;
             gap: 10px;
-            margin-top: auto; /* Pushes button to bottom */
+            margin-top: auto;
             width: 100%;
             justify-content: center;
         }
@@ -137,6 +134,15 @@
         .nav-back { display: block; width: 100%; max-width: 900px; margin: 20px auto; color: #666; text-decoration: none; font-size: 1.2rem; }
         .nav-back:hover { color: var(--neon-yellow); }
 
+        #resetIdentity {
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 0.8em;
+            color: #666;
+            margin-left: 10px;
+        }
+        #resetIdentity:hover { color: #fff; }
+
         /* --- INCOMING CALL MODAL --- */
         #incomingModal {
             display: none;
@@ -146,7 +152,6 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(5px);
         }
         .incoming-box {
             background: #111;
@@ -178,7 +183,10 @@
     <div class="header-container">
         <div>
             <h1>users_directory</h1>
-            <div id="who-am-i" class="status-bar">INITIALIZING LINK...</div>
+            <div class="status-bar">
+                <span id="who-am-i">INITIALIZING...</span>
+                <span id="resetIdentity">[CHANGE]</span>
+            </div>
         </div>
         <input type="text" id="filterInput" class="filter-input" placeholder="> Search users...">
     </div>
@@ -197,8 +205,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, get, push, set, onChildAdded, update, query, limitToLast, orderByChild } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getDatabase, ref, get, push, set, onChildAdded, update, query, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        // Removed Auth imports as requested
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
@@ -212,36 +220,50 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const auth = getAuth(app);
 
         // --- GLOBAL STATE ---
         let myIdentity = null;
         let myUid = null;
         let allUsers = [];
-        
         const FOUNDERS = ['root', '-nl', 'futtbucker67'];
         
         // Grab elements
         const grid = document.getElementById('userGrid');
         const statusLabel = document.getElementById('who-am-i');
+        const resetBtn = document.getElementById('resetIdentity');
         const filterInput = document.getElementById('filterInput');
         const modal = document.getElementById('incomingModal');
 
-        // --- 1. AUTH CHECK ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log("Authenticated as UID:", user.uid);
-                myUid = user.uid;
-                fetchUsers();
-            } else {
-                console.log("No user found.");
-                if(statusLabel) {
-                    statusLabel.innerText = "ERROR: NOT AUTHENTICATED";
-                    statusLabel.classList.add('error');
-                }
-                // Optional: Redirect to login
-                // window.location.href = 'index.html';
+        // --- 1. IDENTITY SETUP (NO AUTH) ---
+        function setupIdentity() {
+            // Check if we have a stored name
+            let storedName = localStorage.getItem('chat_identity');
+            
+            if (!storedName) {
+                // Ask user for name since they aren't logging in
+                storedName = prompt("ENTER YOUR HANDLE / USERNAME:") || `Guest_${Math.floor(Math.random() * 1000)}`;
+                // Remove spaces and special chars to avoid logic issues
+                storedName = storedName.replace(/[^a-zA-Z0-9_-]/g, "");
+                if(storedName.length === 0) storedName = `Guest_${Math.floor(Math.random() * 1000)}`;
+                localStorage.setItem('chat_identity', storedName);
             }
+
+            myIdentity = storedName;
+            // Generate a fake UID for this session
+            myUid = `anon_${myIdentity}`;
+
+            statusLabel.innerText = `ID: ${myIdentity}`;
+            console.log(`Operating as: ${myIdentity}`);
+            
+            // Start App
+            fetchUsers();
+            listenForCalls();
+        }
+
+        // Allow changing name
+        resetBtn.addEventListener('click', () => {
+            localStorage.removeItem('chat_identity');
+            location.reload();
         });
 
         // --- 2. LISTEN FOR CALLS ---
@@ -249,19 +271,18 @@
         function listenForCalls() {
             if(listenerActive) return; 
             listenerActive = true;
-            console.log("Call listener activated for:", myIdentity);
 
-            // OPTIMIZATION: Only listen to the last 10 calls to avoid downloading full history
+            // Listen to last 10 calls
             const callsRef = query(ref(db, 'calls'), limitToLast(10));
 
             onChildAdded(callsRef, (snapshot) => {
                 const call = snapshot.val();
                 const callId = snapshot.key;
 
-                // Check if call is for me, is dialing, and is recent (within 30 seconds)
+                // Check if call is for me
                 if (call.recipient === myIdentity && call.status === 'dialing') {
                     const timeDiff = Date.now() - call.timestamp;
-                    if (timeDiff < 30000) {
+                    if (timeDiff < 30000) { // 30 sec timeout
                         document.getElementById('incomingCaller').innerText = `FROM: ${call.callerName || 'UNKNOWN'}`;
                         modal.style.display = 'flex';
 
@@ -277,17 +298,10 @@
         }
 
         // --- 3. MAKE CALL LOGIC ---
-        // We do not attach this to window anymore. We use event delegation in renderList/Grid.
         async function initiateCall(targetUser) {
-            console.log(`Attempting to call: ${targetUser} from ${myIdentity}`);
+            console.log(`Calling ${targetUser} as ${myIdentity}`);
 
-            if (!myIdentity) {
-                alert("System identifying... please wait.");
-                return;
-            }
-            if (targetUser === myIdentity) {
-                return; // Should be blocked by UI, but double check
-            }
+            if (targetUser === myIdentity) return;
 
             const callRef = push(ref(db, 'calls'));
             const callId = callRef.key;
@@ -303,7 +317,7 @@
                 window.location.href = `call.html?room=${callId}&recipient=${targetUser}`;
             } catch (error) {
                 console.error("Call failed:", error);
-                alert("Signal failed. Check console.");
+                alert("Connection failed. (Check Firebase Rules: Must allow write without auth)");
             }
         };
 
@@ -318,23 +332,6 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     allUsers = Object.keys(data).map(key => ({ username: key, ...data[key] }));
-                    
-                    // Identify myself
-                    const me = allUsers.find(u => u.uid === myUid);
-                    if (me) {
-                        myIdentity = me.username;
-                        if(statusLabel) {
-                            statusLabel.innerText = `ID: ${myIdentity}`;
-                            statusLabel.classList.remove('error');
-                        }
-                        listenForCalls();
-                    } else {
-                        if(statusLabel) {
-                            statusLabel.innerText = "ERROR: UID NOT IN DB";
-                            statusLabel.classList.add('error');
-                        }
-                    }
-                    
                     renderList(allUsers);
                 } else {
                     grid.innerHTML = '<div style="font-size: 1.5rem; color: #facc15;">DATABASE EMPTY</div>';
@@ -343,8 +340,8 @@
                 console.error(e);
                 grid.innerHTML = `
                     <div style="color: #ef4444; font-size: 1.5rem; text-align: center; grid-column: 1/-1;">
-                        ACCESS DENIED<br>
-                        <span style="font-size: 1rem; color: #fff;">Check Firebase Rules</span>
+                        READ ERROR<br>
+                        <span style="font-size: 1rem; color: #fff;">Firebase Rules must allow Public Read</span>
                     </div>
                 `;
             }
@@ -408,7 +405,7 @@
             });
         }
         
-        // Event Delegation for Buttons (Better than inline onclick)
+        // Event Delegation
         grid.addEventListener('click', (e) => {
             if (e.target.classList.contains('call-trigger')) {
                 const targetUser = e.target.getAttribute('data-user');
@@ -426,14 +423,9 @@
                 renderList(filtered);
             });
         }
-        
-        // Backgrounds (Swapped local paths for Unsplash placeholders)
-        const bgs = [
-            'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop', // Cyberpunk
-            'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop', // Chips
-            'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2070&auto=format&fit=crop'  // Matrix code
-        ];
-        document.body.style.backgroundImage = `url('${bgs[Math.floor(Math.random()*bgs.length)]}')`;
+
+        // Initialize
+        setupIdentity();
 
     </script>
 </body>
