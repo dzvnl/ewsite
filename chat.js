@@ -24,7 +24,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // --- STATE ---
-const ADMINS = ['root', 'futtbucker67', 'w234']; 
+const ADMINS = ['root', 'futtbucker67', 'undefined']; 
 const currentUser = localStorage.getItem('username') || 'no name';
 const currentUuid = localStorage.getItem('account_uuid'); 
 const isAdmin = ADMINS.includes(currentUser);
