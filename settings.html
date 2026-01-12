@@ -15,17 +15,19 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background-image: url('IMG_4928.jpeg'); /* Ensure this file exists */
+            /* Added a fallback dark gray in case image is missing */
+            background: #111 url('IMG_4928.jpeg') no-repeat center center fixed; 
             background-size: cover;
             overflow: hidden;
             margin: 0;
         }
 
+        /* Overlay to darken background image */
         body::before {
             content: "";
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); /* Darkened slightly for readability */
+            background: rgba(0,0,0,0.8);
             z-index: -1;
         }
 
@@ -37,7 +39,7 @@
             padding: 30px;
             box-shadow: 0 0 40px rgba(0,0,0,0.9);
             position: relative;
-            overflow: hidden;
+            overflow: hidden; 
             border-radius: 4px;
         }
 
@@ -55,9 +57,8 @@
         .admin-toggle {
             cursor: pointer; font-size: 1.5rem; color: #333; user-select: none;
             transition: color 0.3s;
-            display: none; /* Hidden by default for security */
+            display: none; /* Hidden until loaded */
         }
-        .admin-toggle.visible { display: block; }
         .admin-toggle:hover { color: #f87171; text-shadow: 0 0 5px red; }
 
         .preview-container { text-align: center; margin-bottom: 20px; }
@@ -172,7 +173,7 @@
         </div>
 
         <div class="form-group">
-            <label>profile picture (max 150kb)</label>
+            <label>profile picture</label>
             <label for="inp-file" class="file-upload-btn">
                 [ click to upload photo ]
             </label>
@@ -181,7 +182,7 @@
 
         <div class="btn-row">
             <button class="btn-cancel" onclick="window.location.href='index.html'">back</button>
-            <button class="btn-save" onclick="saveSettings()">save</button>
+            <button class="btn-save" onclick="window.saveSettings()">save</button>
         </div>
 
         <div id="status" class="status-msg"></div>
@@ -203,7 +204,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, get, set, update, remove, push, onValue, child } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref, get, set, update, remove, push, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
@@ -220,26 +221,25 @@
         const currentName = localStorage.getItem('username');
         if(!currentName) window.location.href = 'login.html';
 
-        let isCurrentUserAdmin = false;
         let finalPfpString = "";
 
-        // --- 1. LOAD DATA & BAN CHECK ---
+        // --- 1. Load User Data ---
         onValue(ref(db, 'users/' + currentName), (snapshot) => {
             const data = snapshot.val();
-            
-            // Check if user exists or was deleted
-            if (!data) {
-                // If data is null, they might have been deleted/banned completely
-                return;
-            }
+            if (!data) return; // Data might be null if name changing
 
-            // Check Ban
+            // Ban Check
             if (data.banned === true) {
                 document.getElementById('ban-screen').style.display = 'flex';
                 return;
             }
 
-            // Populate Form (Only if inputs are empty to avoid overwriting while typing)
+            // Show Admin Button if isAdmin
+            if (data.isAdmin === true) {
+                document.getElementById('btn-admin-open').style.display = 'block';
+            }
+
+            // Fill Form (Only if username input is empty to avoid overwrite loop)
             if(document.getElementById('inp-username').value === "") {
                 document.getElementById('inp-username').value = data.username;
                 document.getElementById('inp-bio').value = data.bio || '';
@@ -248,22 +248,16 @@
                     document.getElementById('img-preview').src = data.pfp;
                 }
             }
-
-            // Check Admin Privileges
-            if (data.isAdmin === true) {
-                isCurrentUserAdmin = true;
-                document.getElementById('btn-admin-open').classList.add('visible');
-            }
         });
 
-        // --- 2. IMAGE UPLOAD (With Size Limit) ---
+        // --- 2. Image Handler ---
         document.getElementById('inp-file').addEventListener('change', function() {
             if (this.files && this.files[0]) {
                 const file = this.files[0];
-
-                // LIMIT: 150KB (approx)
-                if(file.size > 150000) {
-                    alert("File too big! Please keep it under 150KB for the database.");
+                
+                // Keeping this size limit just so your DB doesn't crash
+                if(file.size > 200000) { 
+                    alert("Image too big! Max 200KB.");
                     return;
                 }
 
@@ -276,7 +270,7 @@
             }
         });
 
-        // --- 3. SAVE SETTINGS (Atomic Update) ---
+        // --- 3. Save Function (Attached to WINDOW) ---
         window.saveSettings = async () => {
             const newName = document.getElementById('inp-username').value.trim();
             const newBio = document.getElementById('inp-bio').value;
@@ -284,28 +278,28 @@
             const status = document.getElementById('status');
 
             if(!newName) return;
-            status.innerText = "PROCESSING...";
+            status.innerText = "SAVING...";
             status.className = "status-msg";
 
             try {
-                // Scenario A: Name is the same, simple update
+                // Case A: Same Name (Easy Update)
                 if(newName === currentName) {
                     await update(ref(db, 'users/' + currentName), {
                         bio: newBio,
                         pfp: newPfp
                     });
-                    status.innerText = "SAVED.";
+                    status.innerText = "UPDATED.";
                     status.className = "status-msg success";
                     setTimeout(() => window.location.href = 'index.html', 1000);
                     return;
                 }
 
-                // Scenario B: Name Change (Requires Atomic Transaction)
+                // Case B: Name Change (Copy & Delete)
                 const newNameRef = ref(db, 'users/' + newName);
                 const checkSnap = await get(newNameRef);
                 
                 if(checkSnap.exists()) {
-                    status.innerText = "taken, awkward";
+                    status.innerText = "NAME TAKEN";
                     status.className = "status-msg error";
                     return;
                 }
@@ -315,7 +309,6 @@
                 const oldSnap = await get(oldUserRef);
                 const oldData = oldSnap.val();
 
-                // Prepare new data object
                 const newData = {
                     ...oldData,
                     username: newName,
@@ -323,47 +316,40 @@
                     pfp: newPfp
                 };
 
-                // Atomic update: Create new path AND delete old path simultaneously
+                // Perform update
                 const updates = {};
                 updates['users/' + newName] = newData;
-                updates['users/' + currentName] = null;
-                updates['logs/' + Date.now()] = {
-                    type: "NAME_CHANGE",
-                    oldName: currentName,
-                    newName: newName
-                };
-
+                updates['users/' + currentName] = null; // Delete old
+                
                 await update(ref(db), updates);
 
                 localStorage.setItem('username', newName);
-                status.innerText = "changed. refreshing.";
+                status.innerText = "NAME CHANGED";
                 status.className = "status-msg success";
                 setTimeout(() => window.location.href = 'index.html', 1500);
 
             } catch(e) {
                 console.error(e);
-                status.innerText = "database error";
+                status.innerText = "ERROR";
                 status.className = "status-msg error";
             }
         };
 
-        // --- 4. ADMIN PANEL LOGIC ---
+        // --- 4. Admin Functions ---
         
+        // Open/Close
         document.getElementById('btn-admin-open').onclick = () => {
-            if(!isCurrentUserAdmin) return; // Security Check
             document.getElementById('admin-panel').classList.add('open');
             loadAllUsers();
         };
-
         document.getElementById('btn-admin-close').onclick = () => {
             document.getElementById('admin-panel').classList.remove('open');
         };
 
+        // Load Users
         async function loadAllUsers() {
-            if(!isCurrentUserAdmin) return; // Security Check
-
             const listDiv = document.getElementById('user-list-container');
-            listDiv.innerHTML = '<div style="text-align:center; color:#555">fetching souls...</div>';
+            listDiv.innerHTML = '<div style="text-align:center; color:#555">fetching...</div>';
 
             const snapshot = await get(ref(db, 'users'));
             listDiv.innerHTML = ''; 
@@ -377,7 +363,7 @@
 
                     const nameSpan = document.createElement('span');
                     nameSpan.innerText = user.username;
-                    if(user.isAdmin) nameSpan.style.color = "#facc15"; // Gold for admins
+                    if(user.isAdmin) nameSpan.style.color = "#facc15"; 
                     
                     if(user.banned) {
                         const badge = document.createElement('div');
@@ -386,17 +372,20 @@
                         div.appendChild(nameSpan);
                         div.appendChild(badge);
                     } else {
+                        // Create button manually to ensure event listener works
                         const banBtn = document.createElement('button');
                         banBtn.className = 'ban-btn';
                         banBtn.innerText = "BAN";
-                        // Prevent self-ban
-                        if(user.username === currentName) {
-                            banBtn.disabled = true;
-                            banBtn.style.opacity = 0.5;
-                        } else {
-                            banBtn.onclick = () => window.banUser(user.username);
-                        }
                         
+                        // Don't ban self
+                        if(user.username === currentName) {
+                            banBtn.style.opacity = "0.3";
+                        } else {
+                            banBtn.onclick = function() {
+                                window.banUser(user.username);
+                            };
+                        }
+
                         div.appendChild(nameSpan);
                         div.appendChild(banBtn);
                     }
@@ -406,21 +395,17 @@
             }
         }
 
+        // Make Ban Global so HTML can access it
         window.banUser = async (targetName) => {
-            if(!isCurrentUserAdmin) {
-                alert("Nice try.");
-                return;
-            }
-
-            if(!confirm(`Are you sure you want to DESTROY ${targetName}?`)) return;
+            if(!confirm(`Ban ${targetName}?`)) return;
             
             try {
                 await update(ref(db, 'users/' + targetName), {
                     banned: true
                 });
-                loadAllUsers(); 
+                loadAllUsers(); // Refresh list
             } catch(e) {
-                alert("Error banning user.");
+                alert("Error banning.");
             }
         };
 
