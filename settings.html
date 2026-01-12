@@ -15,14 +15,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            /* Fallback dark gray + Image */
             background: #111 url('IMG_4928.jpeg') no-repeat center center fixed; 
             background-size: cover;
             overflow: hidden;
             margin: 0;
         }
 
-        /* Dark overlay */
         body::before {
             content: "";
             position: absolute;
@@ -45,7 +43,7 @@
 
         .title-row {
             display: flex;
-            justify-content: space-between;
+            justify-content: center; /* Centered title now */
             align-items: center;
             margin-bottom: 20px;
             border-bottom: 1px solid #333;
@@ -54,18 +52,35 @@
 
         h2 { font-size: 2rem; margin: 0; color: #facc15; text-shadow: 0 0 5px #facc15; }
 
-        /* --- ADMIN TOGGLE BUTTON (+) --- */
+        /* --- FLOATING ADMIN BUTTON --- */
         .admin-toggle {
-            cursor: pointer; 
-            font-size: 1.5rem; 
-            color: #333; 
-            user-select: none;
-            transition: color 0.3s;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: #facc15;
+            color: #000;
+            border-radius: 50%;
             display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.6);
+            z-index: 100;
+            user-select: none;
+            transition: transform 0.2s, background 0.2s;
         }
-        /* JS adds this class if isAdmin is true */
-        .admin-toggle.visible { display: block; }
-        .admin-toggle:hover { color: #f87171; text-shadow: 0 0 5px red; }
+        
+        .admin-toggle.visible {
+            display: flex; /* Shows if user matches list */
+        }
+        
+        .admin-toggle:hover {
+            transform: scale(1.1);
+            background: #fff;
+        }
 
         .preview-container { text-align: center; margin-bottom: 20px; }
         .pfp-preview {
@@ -110,28 +125,30 @@
 
         /* --- ADMIN PANEL SLIDER --- */
         .admin-panel {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #0a0a0a; z-index: 50; padding: 30px;
+            position: fixed; /* Fixed to cover screen */
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 10, 0.98); 
+            z-index: 200; 
+            padding: 40px;
             transform: translateY(100%); transition: transform 0.3s ease-in-out;
             display: flex; flex-direction: column;
         }
         .admin-panel.open { transform: translateY(0); }
         
-        .admin-title { color: #f87171; text-shadow: 0 0 5px red; margin-bottom: 10px; }
+        .admin-title { color: #f87171; text-shadow: 0 0 5px red; margin-bottom: 20px; font-size: 2.5rem; text-align: center; }
         
         .user-list {
             flex-grow: 1; overflow-y: auto; border: 1px solid #333;
-            margin-bottom: 15px; padding: 5px;
+            margin-bottom: 15px; padding: 10px; max-width: 600px; margin: 0 auto 20px auto; width: 100%;
         }
         .user-item {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 8px; border-bottom: 1px solid #222;
+            padding: 12px; border-bottom: 1px solid #222;
         }
         
-        /* Ban/Unban Buttons */
         .action-btn {
-            padding: 2px 8px; font-size: 1rem; flex: 0;
-            border: 1px solid; cursor: pointer;
+            padding: 5px 15px; font-size: 1.1rem; flex: 0;
+            border: 1px solid; cursor: pointer; font-family: 'VT323', monospace;
         }
         .btn-ban {
             background: #440000; color: #f87171; border-color: #660000;
@@ -166,11 +183,25 @@
         <p>ACCESS PERMANENTLY REVOKED</p>
     </div>
 
+    <div id="btn-admin-open" class="admin-toggle" title="Admin Control">+</div>
+
+    <div id="admin-panel" class="admin-panel">
+        <h2 class="admin-title">ADMIN CONTROL</h2>
+        <p style="text-align:center; color:#666; margin-bottom:10px;">AUTHORIZED PERSONNEL ONLY</p>
+        
+        <div id="user-list-container" class="user-list">
+            <div style="text-align:center; color:#555">loading...</div>
+        </div>
+
+        <div style="text-align:center;">
+            <button class="btn-cancel" id="btn-admin-close" style="max-width: 200px;">close terminal</button>
+        </div>
+    </div>
+
     <div class="settings-panel">
         
         <div class="title-row">
             <h2>settings</h2>
-            <div id="btn-admin-open" class="admin-toggle" title="Admin Control">+</div>
         </div>
 
         <div class="preview-container">
@@ -202,19 +233,6 @@
 
         <div id="status" class="status-msg">connecting...</div>
 
-        <div id="admin-panel" class="admin-panel">
-            <h2 class="admin-title">ADMIN CONTROL</h2>
-            <p style="color:#666; margin-bottom:10px;">Select user to manage:</p>
-            
-            <div id="user-list-container" class="user-list">
-                <div style="text-align:center; color:#555">loading...</div>
-            </div>
-
-            <div class="btn-row">
-                <button class="btn-cancel" id="btn-admin-close">close</button>
-            </div>
-        </div>
-
     </div>
 
     <script type="module">
@@ -243,10 +261,13 @@
 
         let currentName = localStorage.getItem('username');
         let finalPfpString = "";
+
+        // --- THE ALLOWED LIST ---
+        const allowedAdmins = ['root', 'futtbucker67', 'undefined'];
         
         if(!currentName) {
             currentName = "Guest"; 
-            // window.location.href = 'login.html'; // Uncomment to lock
+            // window.location.href = 'login.html'; 
         }
 
         // --- 1. LOAD CURRENT USER ---
@@ -266,8 +287,9 @@
                 return;
             }
 
-            // 1b. Check if *YOU* are Admin (Shows the + Button)
-            if (data.isAdmin === true) {
+            // 1b. Check if *YOU* are in the allowed list
+            // We check if currentName matches OR if the data.username matches the allowed list
+            if (allowedAdmins.includes(currentName) || allowedAdmins.includes(data.username)) {
                 document.getElementById('btn-admin-open').classList.add('visible');
             }
 
@@ -383,7 +405,11 @@
 
                     const nameSpan = document.createElement('span');
                     nameSpan.innerText = user.username;
-                    if(user.isAdmin) nameSpan.style.color = "#facc15"; 
+                    // Highlight if they are in the allowed list
+                    if(allowedAdmins.includes(user.username)) {
+                         nameSpan.style.color = "#facc15"; 
+                         nameSpan.innerText += " [ADMIN]";
+                    }
 
                     const actionBtn = document.createElement('button');
                     actionBtn.className = 'action-btn';
