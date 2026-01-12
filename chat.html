@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
@@ -17,13 +17,15 @@
             justify-content: center;
             align-items: center;
             padding: 10px;
+            /* Fix for mobile address bar scrolling */
+            overflow: hidden; 
         }
 
         #chat-container {
-            width: 800%;
+            width: 95%;
             max-width: 800px;
             height: 85vh;
-            background: rgba(0, 0, 0, 0.3); 
+            background: rgba(0, 0, 0, 0.6); 
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 2px solid #969696;
@@ -32,13 +34,30 @@
             position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
 
-            /* --- NEW: Resizable Properties --- */
-            resize: both;        /* Allows dragging corners */
-            overflow: hidden;    /* Required for resize handle to show properly */
-            min-width: 300px;    /* Prevents it from getting too small */
-            min-height: 400px;   /* Prevents it from getting too small */
-            max-height: 95vh;    /* Stops it from going off screen */
-            max-width: 95vw;     /* Stops it from going off screen */
+            /* Resizable Properties */
+            resize: both;        
+            overflow: hidden;    
+            min-width: 300px;    
+            min-height: 400px;   
+            max-height: 95vh;    
+            max-width: 95vw;     
+        }
+
+        /* --- MOBILE SUPPORT --- */
+        @media (max-width: 768px) {
+            body { padding: 0; }
+            #chat-container {
+                width: 100%;
+                height: 100%;
+                max-width: 100%;
+                max-height: 100%;
+                border: none;
+                border-radius: 0;
+                resize: none; /* Disable manual resize on mobile */
+            }
+            .msg-avatar { width: 32px; height: 32px; }
+            #chat-messages { padding: 10px; }
+            #chat-input-area { padding: 8px; }
         }
 
         #chat-messages {
@@ -51,7 +70,7 @@
             text-shadow: 1px 1px 2px black; 
             display: flex;            
             flex-direction: column;  
-            gap: 12px;                
+            gap: 2px; /* Reduced gap for grouping logic */               
         }
 
         /* --- Message & Avatar Styles --- */
@@ -59,16 +78,32 @@
             display: flex;
             align-items: flex-start;
             gap: 10px;
+            margin-bottom: 10px; /* Default spacing */
+            transition: margin 0.2s;
+        }
+
+        /* Grouped Message Styling (Clutter reduction) */
+        .message-row.grouped {
+            margin-bottom: 2px; /* Tighter spacing */
+            margin-top: 0;
+        }
+        
+        .message-row.grouped .msg-avatar {
+            visibility: hidden; /* Hide avatar but keep alignment */
+        }
+        
+        .message-row.grouped .msg-header {
+            display: none; /* Hide name and time */
         }
 
         .msg-avatar {
             width: 40px;
             height: 40px;
-            border-radius: 50%;       
+            border-radius: 50%;        
             object-fit: cover;        
             border: 2px solid #facc15; 
-            flex-shrink: 0;           
-            background: #000;         
+            flex-shrink: 0;            
+            background: #000;          
         }
 
         .message-content {
@@ -77,16 +112,41 @@
             max-width: 85%;
         }
 
+        .msg-header {
+            margin-bottom: 2px;
+            line-height: 1;
+        }
+
         .msg-username {
             color: #facc15;
             font-size: 0.8rem;
-            margin-bottom: 2px;
             opacity: 0.8;
         }
 
         .msg-text {
             word-wrap: break-word;
         }
+
+        /* --- Day Timestamp --- */
+        .date-separator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            color: #888;
+            font-size: 0.8rem;
+        }
+        .date-separator::before, .date-separator::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #444;
+        }
+        .date-separator span {
+            padding: 0 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+        }
+
         /* ------------------------------------ */
 
         #chat-input-area {
@@ -94,9 +154,8 @@
             padding: 10px;
             display: flex;
             gap: 8px;
-            background: transparent; 
+            background: rgba(0,0,0,0.4); 
             align-items: center; 
-            /* Ensure input area stays at bottom when resizing */
             flex-shrink: 0; 
         }
 
@@ -105,10 +164,11 @@
             background: rgba(0, 0, 0, 0.6);
             border: 1px solid #666;
             color: #facc15; 
-            padding: 6px 10px;
+            padding: 8px 10px;
             outline: none;
             font-size: 1rem;
             font-family: 'Special Elite', monospace; 
+            border-radius: 4px;
         }
 
         button {
@@ -119,6 +179,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 4px;
         }
         button:hover {
             background: rgba(250, 204, 21, 0.2);
@@ -142,10 +203,11 @@
             background: rgba(0,0,0,0.5);
             padding: 2px 6px;
             border-radius: 4px;
+            z-index: 10;
         }
         .dot { width: 9px; height: 9px; background: #4ade80; border-radius: 100%; box-shadow: 0 0 5px #4ade80; }
         
-        .user-menu { position: absolute; top: 8px; right: 12px; }
+        .user-menu { position: absolute; top: 8px; right: 12px; z-index: 20; }
         #user-display { background: none; border: none; cursor: pointer; padding: 4px; }
         .person-icon { width: 24px; height: 24px; fill: #facc15; filter: drop-shadow(1px 1px 2px black); }
 
@@ -207,7 +269,7 @@
                 </svg>
             </button>
 
-            <button onclick="send()" style="color: #facc15; padding: 6px 15px;">[SEND]</button>
+            <button onclick="send()" style="color: #facc15; padding: 6px 15px;">SEND</button>
         </div>
     </div>
 
