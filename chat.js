@@ -1,6 +1,6 @@
 /*
  * Target: chat.js
- * Updated with: Auto-delete 24h, Message Grouping, Day Timestamps
+ * FIXED: Added missing escapeHtml, fixed Delete buttons, optimized User Count
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -53,6 +53,28 @@ const dom = {
 
 if(dom.userDisplay) dom.userDisplay.innerText = currentUser;
 
+// --- UTILITY: ESCAPE HTML (Was missing previously) ---
+function escapeHtml(text) {
+    if (!text) return text;
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// --- UTILITY: DELETE LISTENER ---
+// This listens for clicks on any delete button
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('delete-btn')) {
+        const msgId = e.target.getAttribute('data-id');
+        if (confirm('Delete this message?')) {
+            remove(ref(db, `messages/${msgId}`));
+        }
+    }
+});
+
 // --- BAN ENFORCEMENT ---
 onValue(ref(db, 'banned'), (snapshot) => {
     const bannedUsers = snapshot.val() || {};
@@ -71,17 +93,14 @@ onValue(ref(db, 'banned'), (snapshot) => {
 });
 
 // --- HELPER: DELETE MESSAGES OLDER THAN 24H ---
-async function cleanOldMessages(msgList) {
+function cleanOldMessages(msgList) {
     const now = Date.now();
     const oneDayMs = 24 * 60 * 60 * 1000;
     
-    // Only perform cleanup if lists exist
     if (!msgList || msgList.length === 0) return;
 
     msgList.forEach(msg => {
         if (now - msg.time > oneDayMs) {
-            console.log("Auto-deleting old message:", msg.id);
-            // We use a catch block here to prevent crashing if multiple clients try to delete at once
             remove(ref(db, `messages/${msg.id}`)).catch(e => {}); 
         }
     });
@@ -108,7 +127,7 @@ async function sendMessage() {
     const text = dom.input.value.trim();
     if (!text) return; 
 
-    // Admin Commands (Simplified for brevity, same as before)
+    // Admin Commands
     if (text.startsWith('/')) {
         const parts = text.split(' ');
         const command = parts[0].toLowerCase();
@@ -174,8 +193,7 @@ onValue(ref(db, 'messages'), (snapshot) => {
     const msgList = Object.keys(data).map(key => ({ ...data[key], id: key }));
     msgList.sort((a, b) => a.time - b.time);
 
-    // 1. Run Auto-Cleanup (Older than 24h)
-    // Note: This runs on every client. Firebase handles concurrency well, but technically redundant.
+    // Run Auto-Cleanup
     cleanOldMessages(msgList);
 
     let lastUser = null;
@@ -194,7 +212,6 @@ onValue(ref(db, 'messages'), (snapshot) => {
         }
 
         // --- Grouping Logic ---
-        // We group if the user is same as last message AND it's the same day
         const isGrouped = (msg.user === lastUser);
         lastUser = msg.user;
 
@@ -204,6 +221,7 @@ onValue(ref(db, 'messages'), (snapshot) => {
         // Admin Delete Button
         let adminControls = '';
         if (isAdmin) {
+            // Note: We use class "delete-btn" which is handled by the global listener at top
             adminControls = `<span class="admin-action delete-btn" data-id="${msg.id}" style="color:red; cursor:pointer; font-size:0.7em; margin-left:5px;">[DEL]</span>`;
         }
 
@@ -218,8 +236,6 @@ onValue(ref(db, 'messages'), (snapshot) => {
             contentHtml = `<span class="msg-text">${escapeHtml(msg.text)}</span>`;
         }
 
-        // HTML Construction
-        // Note: For grouped messages, CSS hides .msg-avatar (via visibility:hidden) and .msg-header (display:none)
         el.innerHTML = `
             <img src="${avatarUrl}" class="msg-avatar" alt="pic">
             <div class="message-content">
@@ -238,10 +254,6 @@ onValue(ref(db, 'messages'), (snapshot) => {
     
     dom.messages.scrollTop = dom.messages.scrollHeight;
 });
-
-/* REPLACE THE CONNECTION SECTION AT THE BOTTOM OF CHAT.JS 
-   WITH THIS BLOCK 
-*/
 
 // --- CONNECTION TRACKING & CLEANUP ---
 const connectionsRef = ref(db, 'connections');
@@ -275,8 +287,8 @@ onValue(connectedRef, (snap) => {
 onValue(connectionsRef, (snap) => {
     const data = snap.val();
     
-    // Update the visual count
-    dom.count.innerText = snap.size || 0;
+    // Update the visual count (Using size property)
+    dom.count.innerText = snap.size;
 
     // Run cleanup occasionally (when data changes)
     if (data) cleanStaleConnections(data);
