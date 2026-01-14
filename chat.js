@@ -1,6 +1,6 @@
 /*
  * Target: chat.js
- * FIXED: Added missing escapeHtml, fixed Delete buttons, optimized User Count
+ * FIXED: Added Online User List generation for the GUI
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -53,7 +53,7 @@ const dom = {
 
 if(dom.userDisplay) dom.userDisplay.innerText = currentUser;
 
-// --- UTILITY: ESCAPE HTML (Was missing previously) ---
+// --- UTILITY: ESCAPE HTML ---
 function escapeHtml(text) {
     if (!text) return text;
     return text
@@ -65,7 +65,6 @@ function escapeHtml(text) {
 }
 
 // --- UTILITY: DELETE LISTENER ---
-// This listens for clicks on any delete button
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('delete-btn')) {
         const msgId = e.target.getAttribute('data-id');
@@ -221,7 +220,6 @@ onValue(ref(db, 'messages'), (snapshot) => {
         // Admin Delete Button
         let adminControls = '';
         if (isAdmin) {
-            // Note: We use class "delete-btn" which is handled by the global listener at top
             adminControls = `<span class="admin-action delete-btn" data-id="${msg.id}" style="color:red; cursor:pointer; font-size:0.7em; margin-left:5px;">[DEL]</span>`;
         }
 
@@ -267,7 +265,6 @@ function cleanStaleConnections(data) {
 
     Object.keys(data).forEach(key => {
         const connection = data[key];
-        // If no timestamp exists or it's older than 4 hours, kill it
         if (!connection.time || (now - connection.time > fourHoursMs)) {
             remove(ref(db, `connections/${key}`)).catch(e => {});
         }
@@ -283,13 +280,23 @@ onValue(connectedRef, (snap) => {
     }
 });
 
-// 3. Listen for count changes & trigger cleanup
+// 3. Listen for count changes & users
 onValue(connectionsRef, (snap) => {
-    const data = snap.val();
+    const data = snap.val() || {};
     
-    // Update the visual count (Using size property)
-    dom.count.innerText = snap.size;
+    // Extract Usernames
+    const allUsers = Object.values(data).map(c => c.user || 'Unknown');
+    
+    // Filter to unique names (removes duplicates from multiple tabs)
+    const uniqueUsers = [...new Set(allUsers)];
+    
+    // Update the visual count
+    dom.count.innerText = uniqueUsers.length;
 
-    // Run cleanup occasionally (when data changes)
-    if (data) cleanStaleConnections(data);
+    // --- EXPOSE TO GLOBAL SCOPE FOR GUI ---
+    // This allows the HTML modal to access the real user list
+    window.onlineUsersList = uniqueUsers;
+
+    // Run cleanup occasionally
+    cleanStaleConnections(data);
 });
