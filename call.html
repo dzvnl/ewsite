@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas</title>
+    <title>SECURE_LINE | TERMINAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -18,7 +18,6 @@
             align-items: center;
             overflow: hidden;
         }
-
         .video-container {
             position: relative;
             width: 100%;
@@ -28,79 +27,32 @@
             align-items: center;
             background: #0a0a0a;
         }
-
-        #remoteVideo {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            background: #000;
-        }
-
+        #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; }
         #localVideo {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 180px;
-            height: 130px;
-            background: #000;
-            border: 2px solid #22c55e;
-            object-fit: cover;
-            z-index: 10;
-            transform: scaleX(-1);
+            position: absolute; bottom: 20px; right: 20px;
+            width: 180px; height: 130px;
+            border: 2px solid #22c55e; object-fit: cover;
+            z-index: 10; transform: scaleX(-1);
         }
-
         .status-overlay {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.8);
-            padding: 12px;
-            border: 1px solid #22c55e;
-            z-index: 20;
-            font-size: 1.4rem;
+            position: absolute; top: 20px; left: 20px;
+            background: rgba(0,0,0,0.8); padding: 12px;
+            border: 1px solid #22c55e; z-index: 20; font-size: 1.4rem;
         }
-
-        .controls {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            z-index: 20;
-        }
-
         .btn-end { 
-            background: #ef4444; 
-            color: #fff; 
-            padding: 10px 20px;
-            font-family: 'VT323';
-            font-size: 1.5rem;
-            border: none;
-            cursor: pointer;
-        }
-
-        /* CRT Scanline Effect */
-        .video-container::after {
-            content: " ";
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 4px, 3px 100%;
-            pointer-events: none;
-            z-index: 15;
+            position: absolute; bottom: 20px; left: 20px;
+            background: #ef4444; color: #fff; padding: 10px 20px;
+            font-family: 'VT323'; font-size: 1.5rem; border: none; cursor: pointer; z-index: 20;
         }
     </style>
 </head>
 <body>
 
     <div class="video-container">
-        <div id="statusText" class="status-overlay">looking</div>
-
+        <div id="statusText" class="status-overlay">SIGNAL: INITIALIZING...</div>
         <video id="remoteVideo" autoplay playsinline></video>
         <video id="localVideo" autoplay playsinline muted></video>
-
-        <div class="controls">
-            <button class="btn-end" onclick="endCall()">leave</button>
-        </div>
+        <button class="btn-end" id="terminateBtn">TERMINATE</button>
     </div>
 
     <script type="module">
@@ -121,9 +73,7 @@
         const db = getDatabase(app);
 
         const servers = {
-            iceServers: [
-                { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
-            ],
+            iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }],
             iceCandidatePoolSize: 10,
         };
 
@@ -135,99 +85,76 @@
         const roomId = urlParams.get('room');
         const statusText = document.getElementById('statusText');
 
-        async function start() {
-            console.log("System Initializing...");
-            
-            // Link remote video element to our stream object immediately
+        async function startCall() {
             document.getElementById('remoteVideo').srcObject = remoteStream;
 
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
 
-                localStream.getTracks().forEach(track => {
-                    pc.addTrack(track, localStream);
-                });
+                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
                 pc.ontrack = (event) => {
-                    console.log("Remote track detected!");
-                    event.streams[0].getTracks().forEach(track => {
-                        remoteStream.addTrack(track);
-                    });
-                    statusText.innerText = "active";
+                    event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
+                    statusText.innerText = "SIGNAL: ENCRYPTED LINK ACTIVE";
                 };
 
                 pc.onicecandidate = (event) => {
                     if (event.candidate) {
                         const type = pc.localDescription.type === 'offer' ? 'offerCandidates' : 'answerCandidates';
-                        console.log(`Sending ${type}`);
                         push(ref(db, `calls/${roomId}/${type}`), event.candidate.toJSON());
                     }
                 };
 
-                initSignaling();
+                const callRef = ref(db, `calls/${roomId}`);
+                const snapshot = await get(callRef);
+                const data = snapshot.val();
+
+                if (!data || !data.offer) {
+                    // CALLER
+                    const offerDescription = await pc.createOffer();
+                    await pc.setLocalDescription(offerDescription);
+                    await set(callRef, { offer: { type: offerDescription.type, sdp: offerDescription.sdp } });
+
+                    onValue(callRef, (snap) => {
+                        const d = snap.val();
+                        if (!pc.remoteDescription && d?.answer) {
+                            pc.setRemoteDescription(new RTCSessionDescription(d.answer));
+                        }
+                    });
+
+                    onChildAdded(ref(db, `calls/${roomId}/answerCandidates`), (snap) => {
+                        pc.addIceCandidate(new RTCIceCandidate(snap.val()));
+                    });
+                } else {
+                    // RECEIVER
+                    await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+                    const answerDescription = await pc.createAnswer();
+                    await pc.setLocalDescription(answerDescription);
+                    await update(callRef, { answer: { type: answerDescription.type, sdp: answerDescription.sdp } });
+
+                    onChildAdded(ref(db, `calls/${roomId}/offerCandidates`), (snap) => {
+                        pc.addIceCandidate(new RTCIceCandidate(snap.val()));
+                    });
+                }
             } catch (e) {
-                console.error("Hardware denied:", e);
-                statusText.innerText = "ERROR: CAMERA_ACCESS_DENIED";
+                statusText.innerText = "ERROR: CAMERA DENIED";
             }
         }
 
-        async function initSignaling() {
-            const callRef = ref(db, `calls/${roomId}`);
-            const snapshot = await get(callRef);
-            const data = snapshot.val();
-
-            // CALLER SIDE
-            if (!data || !data.offer) {
-                console.log("Creating new call...");
-                const offerDescription = await pc.createOffer();
-                await pc.setLocalDescription(offerDescription);
-
-                await set(callRef, { 
-                    offer: { type: offerDescription.type, sdp: offerDescription.sdp } 
-                });
-
-                // Watch for answer
-                onValue(callRef, (snap) => {
-                    const d = snap.val();
-                    if (!pc.remoteDescription && d?.answer) {
-                        console.log("Answer received, connecting...");
-                        pc.setRemoteDescription(new RTCSessionDescription(d.answer));
-                    }
-                });
-
-                // Watch for answerer's network paths
-                onChildAdded(ref(db, `calls/${roomId}/answerCandidates`), (snap) => {
-                    pc.addIceCandidate(new RTCIceCandidate(snap.val()));
-                });
-
-            } 
-            // RECEIVER SIDE
-            else {
-                console.log("Joining existing call...");
-                await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-                
-                const answerDescription = await pc.createAnswer();
-                await pc.setLocalDescription(answerDescription);
-                
-                await update(callRef, { 
-                    answer: { type: answerDescription.type, sdp: answerDescription.sdp } 
-                });
-
-                // Watch for caller's network paths
-                onChildAdded(ref(db, `calls/${roomId}/offerCandidates`), (snap) => {
-                    pc.addIceCandidate(new RTCIceCandidate(snap.val()));
-                });
-            }
-        }
-
-        window.endCall = () => {
+        // Handle the disconnect button inside the module
+        document.getElementById('terminateBtn').onclick = () => {
             pc.close();
-            localStream.getTracks().forEach(t => t.stop());
+            if(localStream) localStream.getTracks().forEach(t => t.stop());
             window.location.href = 'users.html';
         };
 
-        start();
+        if (!roomId) {
+            alert("NO ROOM ID FOUND");
+            window.location.href = "users.html";
+        } else {
+            startCall();
+        }
     </script>
 </body>
 </html>
