@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SECURE_LINE | ENCRYPTED</title>
+    <title>canvas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -19,7 +19,6 @@
             overflow: hidden;
         }
 
-        /* --- VIDEO GRID --- */
         .video-container {
             position: relative;
             width: 100%;
@@ -34,35 +33,31 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            background: #111;
+            background: #000;
         }
 
         #localVideo {
             position: absolute;
             bottom: 20px;
             right: 20px;
-            width: 200px;
-            height: 150px;
+            width: 180px;
+            height: 130px;
             background: #000;
             border: 2px solid #22c55e;
             object-fit: cover;
             z-index: 10;
-            transform: scaleX(-1); /* Mirror for local view */
+            transform: scaleX(-1);
         }
 
-        /* --- OVERLAYS --- */
         .status-overlay {
             position: absolute;
             top: 20px;
             left: 20px;
             background: rgba(0,0,0,0.8);
-            padding: 15px;
+            padding: 12px;
             border: 1px solid #22c55e;
             z-index: 20;
-            font-size: 1.5rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+            font-size: 1.4rem;
         }
 
         .controls {
@@ -70,67 +65,48 @@
             bottom: 20px;
             left: 20px;
             z-index: 20;
-            display: flex;
-            gap: 15px;
-        }
-
-        .btn {
-            font-family: 'VT323';
-            font-size: 1.5rem;
-            padding: 8px 20px;
-            cursor: pointer;
-            border: 1px solid #22c55e;
-            text-transform: uppercase;
-            transition: all 0.2s;
         }
 
         .btn-end { 
             background: #ef4444; 
             color: #fff; 
-            border-color: #b91c1c;
-        }
-        
-        .btn-end:hover { 
-            background: #b91c1c; 
-            transform: scale(1.05);
+            padding: 10px 20px;
+            font-family: 'VT323';
+            font-size: 1.5rem;
+            border: none;
+            cursor: pointer;
         }
 
-        /* Scanning effect overlay */
-        .scanline {
-            width: 100%;
-            height: 2px;
-            background: rgba(34, 197, 94, 0.1);
+        /* CRT Scanline Effect */
+        .video-container::after {
+            content: " ";
             position: absolute;
-            top: 0;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
             z-index: 15;
-            animation: scan 4s linear infinite;
-        }
-
-        @keyframes scan {
-            0% { top: 0; }
-            100% { top: 100%; }
         }
     </style>
 </head>
 <body>
 
     <div class="video-container">
-        <div class="scanline"></div>
-        <div id="statusText" class="status-overlay">SYSTEM: INITIALIZING...</div>
+        <div id="statusText" class="status-overlay">looking</div>
 
         <video id="remoteVideo" autoplay playsinline></video>
         <video id="localVideo" autoplay playsinline muted></video>
 
         <div class="controls">
-            <button class="btn btn-end" onclick="endCall()">TERMINATE CONNECTION</button>
+            <button class="btn-end" onclick="endCall()">leave</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, onValue, update, push, onChildAdded, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref, onValue, update, push, onChildAdded, get, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-        // --- FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
             authDomain: "ewsitechat.firebaseapp.com",
@@ -144,61 +120,55 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- WebRTC CONFIG ---
         const servers = {
             iceServers: [
                 { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
-            ]
+            ],
+            iceCandidatePoolSize: 10,
         };
 
         const pc = new RTCPeerConnection(servers);
         let localStream = null;
+        let remoteStream = new MediaStream();
 
         const urlParams = new URLSearchParams(window.location.search);
         const roomId = urlParams.get('room');
         const statusText = document.getElementById('statusText');
 
-        if (!roomId) {
-            alert("CRITICAL ERROR: NO ROOM ID");
-            window.location.href = 'users.html';
-        }
-
-        // --- STARTUP LOGIC ---
         async function start() {
+            console.log("System Initializing...");
+            
+            // Link remote video element to our stream object immediately
+            document.getElementById('remoteVideo').srcObject = remoteStream;
+
             try {
-                // 1. Get Media
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
 
-                // 2. Add tracks to PeerConnection
-                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+                localStream.getTracks().forEach(track => {
+                    pc.addTrack(track, localStream);
+                });
 
-                // 3. Handle Remote Stream
                 pc.ontrack = (event) => {
-                    const remoteVideo = document.getElementById('remoteVideo');
-                    if (remoteVideo.srcObject !== event.streams[0]) {
-                        remoteVideo.srcObject = event.streams[0];
-                        statusText.innerText = "STATUS: ENCRYPTED UPLINK STABLE";
-                        statusText.style.color = "#22c55e";
-                    }
+                    console.log("Remote track detected!");
+                    event.streams[0].getTracks().forEach(track => {
+                        remoteStream.addTrack(track);
+                    });
+                    statusText.innerText = "active";
                 };
 
-                // 4. Handle ICE Candidates (Crucial Fix)
                 pc.onicecandidate = (event) => {
                     if (event.candidate) {
-                        // We detect if we are the 'offer' side or 'answer' side
-                        const candidateType = pc.localDescription.type === 'offer' ? 'offerCandidates' : 'answerCandidates';
-                        push(ref(db, `calls/${roomId}/${candidateType}`), event.candidate.toJSON());
+                        const type = pc.localDescription.type === 'offer' ? 'offerCandidates' : 'answerCandidates';
+                        console.log(`Sending ${type}`);
+                        push(ref(db, `calls/${roomId}/${type}`), event.candidate.toJSON());
                     }
                 };
 
-                // 5. Determine Role
                 initSignaling();
-
-            } catch (error) {
-                console.error(error);
-                statusText.innerText = "ERROR: HARDWARE ACCESS DENIED";
-                statusText.style.color = "#ef4444";
+            } catch (e) {
+                console.error("Hardware denied:", e);
+                statusText.innerText = "ERROR: CAMERA_ACCESS_DENIED";
             }
         }
 
@@ -207,82 +177,57 @@
             const snapshot = await get(callRef);
             const data = snapshot.val();
 
-            // If no offer exists, I am the CALLER
+            // CALLER SIDE
             if (!data || !data.offer) {
-                setupCaller(callRef);
-            } else {
-                setupReceiver(callRef, data.offer);
+                console.log("Creating new call...");
+                const offerDescription = await pc.createOffer();
+                await pc.setLocalDescription(offerDescription);
+
+                await set(callRef, { 
+                    offer: { type: offerDescription.type, sdp: offerDescription.sdp } 
+                });
+
+                // Watch for answer
+                onValue(callRef, (snap) => {
+                    const d = snap.val();
+                    if (!pc.remoteDescription && d?.answer) {
+                        console.log("Answer received, connecting...");
+                        pc.setRemoteDescription(new RTCSessionDescription(d.answer));
+                    }
+                });
+
+                // Watch for answerer's network paths
+                onChildAdded(ref(db, `calls/${roomId}/answerCandidates`), (snap) => {
+                    pc.addIceCandidate(new RTCIceCandidate(snap.val()));
+                });
+
+            } 
+            // RECEIVER SIDE
+            else {
+                console.log("Joining existing call...");
+                await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+                
+                const answerDescription = await pc.createAnswer();
+                await pc.setLocalDescription(answerDescription);
+                
+                await update(callRef, { 
+                    answer: { type: answerDescription.type, sdp: answerDescription.sdp } 
+                });
+
+                // Watch for caller's network paths
+                onChildAdded(ref(db, `calls/${roomId}/offerCandidates`), (snap) => {
+                    pc.addIceCandidate(new RTCIceCandidate(snap.val()));
+                });
             }
         }
 
-        // --- CALLER LOGIC ---
-        async function setupCaller(callRef) {
-            statusText.innerText = "STATUS: INITIATING HANDSHAKE...";
-
-            // Create and set local offer
-            const offerDescription = await pc.createOffer();
-            await pc.setLocalDescription(offerDescription);
-
-            const offer = {
-                sdp: offerDescription.sdp,
-                type: offerDescription.type,
-            };
-
-            await update(callRef, { offer });
-
-            // Listen for Answer
-            onValue(callRef, (snapshot) => {
-                const data = snapshot.val();
-                if (!pc.remoteDescription && data?.answer) {
-                    const answerDesc = new RTCSessionDescription(data.answer);
-                    pc.setRemoteDescription(answerDesc);
-                }
-            });
-
-            // Listen for Answerer's ICE candidates
-            onChildAdded(ref(db, `calls/${roomId}/answerCandidates`), (snapshot) => {
-                const data = snapshot.val();
-                pc.addIceCandidate(new RTCIceCandidate(data));
-            });
-        }
-
-        // --- RECEIVER LOGIC ---
-        async function setupReceiver(callRef, offer) {
-            statusText.innerText = "STATUS: SIGNAL DETECTED. CONNECTING...";
-
-            // Set remote offer
-            await pc.setRemoteDescription(new RTCSessionDescription(offer));
-
-            // Create local answer
-            const answerDescription = await pc.createAnswer();
-            await pc.setLocalDescription(answerDescription);
-
-            const answer = {
-                type: answerDescription.type,
-                sdp: answerDescription.sdp,
-            };
-
-            await update(callRef, { answer });
-
-            // Listen for Caller's ICE candidates
-            onChildAdded(ref(db, `calls/${roomId}/offerCandidates`), (snapshot) => {
-                const data = snapshot.val();
-                pc.addIceCandidate(new RTCIceCandidate(data));
-            });
-        }
-
-        // --- UTILS ---
         window.endCall = () => {
             pc.close();
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-            }
+            localStream.getTracks().forEach(t => t.stop());
             window.location.href = 'users.html';
         };
 
-        // Initialize
         start();
-
     </script>
 </body>
 </html>
