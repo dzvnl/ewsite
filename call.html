@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SECURE_LINE | INTER-CITY</title>
+    <title>SECURE_LINE | GLOBAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -20,11 +20,10 @@
             background: rgba(0,0,0,0.9); border: 1px solid #22c55e; 
             padding: 15px; z-index: 200; width: 280px;
         }
-        #debugLog { font-size: 0.8rem; color: #666; height: 80px; overflow-y: auto; border-top: 1px solid #22c55e; margin-top: 10px; padding-top: 5px; }
-        .btn { border: 1px solid #22c55e; padding: 8px; cursor: pointer; text-transform: uppercase; width: 100%; margin-top: 10px; }
+        #debugLog { font-size: 0.8rem; color: #666; height: 100px; overflow-y: auto; border-top: 1px solid #22c55e; margin-top: 10px; padding-top: 5px; }
+        .btn { border: 1px solid #22c55e; padding: 8px; cursor: pointer; text-transform: uppercase; width: 100%; margin-top: 10px; background: transparent; color: #22c55e; }
         .btn-red { background: #ef4444; color: white; border: none; }
-        .btn-call { background: #22c55e; color: black; font-weight: bold; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .btn-call { background: #22c55e; color: black; font-weight: bold; }
         .hidden { display: none; }
     </style>
 </head>
@@ -32,11 +31,11 @@
 
     <div class="wrapper">
         <div class="overlay">
-            <div id="statusText" class="text-xl">STATUS: CONNECTING...</div>
-            <div id="netStatus" class="text-xs text-yellow-500">ICE: INITIALIZING</div>
-            <div id="debugLog">Waiting for peer...</div>
+            <div id="statusText" class="text-xl">SYSTEM: STANDBY</div>
+            <div id="netStatus" class="text-xs text-yellow-500">ICE: IDLE</div>
+            <div id="debugLog">Initializing...</div>
             
-            <button id="activateBtn" class="btn btn-call hidden" onclick="startAudio()">ACTIVATE ENCRYPTED FEED</button>
+            <button id="activateBtn" class="btn btn-call hidden" onclick="startAudio()">ACTIVATE FEED</button>
             <button class="btn btn-red" onclick="location.href='users.html'">TERMINATE</button>
         </div>
 
@@ -46,7 +45,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, onValue, set, update, push, onChildAdded, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref, onValue, set, update, push, onChildAdded, get, off } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
@@ -61,45 +60,47 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         
-        // Using multiple STUN servers for better cross-house connectivity
-        const pc = new RTCPeerConnection({ 
+        const servers = {
             iceServers: [
                 { urls: 'stun:stun1.l.google.com:19302' },
                 { urls: 'stun:stun2.l.google.com:19302' },
-                { urls: 'stun:stun.l.google.com:19302' }
-            ] 
-        });
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' }
+            ],
+            iceCandidatePoolSize: 10,
+        };
 
+        let pc = new RTCPeerConnection(servers);
         const urlParams = new URLSearchParams(window.location.search);
         const roomId = urlParams.get('room');
-        const log = (msg) => { document.getElementById('debugLog').innerHTML += `<div>> ${msg}</div>`; };
+        const log = (msg) => { 
+            const d = document.getElementById('debugLog');
+            d.innerHTML += `<div>> ${msg}</div>`;
+            d.scrollTop = d.scrollHeight;
+        };
 
         window.startAudio = () => {
-            const rv = document.getElementById('remoteVideo');
-            rv.play().then(() => {
-                document.getElementById('activateBtn').classList.add('hidden');
-                log("Media playback started.");
-            }).catch(e => log("Playback failed: " + e.message));
+            document.getElementById('remoteVideo').play();
+            document.getElementById('activateBtn').classList.add('hidden');
         };
 
         async function init() {
-            if (!roomId) return;
+            if (!roomId) return log("Error: No Room ID");
             
             const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             document.getElementById('localVideo').srcObject = localStream;
             localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
 
-            // Monitor the actual network connection state
             pc.oniceconnectionstatechange = () => {
                 document.getElementById('netStatus').innerText = `ICE: ${pc.iceConnectionState.toUpperCase()}`;
-                log(`Net State: ${pc.iceConnectionState}`);
+                if(pc.iceConnectionState === 'failed') log("Connection failed. NAT/Firewall block.");
             };
 
             pc.ontrack = (event) => {
-                log("Remote track detected!");
+                log("Signal received!");
                 const rv = document.getElementById('remoteVideo');
                 if (!rv.srcObject) rv.srcObject = event.streams[0];
-                document.getElementById('statusText').innerText = "STATUS: LINK ESTABLISHED";
+                document.getElementById('statusText').innerText = "STATUS: ONLINE";
                 document.getElementById('activateBtn').classList.remove('hidden');
             };
 
@@ -114,27 +115,44 @@
             const snap = await get(callRef);
             const data = snap.val();
 
+            // --- CALLER LOGIC ---
             if (!data || !data.offer) {
-                log("Acting as Caller.");
+                log("Starting new uplink...");
                 const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
                 await set(callRef, { offer: { type: offer.type, sdp: offer.sdp } });
+
                 onValue(callRef, (s) => {
                     const d = s.val();
-                    if (!pc.remoteDescription && d?.answer) pc.setRemoteDescription(new RTCSessionDescription(d.answer));
+                    // State Guard: Only set answer if we have sent an offer and aren't connected yet
+                    if (pc.signalingState === "have-local-offer" && d?.answer) {
+                        log("Answer detected. Syncing...");
+                        pc.setRemoteDescription(new RTCSessionDescription(d.answer));
+                    }
                 });
-                onChildAdded(ref(db, `calls/${roomId}/answerCandidates`), (s) => pc.addIceCandidate(new RTCIceCandidate(s.val())).catch(e => {}));
-            } else {
-                log("Acting as Receiver.");
-                await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-                const answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
-                await update(callRef, { answer: { type: answer.type, sdp: answer.sdp } });
-                onChildAdded(ref(db, `calls/${roomId}/offerCandidates`), (s) => pc.addIceCandidate(new RTCIceCandidate(s.val())).catch(e => {}));
+
+                onChildAdded(ref(db, `calls/${roomId}/answerCandidates`), (s) => {
+                    if (pc.remoteDescription) pc.addIceCandidate(new RTCIceCandidate(s.val()));
+                });
+            } 
+            // --- RECEIVER LOGIC ---
+            else {
+                log("Intercepting uplink...");
+                // State Guard: Only set offer if we are in stable state
+                if (pc.signalingState === "stable") {
+                    await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+                    await update(callRef, { answer: { type: answer.type, sdp: answer.sdp } });
+                }
+
+                onChildAdded(ref(db, `calls/${roomId}/offerCandidates`), (s) => {
+                    if (pc.remoteDescription) pc.addIceCandidate(new RTCIceCandidate(s.val()));
+                });
             }
         }
 
-        init();
+        init().catch(e => log("System Error: " + e.message));
     </script>
 </body>
 </html>
