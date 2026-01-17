@@ -1,6 +1,6 @@
 /*
  * Target: chat.js
- * FIXED: Added Online User List generation for the GUI
+ * FIXED: Cleaned invisible chars, moved logic to EventListeners
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -28,6 +28,7 @@ const ADMINS = ['root', 'futtbucker67', 'w234'];
 const currentUser = localStorage.getItem('username') || 'no name';
 const currentUuid = localStorage.getItem('account_uuid'); 
 const isAdmin = ADMINS.includes(currentUser);
+let onlineUsersList = []; // Store users here
 
 console.log("Current User:", currentUser);
 
@@ -44,11 +45,22 @@ onValue(myUserRef, (snapshot) => {
     }
 });
 
+// --- DOM ELEMENTS ---
 const dom = {
     messages: document.getElementById('chat-messages'),
     input: document.getElementById('msg-input'),
     count: document.getElementById('user-count'),
-    userDisplay: document.getElementById('display-name')
+    userDisplay: document.getElementById('display-name'),
+    sendBtn: document.getElementById('send-btn'),
+    uploadBtn: document.getElementById('upload-btn'),
+    fileInput: document.getElementById('image-upload'),
+    onlineIndicatorBtn: document.getElementById('online-indicator-btn'),
+    modal: document.getElementById('user-list-modal'),
+    modalList: document.getElementById('online-users-list'),
+    modalCloseBtn: document.getElementById('modal-close-btn'),
+    userDisplayBtn: document.getElementById('user-display-btn'),
+    dropdown: document.getElementById('user-dropdown'),
+    logoutBtn: document.getElementById('logout-btn')
 };
 
 if(dom.userDisplay) dom.userDisplay.innerText = currentUser;
@@ -65,6 +77,7 @@ function escapeHtml(text) {
 }
 
 // --- UTILITY: DELETE LISTENER ---
+// Used event delegation here
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('delete-btn')) {
         const msgId = e.target.getAttribute('data-id');
@@ -161,7 +174,7 @@ async function sendMessage() {
     } catch (e) { console.error("Send Error:", e); }
 }
 
-window.sendImage = async function(imageBase64) {
+async function sendImage(imageBase64) {
     const userColor = localStorage.getItem('user_color') || '#facc15';
     try {
         await push(ref(db, 'messages'), {
@@ -176,8 +189,94 @@ window.sendImage = async function(imageBase64) {
     } catch (e) { alert("Failed to send image."); }
 };
 
-window.send = sendMessage;
-dom.input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+// --- EVENT LISTENERS (REPLACING INLINE HTML) ---
+
+// 1. Send Button
+if (dom.sendBtn) {
+    dom.sendBtn.addEventListener('click', sendMessage);
+}
+
+// 2. Enter Key
+if (dom.input) {
+    dom.input.addEventListener('keypress', (e) => { 
+        if (e.key === 'Enter') sendMessage(); 
+    });
+}
+
+// 3. Upload Button (Trigger File Input)
+if (dom.uploadBtn) {
+    dom.uploadBtn.addEventListener('click', () => {
+        dom.fileInput.click();
+    });
+}
+
+// 4. File Input Change
+if (dom.fileInput) {
+    dom.fileInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const file = this.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                sendImage(e.target.result);
+            };
+            reader.readAsDataURL(file);
+            this.value = '';
+        }
+    });
+}
+
+// 5. Open Online Users Modal
+if (dom.onlineIndicatorBtn) {
+    dom.onlineIndicatorBtn.addEventListener('click', () => {
+        dom.modalList.innerHTML = '';
+        onlineUsersList.forEach(user => {
+            const li = document.createElement('li');
+            li.innerHTML = `<div class="list-dot"></div> ${escapeHtml(user)}`;
+            dom.modalList.appendChild(li);
+        });
+        dom.modal.classList.add('open');
+    });
+}
+
+// 6. Close Modal (Button)
+if (dom.modalCloseBtn) {
+    dom.modalCloseBtn.addEventListener('click', () => {
+        dom.modal.classList.remove('open');
+    });
+}
+
+// 7. Close Modal (Click Overlay)
+if (dom.modal) {
+    dom.modal.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay')) {
+            dom.modal.classList.remove('open');
+        }
+    });
+}
+
+// 8. User Dropdown Toggle
+if (dom.userDisplayBtn) {
+    dom.userDisplayBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent closing immediately
+        dom.dropdown.classList.toggle("show");
+    });
+}
+
+// 9. Close Dropdown when clicking elsewhere
+window.addEventListener('click', (e) => {
+    if (dom.userDisplayBtn && !dom.userDisplayBtn.contains(e.target)) {
+        if (dom.dropdown) dom.dropdown.classList.remove('show');
+    }
+});
+
+// 10. Logout
+if (dom.logoutBtn) {
+    dom.logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('username');
+        window.location.href = 'index.html';
+    });
+}
+
 
 // --- RECEIVE & RENDER LOGIC ---
 onValue(ref(db, 'messages'), (snapshot) => {
@@ -288,14 +387,10 @@ onValue(connectionsRef, (snap) => {
     const allUsers = Object.values(data).map(c => c.user || 'Unknown');
     
     // Filter to unique names (removes duplicates from multiple tabs)
-    const uniqueUsers = [...new Set(allUsers)];
+    onlineUsersList = [...new Set(allUsers)];
     
     // Update the visual count
-    dom.count.innerText = uniqueUsers.length;
-
-    // --- EXPOSE TO GLOBAL SCOPE FOR GUI ---
-    // This allows the HTML modal to access the real user list
-    window.onlineUsersList = uniqueUsers;
+    if (dom.count) dom.count.innerText = onlineUsersList.length;
 
     // Run cleanup occasionally
     cleanStaleConnections(data);
