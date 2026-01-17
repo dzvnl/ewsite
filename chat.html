@@ -43,13 +43,8 @@
         @media (max-width: 768px) {
             body { padding: 0; }
             #chat-container {
-                width: 100%;
-                height: 100%;
-                max-width: 100%;
-                max-height: 100%;
-                border: none;
-                border-radius: 0;
-                resize: none;
+                width: 100%; height: 100%; max-width: 100%; max-height: 100%;
+                border: none; border-radius: 0; resize: none;
             }
             .msg-avatar { width: 32px; height: 32px; }
             #chat-messages { padding: 10px; }
@@ -66,7 +61,7 @@
             text-shadow: 1px 1px 2px black; 
             display: flex;             
             flex-direction: column;  
-            gap: 2px;              
+            gap: 2px;               
         }
 
         /* Message Styling */
@@ -108,31 +103,19 @@
         button:hover { background: rgba(250, 204, 21, 0.2); }
         .upload-icon { width: 20px; height: 20px; fill: #facc15; filter: drop-shadow(1px 1px 1px black); }
 
-        /* --- UPDATED ONLINE INDICATOR --- */
-        .online-indicator {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: #4ade80;
-            background: rgba(0,0,0,0.5);
-            padding: 2px 8px; /* Increased padding for clickability */
-            border-radius: 4px;
-            z-index: 10;
-            cursor: pointer; /* Change cursor to pointer */
-            transition: background 0.2s;
+        /* Online Indicator */
+        #online-indicator-btn {
+            position: absolute; top: 12px; left: 12px; display: flex;
+            align-items: center; gap: 6px; color: #4ade80;
+            background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 4px;
+            z-index: 10; cursor: pointer; transition: background 0.2s;
             border: 1px solid transparent;
         }
-        .online-indicator:hover {
-            background: rgba(0,0,0,0.8);
-            border: 1px solid #4ade80;
-        }
+        #online-indicator-btn:hover { background: rgba(0,0,0,0.8); border: 1px solid #4ade80; }
         .dot { width: 9px; height: 9px; background: #4ade80; border-radius: 100%; box-shadow: 0 0 5px #4ade80; }
         
         .user-menu { position: absolute; top: 8px; right: 12px; z-index: 20; }
-        #user-display { background: none; border: none; cursor: pointer; padding: 4px; }
+        #user-display-btn { background: none; border: none; cursor: pointer; padding: 4px; }
         .person-icon { width: 24px; height: 24px; fill: #facc15; filter: drop-shadow(1px 1px 2px black); }
 
         .dropdown {
@@ -148,56 +131,31 @@
         .dropdown a:hover { background: #333; color: #facc15; }
         .show { display: block; }
 
-        /* --- NEW USER LIST MODAL STYLES --- */
+        /* Modal Styles */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 999;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(5px);
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); z-index: 999;
+            justify-content: center; align-items: center; backdrop-filter: blur(5px);
         }
         .modal-overlay.open { display: flex; }
 
         .modal-box {
-            background: rgba(20, 20, 20, 0.95);
-            border: 2px solid #facc15;
-            width: 300px;
-            max-height: 80vh;
-            display: flex;
-            flex-direction: column;
+            background: rgba(20, 20, 20, 0.95); border: 2px solid #facc15;
+            width: 300px; max-height: 80vh; display: flex; flex-direction: column;
             box-shadow: 0 0 25px rgba(250, 204, 21, 0.2);
         }
-
         .modal-header {
-            padding: 10px 15px;
-            border-bottom: 1px solid #666;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(250, 204, 21, 0.1);
+            padding: 10px 15px; border-bottom: 1px solid #666; display: flex;
+            justify-content: space-between; align-items: center; background: rgba(250, 204, 21, 0.1);
         }
         .modal-title { color: #facc15; font-size: 1.1rem; }
-        .close-btn { 
-            color: #999; border: none; font-size: 1.2rem; cursor: pointer; padding: 0 5px;
-        }
+        .close-btn { color: #999; border: none; font-size: 1.2rem; cursor: pointer; padding: 0 5px; }
         .close-btn:hover { color: #fff; }
 
-        .modal-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            overflow-y: auto;
-        }
+        .modal-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; }
         .modal-list li {
-            padding: 10px 15px;
-            border-bottom: 1px solid #333;
-            color: #ccc;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            padding: 10px 15px; border-bottom: 1px solid #333; color: #ccc;
+            display: flex; align-items: center; gap: 10px;
         }
         .modal-list li:hover { background: rgba(255, 255, 255, 0.05); }
         .list-dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; }
@@ -207,13 +165,13 @@
 
     <div id="chat-container">
         
-        <div class="online-indicator" onclick="openOnlineUsers()" title="View Online Users">
+        <div id="online-indicator-btn" title="View Online Users">
             <div class="dot"></div>
             <span id="user-count">0</span>
         </div>
 
         <div class="user-menu">
-            <button id="user-display" onclick="toggleMenu()">
+            <button id="user-display-btn">
                 <svg class="person-icon" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
                 </svg>
@@ -222,7 +180,7 @@
                 <a href="folk" id="display-name" style="color:#fff; pointer-events:none;"></a>
                 <a href="settings">settings</a>
                 <a href="users">users</a>
-                <a href="#" onclick="logout()">logout</a>
+                <a href="#" id="logout-btn">logout</a>
             </div>
         </div>
 
@@ -233,21 +191,21 @@
             
             <input type="text" id="msg-input" placeholder="Type..." autocomplete="off">
             
-            <button onclick="document.getElementById('image-upload').click()" title="Upload Image" style="padding: 5px 10px;">
+            <button id="upload-btn" title="Upload Image" style="padding: 5px 10px;">
                 <svg class="upload-icon" viewBox="0 0 24 24">
                     <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
                 </svg>
             </button>
 
-            <button onclick="send()" style="color: #facc15; padding: 6px 15px;">SEND</button>
+            <button id="send-btn" style="color: #facc15; padding: 6px 15px;">SEND</button>
         </div>
     </div>
 
-    <div id="user-list-modal" class="modal-overlay" onclick="closeOnlineUsers(event)">
+    <div id="user-list-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
                 <span class="modal-title">Active Users</span>
-                <button class="close-btn" onclick="closeOnlineUsers(null)">✕</button>
+                <button id="modal-close-btn" class="close-btn">✕</button>
             </div>
             <ul id="online-users-list" class="modal-list">
                 </ul>
@@ -255,55 +213,5 @@
     </div>
 
     <script type="module" src="chat.js"></script>
-    <script>
-        function toggleMenu() { document.getElementById("user-dropdown").classList.toggle("show"); }
-        window.onclick = function(event) { if (!event.target.closest('#user-display')) { document.getElementById("user-dropdown").classList.remove('show'); } }
-        function logout() { localStorage.removeItem('username'); window.location.href = 'index.html'; }
-        
-        // Image logic
-        const fileInput = document.getElementById('image-upload');
-        fileInput.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                const file = this.files[0];
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    if (window.sendImage) window.sendImage(e.target.result);
-                };
-                reader.readAsDataURL(file);
-                this.value = '';
-            }
-        });
-
-        /* --- NEW USER LIST LOGIC --- */
-        
-        // 1. Function to open the modal
-        function openOnlineUsers() {
-            const modal = document.getElementById('user-list-modal');
-            const listContainer = document.getElementById('online-users-list');
-            
-            // Clear current list
-            listContainer.innerHTML = '';
-// Use the real list from chat.js, or an empty array if loading
-const demoUsers = window.onlineUsersList || [];
-
-            
-            demoUsers.forEach(user => {
-                const li = document.createElement('li');
-                li.innerHTML = `<div class="list-dot"></div> ${user}`;
-                listContainer.appendChild(li);
-            });
-
-            modal.classList.add('open');
-        }
-
-        // 2. Function to close the modal
-        function closeOnlineUsers(event) {
-            // If event is provided, only close if clicking the overlay (background), not the box itself
-            if (event && !event.target.classList.contains('modal-overlay')) return;
-            
-            document.getElementById('user-list-modal').classList.remove('open');
-        }
-
-    </script>
 </body>
 </html>
