@@ -1,269 +1,108 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>secure_line</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'VT323', monospace;
-            background-color: #000;
-            color: #22c55e;
-            height: 100vh;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow: hidden;
-        }
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue, update, push, onChildAdded, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-        /* --- VIDEO GRID --- */
-        .video-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #111;
-        }
+    const firebaseConfig = {
+        apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
+        authDomain: "ewsitechat.firebaseapp.com",
+        databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
+        projectId: "ewsitechat",
+        storageBucket: "ewsitechat.firebasestorage.app",
+        messagingSenderId: "282495574514",
+        appId: "1:282495574514:web:e2781da630d93fc1ce8b6b"
+    };
 
-        /* Remote Video (Full Screen) */
-        #remoteVideo {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1); /* Mirror effect */
-        }
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-        /* Local Video (Picture in Picture) */
-        #localVideo {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 200px;
-            height: 150px;
-            background: #000;
-            border: 2px solid #22c55e;
-            object-fit: cover;
-            z-index: 10;
-            transform: scaleX(-1);
-        }
+    const servers = {
+        iceServers: [
+            { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
+        ]
+    };
 
-        /* --- OVERLAYS --- */
-        .status-overlay {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.7);
-            padding: 10px;
-            border: 1px solid #22c55e;
-            z-index: 20;
-            font-size: 1.5rem;
-        }
+    const pc = new RTCPeerConnection(servers);
+    let localStream = null;
 
-        .controls {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            z-index: 20;
-            display: flex;
-            gap: 10px;
-        }
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get('room');
+    const statusText = document.getElementById('statusText');
 
-        .btn {
-            font-family: 'VT323';
-            font-size: 1.5rem;
-            padding: 5px 15px;
-            cursor: pointer;
-            border: none;
-            text-transform: uppercase;
-        }
-        .btn-end { background: #ef4444; color: #fff; }
-        .btn-end:hover { background: #b91c1c; }
+    // 1. Setup Local Media
+    async function start() {
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            document.getElementById('localVideo').srcObject = localStream;
 
-    </style>
-</head>
-<body>
+            localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-    <div class="video-container">
-        <div id="statusText" class="status-overlay">INITIALIZING ENCRYPTION...</div>
+            pc.ontrack = (event) => {
+                document.getElementById('remoteVideo').srcObject = event.streams[0];
+                statusText.innerText = "STATUS: SECURE CONNECTION ESTABLISHED";
+            };
 
-        <video id="remoteVideo" autoplay playsinline></video>
-        <video id="localVideo" autoplay playsinline muted></video>
-
-        <div class="controls">
-            <button class="btn btn-end" onclick="endCall()">DISCONNECT</button>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, update, push, onChildAdded } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
-        // --- CONFIG ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
-            authDomain: "ewsitechat.firebaseapp.com",
-            databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
-            projectId: "ewsitechat",
-            storageBucket: "ewsitechat.firebasestorage.app",
-            messagingSenderId: "282495574514",
-            appId: "1:282495574514:web:e2781da630d93fc1ce8b6b"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        // --- WEBRTC SETUP ---
-        const servers = {
-            iceServers: [
-                { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
-            ]
-        };
-
-        const pc = new RTCPeerConnection(servers);
-        let localStream = null;
-        let remoteStream = null;
-
-        // URL Params
-        const urlParams = new URLSearchParams(window.location.search);
-        const roomId = urlParams.get('room');
-        
-        const statusText = document.getElementById('statusText');
-        const localVideo = document.getElementById('localVideo');
-        const remoteVideo = document.getElementById('remoteVideo');
-
-        if (!roomId) {
-            alert("No Room ID provided!");
-            window.location.href = 'users.html';
-        }
-
-        // --- 1. STARTUP ---
-        async function start() {
-            try {
-                // Get Camera/Mic
-                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                
-                // Show Local Video
-                localVideo.srcObject = localStream;
-
-                // Push tracks to PeerConnection
-                localStream.getTracks().forEach(track => {
-                    pc.addTrack(track, localStream);
-                });
-
-                // Listen for Remote Tracks
-                pc.ontrack = (event) => {
-                    event.streams[0].getTracks().forEach(track => {
-                        remoteStream = new MediaStream();
-                        remoteStream.addTrack(track);
-                        remoteVideo.srcObject = event.streams[0];
-                        statusText.innerText = "STATUS: SECURE CONNECTION ESTABLISHED";
-                        statusText.style.color = "#22c55e";
-                    });
-                };
-
-                // Listen for Local ICE Candidates -> Send to Firebase
-                pc.onicecandidate = (event) => {
-                    if (event.candidate) {
-                        push(ref(db, `calls/${roomId}/iceCandidates`), event.candidate.toJSON());
-                    }
-                };
-
-                // DETERMINE IF CALLER OR RECEIVER
-                checkRoleAndSignaling();
-
-            } catch (error) {
-                console.error(error);
-                statusText.innerText = "ERROR: CAMERA BLOCKED OR MISSING";
-                statusText.style.color = "red";
-            }
-        }
-
-        // --- 2. SIGNALING LOGIC ---
-        function checkRoleAndSignaling() {
-            const callRef = ref(db, `calls/${roomId}`);
-            
-            // Check if an offer already exists. 
-            // If NO offer, I am the CALLER.
-            // If YES offer, I am the RECEIVER.
-            
-            onValue(callRef, async (snapshot) => {
-                const data = snapshot.val();
-                if (!data) return;
-
-                // HANDLING ICE CANDIDATES (FROM THE OTHER PERSON)
-                const candidatesRef = ref(db, `calls/${roomId}/iceCandidates`);
-                onChildAdded(candidatesRef, (data) => {
-                    const candidate = new RTCIceCandidate(data.val());
-                    pc.addIceCandidate(candidate).catch(e => console.error("ICE Error", e));
-                });
-
-                // --- LOGIC SPLIT ---
-
-                // CASE A: I am the CALLER (First time setup)
-                // We check if *I* created the call entry locally? 
-                // Simpler check: If there is no 'offer' in DB yet, create it.
-                if (!data.offer && !data.answer) {
-                    statusText.innerText = "STATUS: DIALING...";
-                    createOffer();
+            // Logic to handle ICE candidates
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    // We store candidates in two separate paths so we don't trigger our own listeners
+                    const type = pc.localDescription.type; // 'offer' or 'answer'
+                    push(ref(db, `calls/${roomId}/${type}Candidates`), event.candidate.toJSON());
                 }
-                
-                // CASE B: I am the RECEIVER (An offer exists, but no answer yet)
-                else if (data.offer && !data.answer && pc.signalingState === "stable") {
-                    statusText.innerText = "STATUS: CONNECTING...";
-                    answerCall(data.offer);
-                }
+            };
 
-                // CASE C: I am the CALLER (Waiting for answer, and it just arrived)
-                else if (data.offer && data.answer && pc.signalingState === "have-local-offer") {
-                    statusText.innerText = "STATUS: HANDSHAKING...";
-                    const answerDesc = new RTCSessionDescription(data.answer);
-                    await pc.setRemoteDescription(answerDesc);
-                }
-            }, { onlyOnce: false }); // Keep listening for updates
+            initSignaling();
+        } catch (e) {
+            statusText.innerText = "ERROR: CAMERA BLOCKED";
+            console.error(e);
         }
+    }
 
-        // --- 3. HELPER FUNCTIONS ---
+    // 2. Signaling Logic
+    async function initSignaling() {
+        const callRef = ref(db, `calls/${roomId}`);
+        const snapshot = await get(callRef);
+        const data = snapshot.val();
 
-        async function createOffer() {
+        if (!data || !data.offer) {
+            // I AM THE CALLER
+            statusText.innerText = "STATUS: DIALING...";
             const offerDescription = await pc.createOffer();
             await pc.setLocalDescription(offerDescription);
+            await update(callRef, { offer: { type: offerDescription.type, sdp: offerDescription.sdp } });
 
-            const offer = {
-                sdp: offerDescription.sdp,
-                type: offerDescription.type,
-            };
+            // Listen for the Answer
+            onValue(callRef, (snapshot) => {
+                const data = snapshot.val();
+                if (!pc.remoteDescription && data?.answer) {
+                    pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+                }
+            });
 
-            await update(ref(db, `calls/${roomId}`), { offer });
-        }
+            // Listen for Answerer's ICE candidates
+            onChildAdded(ref(db, `calls/${roomId}/answerCandidates`), (snapshot) => {
+                pc.addIceCandidate(new RTCIceCandidate(snapshot.val()));
+            });
 
-        async function answerCall(offer) {
-            const offerDesc = new RTCSessionDescription(offer);
-            await pc.setRemoteDescription(offerDesc);
-
+        } else {
+            // I AM THE RECEIVER
+            statusText.innerText = "STATUS: CONNECTING...";
+            await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+            
             const answerDescription = await pc.createAnswer();
             await pc.setLocalDescription(answerDescription);
+            await update(callRef, { answer: { type: answerDescription.type, sdp: answerDescription.sdp } });
 
-            const answer = {
-                type: answerDescription.type,
-                sdp: answerDescription.sdp,
-            };
-
-            await update(ref(db, `calls/${roomId}`), { answer });
+            // Listen for Caller's ICE candidates
+            onChildAdded(ref(db, `calls/${roomId}/offerCandidates`), (snapshot) => {
+                pc.addIceCandidate(new RTCIceCandidate(snapshot.val()));
+            });
         }
+    }
 
-        // --- 4. END CALL ---
-        window.endCall = () => {
-            pc.close();
-            window.location.href = 'users.html';
-        };
+    window.endCall = () => {
+        pc.close();
+        window.location.href = 'users.html';
+    };
 
-        // START
-        start();
-
-    </script>
-</body>
-</html>
+    start();
+</script>
