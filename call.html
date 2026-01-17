@@ -3,47 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SECURE_LINE | TERMINAL</title>
+    <title>SECURE_LINE | INTER-CITY</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'VT323', monospace; background: #000; color: #22c55e; height: 100vh; overflow: hidden; margin: 0; }
-        
-        .video-wrapper { 
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #050505; display: block;
-        }
-
-        #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #111; }
-
+        .wrapper { position: relative; width: 100vw; height: 100vh; background: #050505; }
+        #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; }
         #localVideo { 
             position: absolute; bottom: 20px; right: 20px; 
-            width: 200px; height: 150px; border: 2px solid #22c55e; 
-            z-index: 100; transform: scaleX(-1); background: #000;
+            width: 180px; height: 130px; border: 2px solid #22c55e; 
+            z-index: 100; transform: scaleX(-1); background: #111;
         }
-
         .overlay { 
             position: absolute; top: 20px; left: 20px; 
-            background: rgba(0,0,0,0.85); border: 1px solid #22c55e; 
-            padding: 15px; z-index: 200; min-width: 250px;
+            background: rgba(0,0,0,0.9); border: 1px solid #22c55e; 
+            padding: 15px; z-index: 200; width: 280px;
         }
-
-        #debugLog { font-size: 0.85rem; color: #888; margin-top: 10px; height: 100px; overflow-y: auto; border-top: 1px solid #333; }
-        .btn { padding: 5px 15px; cursor: pointer; border: 1px solid #22c55e; background: transparent; color: #22c55e; text-transform: uppercase; margin-top: 10px; }
+        #debugLog { font-size: 0.8rem; color: #666; height: 80px; overflow-y: auto; border-top: 1px solid #22c55e; margin-top: 10px; padding-top: 5px; }
+        .btn { border: 1px solid #22c55e; padding: 8px; cursor: pointer; text-transform: uppercase; width: 100%; margin-top: 10px; }
         .btn-red { background: #ef4444; color: white; border: none; }
+        .btn-call { background: #22c55e; color: black; font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="video-wrapper">
+    <div class="wrapper">
         <div class="overlay">
-            <div id="statusText" class="text-xl">SYSTEM: STANDBY</div>
-            <div id="debugLog">Initializing...</div>
-            <div class="flex gap-2">
-                <button class="btn btn-red" onclick="location.href='users.html'">LEAVE</button>
-                <button id="playBtn" class="btn hidden" onclick="forcePlay()">ACTIVATE VIDEO</button>
-            </div>
+            <div id="statusText" class="text-xl">STATUS: CONNECTING...</div>
+            <div id="netStatus" class="text-xs text-yellow-500">ICE: INITIALIZING</div>
+            <div id="debugLog">Waiting for peer...</div>
+            
+            <button id="activateBtn" class="btn btn-call hidden" onclick="startAudio()">ACTIVATE ENCRYPTED FEED</button>
+            <button class="btn btn-red" onclick="location.href='users.html'">TERMINATE</button>
         </div>
 
         <video id="remoteVideo" autoplay playsinline></video>
@@ -66,70 +60,81 @@
         
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const pc = new RTCPeerConnection({ iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] });
         
+        // Using multiple STUN servers for better cross-house connectivity
+        const pc = new RTCPeerConnection({ 
+            iceServers: [
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun.l.google.com:19302' }
+            ] 
+        });
+
         const urlParams = new URLSearchParams(window.location.search);
         const roomId = urlParams.get('room');
-        const log = (msg) => { 
-            const d = document.getElementById('debugLog');
-            d.innerHTML += `<div>> ${msg}</div>`;
-            d.scrollTop = d.scrollHeight;
+        const log = (msg) => { document.getElementById('debugLog').innerHTML += `<div>> ${msg}</div>`; };
+
+        window.startAudio = () => {
+            const rv = document.getElementById('remoteVideo');
+            rv.play().then(() => {
+                document.getElementById('activateBtn').classList.add('hidden');
+                log("Media playback started.");
+            }).catch(e => log("Playback failed: " + e.message));
         };
 
-        window.forcePlay = () => {
-            document.getElementById('remoteVideo').play();
-            document.getElementById('playBtn').classList.add('hidden');
-        };
-
-        async function start() {
+        async function init() {
             if (!roomId) return;
-            log("Opening camera...");
             
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                document.getElementById('localVideo').srcObject = stream;
-                stream.getTracks().forEach(track => pc.addTrack(track, stream));
-            } catch (e) { log("CAMERA ERROR: " + e.message); }
+            const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            document.getElementById('localVideo').srcObject = localStream;
+            localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
 
-            pc.ontrack = (event) => {
-                log("Remote track received!");
-                const remoteVid = document.getElementById('remoteVideo');
-                if (!remoteVid.srcObject) remoteVid.srcObject = event.streams[0];
-                document.getElementById('statusText').innerText = "STATUS: LINK ACTIVE";
-                document.getElementById('playBtn').classList.remove('hidden');
+            // Monitor the actual network connection state
+            pc.oniceconnectionstatechange = () => {
+                document.getElementById('netStatus').innerText = `ICE: ${pc.iceConnectionState.toUpperCase()}`;
+                log(`Net State: ${pc.iceConnectionState}`);
             };
 
-            pc.onicecandidate = (event) => {
-                if (event.candidate) {
-                    const path = pc.localDescription.type === 'offer' ? 'offerCandidates' : 'answerCandidates';
-                    push(ref(db, `calls/${roomId}/${path}`), event.candidate.toJSON());
+            pc.ontrack = (event) => {
+                log("Remote track detected!");
+                const rv = document.getElementById('remoteVideo');
+                if (!rv.srcObject) rv.srcObject = event.streams[0];
+                document.getElementById('statusText').innerText = "STATUS: LINK ESTABLISHED";
+                document.getElementById('activateBtn').classList.remove('hidden');
+            };
+
+            pc.onicecandidate = (e) => {
+                if (e.candidate) {
+                    const type = pc.localDescription.type === 'offer' ? 'offerCandidates' : 'answerCandidates';
+                    push(ref(db, `calls/${roomId}/${type}`), e.candidate.toJSON());
                 }
             };
 
             const callRef = ref(db, `calls/${roomId}`);
-            const snapshot = await get(callRef);
-            const data = snapshot.val();
+            const snap = await get(callRef);
+            const data = snap.val();
 
             if (!data || !data.offer) {
-                log("Starting new call...");
+                log("Acting as Caller.");
                 const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
                 await set(callRef, { offer: { type: offer.type, sdp: offer.sdp } });
-                onValue(callRef, (snap) => {
-                    const d = snap.val();
+                onValue(callRef, (s) => {
+                    const d = s.val();
                     if (!pc.remoteDescription && d?.answer) pc.setRemoteDescription(new RTCSessionDescription(d.answer));
                 });
-                onChildAdded(ref(db, `calls/${roomId}/answerCandidates`), (s) => pc.addIceCandidate(new RTCIceCandidate(s.val())).catch(() => {}));
+                onChildAdded(ref(db, `calls/${roomId}/answerCandidates`), (s) => pc.addIceCandidate(new RTCIceCandidate(s.val())).catch(e => {}));
             } else {
-                log("Joining call...");
+                log("Acting as Receiver.");
                 await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
                 const answer = await pc.createAnswer();
                 await pc.setLocalDescription(answer);
                 await update(callRef, { answer: { type: answer.type, sdp: answer.sdp } });
-                onChildAdded(ref(db, `calls/${roomId}/offerCandidates`), (s) => pc.addIceCandidate(new RTCIceCandidate(s.val())).catch(() => {}));
+                onChildAdded(ref(db, `calls/${roomId}/offerCandidates`), (s) => pc.addIceCandidate(new RTCIceCandidate(s.val())).catch(e => {}));
             }
         }
-        start();
+
+        init();
     </script>
 </body>
 </html>
