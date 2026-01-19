@@ -11,48 +11,35 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--bg-color); overflow: hidden; font-family: monospace; }
         
         #videos-container { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #000; }
-        
-        /* Remote Video */
         #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; }
         
-        /* Local Video */
         #local-video-wrapper { position: absolute; bottom: 20px; right: 20px; width: 280px; height: 157px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.8); border: 1px solid #333; background: #111; z-index: 10; }
         #localVideo { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        #localVideo.screen-sharing { transform: scaleX(1); }
-
-        /* Controls */
+        
         #controls { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; background: var(--control-bg); padding: 15px 30px; border-radius: 50px; border: 1px solid #333; z-index: 20; }
         .btn { background: #333; border: none; width: 55px; height: 55px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; transition: all 0.2s; }
         .btn:hover { background: #444; transform: scale(1.1); }
-        .btn.disabled-state { background: var(--danger); color: white; }
 
-        /* Overlay */
         #start-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; }
         #start-btn { padding: 20px 40px; font-size: 2rem; background: var(--accent); color: black; border: none; cursor: pointer; font-family: 'Courier New'; font-weight: bold; margin-top: 20px; }
 
-        /* Debug Log */
         #status-log { position: absolute; top: 20px; left: 20px; color: #0f0; font-size: 14px; z-index: 100; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 4px; pointer-events: none; font-family: 'Courier New'; white-space: pre-wrap; }
     </style>
 </head>
 <body>
 
     <div id="start-overlay">
-        <div id="overlay-msg" style="font-size: 1.5rem; text-align:center;">
-            SECURE CONNECTION READY<br>
-            <span style="font-size: 1rem; color:#888;">Click to Initialize Media Stream</span>
-        </div>
-        <button id="start-btn">ESTABLISH LINK</button>
+        <div style="font-size: 1.5rem; text-align:center;">SECURE LINK READY</div>
+        <button id="start-btn">CONNECT</button>
     </div>
 
-    <div id="status-log">Waiting for user...</div>
+    <div id="status-log">Initializing...</div>
 
     <div id="videos-container">
         <video id="remoteVideo" autoplay playsinline></video>
-        
         <div id="local-video-wrapper">
             <video id="localVideo" autoplay playsinline muted></video>
         </div>
-
         <div id="controls">
             <button class="btn" id="btn-mic"><i class="fas fa-microphone"></i></button>
             <button class="btn" id="btn-cam"><i class="fas fa-video"></i></button>
@@ -77,35 +64,27 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- IMPROVED SERVER LIST ---
         const servers = {
             iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' },
-                { urls: 'stun:stun3.l.google.com:19302' },
-                { urls: 'stun:stun4.l.google.com:19302' }
+                { urls: 'stun:stun2.l.google.com:19302' }
             ]
         };
 
         const pc = new RTCPeerConnection(servers);
         let localStream = null;
+        let candidatesQueue = []; // <--- THE FIX: Buffer for early candidates
 
-        // Elements
-        const localVideo = document.getElementById('localVideo');
-        const remoteVideo = document.getElementById('remoteVideo');
+        // Logs
         const statusLog = document.getElementById('status-log');
-        const startOverlay = document.getElementById('start-overlay');
-        const startBtn = document.getElementById('start-btn');
-
         function log(msg) {
             console.log(msg);
             statusLog.innerText = msg + "\n" + statusLog.innerText.split('\n').slice(0, 4).join('\n');
         }
 
-        // --- 1. USER START ---
-        startBtn.onclick = async () => {
-            startOverlay.style.display = 'none';
+        // Start Button
+        document.getElementById('start-btn').onclick = async () => {
+            document.getElementById('start-overlay').style.display = 'none';
             await init();
         };
 
@@ -115,106 +94,117 @@
             const recipient = urlParams.get('recipient');
             const myIdentity = localStorage.getItem('chat_identity');
 
-            if (!roomId) return log("Error: Missing Room ID");
+            if (!roomId) return log("Error: No Room ID");
 
             const isCaller = (recipient !== myIdentity);
-            log(`Role: ${isCaller ? 'CALLER' : 'RECEIVER'} | Room: ${roomId}`);
+            log(`Role: ${isCaller ? 'CALLER' : 'RECEIVER'}`);
 
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                localVideo.srcObject = localStream;
+                document.getElementById('localVideo').srcObject = localStream;
+                
                 localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-                // --- TRACK HANDLER ---
-                pc.ontrack = (event) => {
-                    log("Stream Tracks Received!");
-                    const [remoteStream] = event.streams;
-                    remoteVideo.srcObject = remoteStream;
-                    remoteVideo.play().catch(e => log("Play Error: " + e.message));
+                pc.ontrack = event => {
+                    log("REMOTE STREAM RECEIVED");
+                    const remoteVid = document.getElementById('remoteVideo');
+                    remoteVid.srcObject = event.streams[0];
+                    remoteVid.play().catch(e => console.error(e));
                 };
 
-                // --- CONNECTION STATE DEBUGGER ---
                 pc.oniceconnectionstatechange = () => {
                     log(`ICE State: ${pc.iceConnectionState}`);
-                    if (pc.iceConnectionState === 'failed') {
-                        log("CRITICAL: Network blocked connection.");
-                    }
                 };
 
                 startSignaling(roomId, isCaller);
 
             } catch (err) {
-                log("Media Error: " + err.message);
+                log("Error: " + err.message);
             }
         }
 
         async function startSignaling(roomId, isCaller) {
             const roomRef = ref(db, `rooms/${roomId}`);
 
+            // 1. Handle ICE Candidates (Send)
+            pc.onicecandidate = event => {
+                if (event.candidate) {
+                    const target = isCaller ? 'callerCandidates' : 'calleeCandidates';
+                    push(ref(db, `rooms/${roomId}/${target}`), event.candidate.toJSON());
+                }
+            };
+
             if (isCaller) {
-                // I AM CALLER
+                // --- CALLER LOGIC ---
                 const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
-                
-                // Send Offer
                 await set(roomRef, { offer: { type: offer.type, sdp: offer.sdp } });
-                log("Offer sent.");
+                log("Offer Sent.");
 
-                // Wait for Answer
-                onValue(ref(db, `rooms/${roomId}/answer`), (snap) => {
+                onValue(ref(db, `rooms/${roomId}/answer`), async (snap) => {
                     const answer = snap.val();
                     if (answer && !pc.currentRemoteDescription) {
-                        log("Answer received!");
-                        pc.setRemoteDescription(new RTCSessionDescription(answer));
+                        log("Answer Received. Setting Remote...");
+                        const rtcAnswer = new RTCSessionDescription(answer);
+                        await pc.setRemoteDescription(rtcAnswer);
+                        processCandidateQueue(); // <--- Process buffered candidates
                     }
                 });
 
-                // ICE Candidates
-                pc.onicecandidate = event => {
-                    if (event.candidate) push(ref(db, `rooms/${roomId}/callerCandidates`), event.candidate.toJSON());
-                };
+                // Listen for Callee Candidates
                 onChildAdded(ref(db, `rooms/${roomId}/calleeCandidates`), (snap) => {
-                    pc.addIceCandidate(new RTCIceCandidate(snap.val()));
+                    handleCandidate(snap.val());
                 });
 
             } else {
-                // I AM RECEIVER
-                log("Waiting for offer...");
+                // --- RECEIVER LOGIC ---
+                log("Waiting for Offer...");
                 onValue(ref(db, `rooms/${roomId}/offer`), async (snap) => {
                     const offer = snap.val();
                     if (offer && !pc.currentRemoteDescription) {
-                        log("Offer found. Sending Answer...");
+                        log("Offer Received. Setting Remote...");
                         await pc.setRemoteDescription(new RTCSessionDescription(offer));
+                        processCandidateQueue(); // <--- Process buffered candidates
                         
                         const answer = await pc.createAnswer();
                         await pc.setLocalDescription(answer);
-
                         await set(ref(db, `rooms/${roomId}/answer`), { type: answer.type, sdp: answer.sdp });
-
-                        pc.onicecandidate = event => {
-                            if (event.candidate) push(ref(db, `rooms/${roomId}/calleeCandidates`), event.candidate.toJSON());
-                        };
-                        onChildAdded(ref(db, `rooms/${roomId}/callerCandidates`), (snap) => {
-                            pc.addIceCandidate(new RTCIceCandidate(snap.val()));
-                        });
+                        log("Answer Sent.");
                     }
+                });
+
+                // Listen for Caller Candidates
+                onChildAdded(ref(db, `rooms/${roomId}/callerCandidates`), (snap) => {
+                    handleCandidate(snap.val());
                 });
             }
         }
 
-        // Controls
-        document.getElementById('btn-mic').onclick = function() {
-            const track = localStream.getAudioTracks()[0];
-            track.enabled = !track.enabled;
-            this.classList.toggle('disabled-state');
+        // --- THE FIX: Candidate Handling with Queue ---
+        function handleCandidate(candidateVal) {
+            const candidate = new RTCIceCandidate(candidateVal);
+            if (pc.remoteDescription) {
+                // If we are ready, add it immediately
+                pc.addIceCandidate(candidate).catch(e => console.error("ICE Error", e));
+            } else {
+                // If not ready, QUEUE IT
+                log("Buffering Candidate...");
+                candidatesQueue.push(candidate);
+            }
         }
-        document.getElementById('btn-cam').onclick = function() {
-            const track = localStream.getVideoTracks()[0];
-            track.enabled = !track.enabled;
-            this.classList.toggle('disabled-state');
-        }
-        document.getElementById('btn-hangup').onclick = () => window.location.href = "users.html";
 
+        function processCandidateQueue() {
+            if (candidatesQueue.length > 0) {
+                log(`Processing ${candidatesQueue.length} buffered candidates`);
+                candidatesQueue.forEach(cand => {
+                    pc.addIceCandidate(cand).catch(e => console.error("ICE Error", e));
+                });
+                candidatesQueue = [];
+            }
+        }
+
+        // Controls
+        document.getElementById('btn-hangup').onclick = () => window.location.href = "users.html";
     </script>
 </body>
 </html>
