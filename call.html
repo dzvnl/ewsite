@@ -14,11 +14,15 @@
         #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; }
         
         #local-video-wrapper { position: absolute; bottom: 20px; right: 20px; width: 280px; height: 157px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.8); border: 1px solid #333; background: #111; z-index: 10; }
-        #localVideo { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        
+        /* Local video is mirrored by default (for webcam), but un-mirrored for screen share */
+        #localVideo { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); transition: transform 0.3s; }
+        #localVideo.screen-sharing { transform: scaleX(1); }
         
         #controls { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; background: var(--control-bg); padding: 15px 30px; border-radius: 50px; border: 1px solid #333; z-index: 20; }
         .btn { background: #333; border: none; width: 55px; height: 55px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; transition: all 0.2s; }
         .btn:hover { background: #444; transform: scale(1.1); }
+        .btn.active { background: var(--accent); color: black; }
 
         #start-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; }
         #start-btn { padding: 20px 40px; font-size: 2rem; background: var(--accent); color: black; border: none; cursor: pointer; font-family: 'Courier New'; font-weight: bold; margin-top: 20px; }
@@ -43,6 +47,7 @@
         <div id="controls">
             <button class="btn" id="btn-mic"><i class="fas fa-microphone"></i></button>
             <button class="btn" id="btn-cam"><i class="fas fa-video"></i></button>
+            <button class="btn" id="btn-screen" title="Share Screen"><i class="fas fa-desktop"></i></button>
             <button class="btn" id="btn-hangup" style="background-color: #ef4444;"><i class="fas fa-phone-slash"></i></button>
         </div>
     </div>
@@ -73,7 +78,11 @@
 
         const pc = new RTCPeerConnection(servers);
         let localStream = null;
-        let candidatesQueue = []; 
+        let candidatesQueue = [];
+        
+        // Screen Share Variables
+        let isScreenSharing = false;
+        let localCamTrack = null; 
 
         const statusLog = document.getElementById('status-log');
         function log(msg) {
@@ -100,23 +109,22 @@
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
+                
+                // Store the camera track so we can switch back to it later
+                localCamTrack = localStream.getVideoTracks()[0];
+
                 localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-                // --- FIXED ONTRACK LOGIC ---
+                // --- Remote Stream Handling ---
                 pc.ontrack = event => {
                     const remoteVid = document.getElementById('remoteVideo');
-                    
-                    // PREVENT DOUBLE LOADING:
-                    // Only assign the stream if it's new.
+                    // Prevent double loading interruption
                     if (remoteVid.srcObject !== event.streams[0]) {
-                        log("Stream Tracks Received - Initializing Player");
+                        log("Remote Stream Active");
                         remoteVid.srcObject = event.streams[0];
-                        
                         remoteVid.onloadedmetadata = () => {
                             remoteVid.play().catch(e => log("Play Error: " + e.message));
                         };
-                    } else {
-                        console.log("Track received but stream already active. Ignoring.");
                     }
                 };
 
@@ -147,8 +155,7 @@
                     const answer = snap.val();
                     if (answer && !pc.currentRemoteDescription) {
                         log("Answer Received.");
-                        const rtcAnswer = new RTCSessionDescription(answer);
-                        await pc.setRemoteDescription(rtcAnswer);
+                        await pc.setRemoteDescription(new RTCSessionDescription(answer));
                         processCandidateQueue(); 
                     }
                 });
@@ -193,7 +200,67 @@
             }
         }
 
+        // --- Screen Sharing Logic ---
+        const btnScreen = document.getElementById('btn-screen');
+        const localVideo = document.getElementById('localVideo');
+
+        btnScreen.onclick = async () => {
+            if (!isScreenSharing) {
+                try {
+                    const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                    const screenTrack = displayStream.getVideoTracks()[0];
+
+                    // Replace the video track being sent to the peer
+                    const sender = pc.getSenders().find(s => s.track.kind === 'video');
+                    if (sender) sender.replaceTrack(screenTrack);
+
+                    // Show screen on local view (and un-mirror it so text is readable)
+                    localVideo.srcObject = displayStream;
+                    localVideo.classList.add('screen-sharing');
+                    
+                    isScreenSharing = true;
+                    btnScreen.classList.add('active');
+
+                    // Handle if user clicks "Stop Sharing" on the browser popup
+                    screenTrack.onended = () => stopScreenSharing();
+
+                } catch (err) {
+                    console.error("Screen Share cancelled or failed:", err);
+                }
+            } else {
+                stopScreenSharing();
+            }
+        };
+
+        function stopScreenSharing() {
+            if (!isScreenSharing) return;
+            
+            // Switch back to camera track
+            const sender = pc.getSenders().find(s => s.track.kind === 'video');
+            if (sender && localCamTrack) sender.replaceTrack(localCamTrack);
+
+            // Reset local view
+            localVideo.srcObject = localStream;
+            localVideo.classList.remove('screen-sharing');
+            
+            isScreenSharing = false;
+            btnScreen.classList.remove('active');
+        }
+
         document.getElementById('btn-hangup').onclick = () => window.location.href = "users.html";
+        
+        // Mic/Cam Toggles
+        document.getElementById('btn-mic').onclick = function() {
+            const track = localStream.getAudioTracks()[0];
+            track.enabled = !track.enabled;
+            this.querySelector('i').className = track.enabled ? 'fas fa-microphone' : 'fas fa-microphone-slash';
+        }
+        document.getElementById('btn-cam').onclick = function() {
+            const track = localStream.getVideoTracks()[0];
+            track.enabled = !track.enabled;
+            this.querySelector('i').className = track.enabled ? 'fas fa-video' : 'fas fa-video-slash';
+        }
+
     </script>
 </body>
 </html>
