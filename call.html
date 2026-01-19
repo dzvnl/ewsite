@@ -7,149 +7,62 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #000;
-            --control-bg: rgba(20, 20, 20, 0.9);
-            --accent: #22c55e;
-            --danger: #ef4444;
-        }
-
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: var(--bg-color);
-            overflow: hidden;
-            font-family: monospace;
-        }
-
-        /* --- Layout --- */
-        #videos-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #000;
-        }
-
-        /* Remote Video (Full Screen) */
-        #remoteVideo {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            background: #000;
-        }
-
-        /* Local Video (Bottom Right, PIP) */
-        #local-video-wrapper {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 280px;
-            height: 157px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-            border: 1px solid #333;
-            background: #111;
-            z-index: 10;
-        }
-
-        #localVideo {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1);
-        }
+        :root { --bg-color: #000; --control-bg: rgba(20, 20, 20, 0.9); --accent: #22c55e; --danger: #ef4444; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--bg-color); overflow: hidden; font-family: monospace; }
         
-        #localVideo.screen-sharing {
-            transform: scaleX(1);
-        }
+        #videos-container { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #000; }
+        
+        /* Remote Video */
+        #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; }
+        
+        /* Local Video */
+        #local-video-wrapper { position: absolute; bottom: 20px; right: 20px; width: 280px; height: 157px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.8); border: 1px solid #333; background: #111; z-index: 10; }
+        #localVideo { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        #localVideo.screen-sharing { transform: scaleX(1); }
 
-        /* --- Indicators --- */
-        .status-indicator {
-            position: absolute;
-            top: 10px; left: 10px;
-            color: white;
-            background: rgba(0,0,0,0.7);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            display: flex; gap: 8px;
-            pointer-events: none;
-        }
-
-        .icon-off { color: var(--danger); }
-
-        /* --- Controls --- */
-        #controls {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 20px;
-            background: var(--control-bg);
-            padding: 15px 30px;
-            border-radius: 50px;
-            border: 1px solid #333;
-            z-index: 20;
-        }
-
-        .btn {
-            background: #333;
-            border: none;
-            width: 55px; height: 55px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 20px;
-            transition: all 0.2s;
-        }
-
+        /* Controls */
+        #controls { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; background: var(--control-bg); padding: 15px 30px; border-radius: 50px; border: 1px solid #333; z-index: 20; }
+        .btn { background: #333; border: none; width: 55px; height: 55px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; transition: all 0.2s; }
         .btn:hover { background: #444; transform: scale(1.1); }
-        .btn.active { background: var(--accent); color: #000; }
         .btn.disabled-state { background: var(--danger); color: white; }
 
-        /* --- Debug/Status Overlay --- */
-        #status-log {
-            position: absolute;
-            top: 20px; left: 20px;
-            color: #0f0;
-            font-size: 0.9rem;
-            z-index: 100;
-            background: rgba(0,0,0,0.8);
-            padding: 10px;
-            border-radius: 4px;
-            max-width: 300px;
-            pointer-events: none;
-            font-family: 'Courier New', Courier, monospace;
-        }
+        /* Overlay */
+        #start-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; }
+        #start-btn { padding: 20px 40px; font-size: 2rem; background: var(--accent); color: black; border: none; cursor: pointer; font-family: 'Courier New'; font-weight: bold; margin-top: 20px; }
+
+        /* Debug Log */
+        #status-log { position: absolute; top: 20px; left: 20px; color: #0f0; font-size: 14px; z-index: 100; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 4px; pointer-events: none; font-family: 'Courier New'; white-space: pre-wrap; }
     </style>
 </head>
 <body>
 
-    <div id="status-log">Initializing...</div>
+    <div id="start-overlay">
+        <div id="overlay-msg" style="font-size: 1.5rem; text-align:center;">
+            SECURE CONNECTION READY<br>
+            <span style="font-size: 1rem; color:#888;">Click to Initialize Media Stream</span>
+        </div>
+        <button id="start-btn">ESTABLISH LINK</button>
+    </div>
+
+    <div id="status-log">Waiting for user...</div>
 
     <div id="videos-container">
         <video id="remoteVideo" autoplay playsinline></video>
         
         <div id="local-video-wrapper">
             <video id="localVideo" autoplay playsinline muted></video>
-            <div class="status-indicator" id="local-indicators"></div>
         </div>
 
         <div id="controls">
             <button class="btn" id="btn-mic"><i class="fas fa-microphone"></i></button>
             <button class="btn" id="btn-cam"><i class="fas fa-video"></i></button>
-            <button class="btn" id="btn-screen"><i class="fas fa-desktop"></i></button>
             <button class="btn" id="btn-hangup" style="background-color: #ef4444;"><i class="fas fa-phone-slash"></i></button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, push, onChildAdded } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
@@ -164,31 +77,37 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // WebRTC Config (Using Google STUN)
+        // --- IMPROVED SERVER LIST ---
         const servers = {
             iceServers: [
-                { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' }
             ]
         };
 
         const pc = new RTCPeerConnection(servers);
         let localStream = null;
-        let remoteStream = null;
-        let isScreenSharing = false;
-        let localCamTrack = null; 
 
-        // HTML Elements
+        // Elements
         const localVideo = document.getElementById('localVideo');
         const remoteVideo = document.getElementById('remoteVideo');
         const statusLog = document.getElementById('status-log');
-        const btnMic = document.getElementById('btn-mic');
-        const btnCam = document.getElementById('btn-cam');
-        const btnScreen = document.getElementById('btn-screen');
+        const startOverlay = document.getElementById('start-overlay');
+        const startBtn = document.getElementById('start-btn');
 
         function log(msg) {
-            statusLog.innerText = msg;
             console.log(msg);
+            statusLog.innerText = msg + "\n" + statusLog.innerText.split('\n').slice(0, 4).join('\n');
         }
+
+        // --- 1. USER START ---
+        startBtn.onclick = async () => {
+            startOverlay.style.display = 'none';
+            await init();
+        };
 
         async function init() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -196,43 +115,36 @@
             const recipient = urlParams.get('recipient');
             const myIdentity = localStorage.getItem('chat_identity');
 
-            if (!roomId) {
-                log("Error: No Room ID");
-                return;
-            }
+            if (!roomId) return log("Error: Missing Room ID");
 
-            // --- 1. Determine Role (Fixes Black Screen Race Condition) ---
-            // If the URL recipient is NOT me, I am calling THEM. So I am the Caller.
-            // If the URL recipient IS me, I am receiving. So I am the Callee.
             const isCaller = (recipient !== myIdentity);
-            log(`Room: ${roomId} | Role: ${isCaller ? 'CALLER' : 'RECEIVER'}`);
+            log(`Role: ${isCaller ? 'CALLER' : 'RECEIVER'} | Room: ${roomId}`);
 
-            // --- 2. Setup Local Media ---
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 localVideo.srcObject = localStream;
-                localCamTrack = localStream.getVideoTracks()[0];
-
                 localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-                // Prepare Remote Stream
-                remoteStream = new MediaStream();
-                remoteVideo.srcObject = remoteStream;
-
-                pc.ontrack = event => {
-                    log("Stream received!");
-                    event.streams[0].getTracks().forEach(track => {
-                        remoteStream.addTrack(track);
-                    });
-                    // Force play
-                    remoteVideo.play().catch(e => console.error("Autoplay blocked:", e));
+                // --- TRACK HANDLER ---
+                pc.ontrack = (event) => {
+                    log("Stream Tracks Received!");
+                    const [remoteStream] = event.streams;
+                    remoteVideo.srcObject = remoteStream;
+                    remoteVideo.play().catch(e => log("Play Error: " + e.message));
                 };
 
-                // Setup Signaling
+                // --- CONNECTION STATE DEBUGGER ---
+                pc.oniceconnectionstatechange = () => {
+                    log(`ICE State: ${pc.iceConnectionState}`);
+                    if (pc.iceConnectionState === 'failed') {
+                        log("CRITICAL: Network blocked connection.");
+                    }
+                };
+
                 startSignaling(roomId, isCaller);
 
             } catch (err) {
-                log("Error: " + err.message);
+                log("Media Error: " + err.message);
             }
         }
 
@@ -240,138 +152,69 @@
             const roomRef = ref(db, `rooms/${roomId}`);
 
             if (isCaller) {
-                // --- I AM CALLER ---
-                log("Creating Offer...");
+                // I AM CALLER
                 const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
+                
+                // Send Offer
+                await set(roomRef, { offer: { type: offer.type, sdp: offer.sdp } });
+                log("Offer sent.");
 
-                await set(roomRef, {
-                    offer: { type: offer.type, sdp: offer.sdp }
-                });
-                log("Offer sent. Waiting for answer...");
-
-                // Listen for Answer
+                // Wait for Answer
                 onValue(ref(db, `rooms/${roomId}/answer`), (snap) => {
                     const answer = snap.val();
                     if (answer && !pc.currentRemoteDescription) {
-                        log("Answer received! Connecting...");
-                        const rtcAnswer = new RTCSessionDescription(answer);
-                        pc.setRemoteDescription(rtcAnswer);
+                        log("Answer received!");
+                        pc.setRemoteDescription(new RTCSessionDescription(answer));
                     }
                 });
 
-                // ICE Candidates logic (Caller sends to 'callerCandidates')
+                // ICE Candidates
                 pc.onicecandidate = event => {
                     if (event.candidate) push(ref(db, `rooms/${roomId}/callerCandidates`), event.candidate.toJSON());
                 };
-                
-                // Listen for Callee candidates
                 onChildAdded(ref(db, `rooms/${roomId}/calleeCandidates`), (snap) => {
                     pc.addIceCandidate(new RTCIceCandidate(snap.val()));
                 });
 
             } else {
-                // --- I AM RECEIVER ---
+                // I AM RECEIVER
                 log("Waiting for offer...");
-                
                 onValue(ref(db, `rooms/${roomId}/offer`), async (snap) => {
                     const offer = snap.val();
                     if (offer && !pc.currentRemoteDescription) {
-                        log("Offer found! Sending Answer...");
-                        
+                        log("Offer found. Sending Answer...");
                         await pc.setRemoteDescription(new RTCSessionDescription(offer));
                         
                         const answer = await pc.createAnswer();
                         await pc.setLocalDescription(answer);
 
-                        await set(ref(db, `rooms/${roomId}/answer`), {
-                            type: answer.type, sdp: answer.sdp
-                        });
-                        log("Answer sent.");
+                        await set(ref(db, `rooms/${roomId}/answer`), { type: answer.type, sdp: answer.sdp });
 
-                        // ICE Candidates logic (Receiver sends to 'calleeCandidates')
                         pc.onicecandidate = event => {
                             if (event.candidate) push(ref(db, `rooms/${roomId}/calleeCandidates`), event.candidate.toJSON());
                         };
-
-                        // Listen for Caller candidates
                         onChildAdded(ref(db, `rooms/${roomId}/callerCandidates`), (snap) => {
                             pc.addIceCandidate(new RTCIceCandidate(snap.val()));
                         });
                     }
                 });
             }
-
-            // Monitor Connection State
-            pc.onconnectionstatechange = () => {
-                log(`Connection: ${pc.connectionState}`);
-            };
         }
 
-        // --- Controls ---
-        btnMic.onclick = () => {
+        // Controls
+        document.getElementById('btn-mic').onclick = function() {
             const track = localStream.getAudioTracks()[0];
-            if (track) { track.enabled = !track.enabled; toggleBtn(btnMic, track.enabled); updateIndicators(); }
-        };
-
-        btnCam.onclick = () => {
-            const track = localStream.getVideoTracks()[0];
-            if (track) { track.enabled = !track.enabled; toggleBtn(btnCam, track.enabled); updateIndicators(); }
-        };
-
-        btnScreen.onclick = async () => {
-            if (!isScreenSharing) {
-                try {
-                    const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-                    const screenTrack = displayStream.getVideoTracks()[0];
-                    const sender = pc.getSenders().find(s => s.track.kind === 'video');
-                    if (sender) sender.replaceTrack(screenTrack);
-                    
-                    localVideo.srcObject = displayStream;
-                    localVideo.classList.add('screen-sharing');
-                    isScreenSharing = true;
-                    btnScreen.classList.add('active');
-                    screenTrack.onended = stopScreenSharing;
-                } catch(e) { console.log(e); }
-            } else {
-                stopScreenSharing();
-            }
-        };
-
-        function stopScreenSharing() {
-            if (!isScreenSharing) return;
-            const sender = pc.getSenders().find(s => s.track.kind === 'video');
-            if (sender && localCamTrack) sender.replaceTrack(localCamTrack);
-            localVideo.srcObject = localStream;
-            localVideo.classList.remove('screen-sharing');
-            isScreenSharing = false;
-            btnScreen.classList.remove('active');
+            track.enabled = !track.enabled;
+            this.classList.toggle('disabled-state');
         }
-
+        document.getElementById('btn-cam').onclick = function() {
+            const track = localStream.getVideoTracks()[0];
+            track.enabled = !track.enabled;
+            this.classList.toggle('disabled-state');
+        }
         document.getElementById('btn-hangup').onclick = () => window.location.href = "users.html";
 
-        function toggleBtn(btn, isActive) {
-            if (isActive) {
-                btn.classList.remove('disabled-state');
-                const i = btn.querySelector('i');
-                i.className = i.className.replace('-slash', '');
-            } else {
-                btn.classList.add('disabled-state');
-                const i = btn.querySelector('i');
-                if(!i.className.includes('-slash')) i.className += '-slash';
-            }
-        }
-
-        function updateIndicators() {
-            const audio = localStream.getAudioTracks()[0]?.enabled;
-            const video = localStream.getVideoTracks()[0]?.enabled;
-            let html = '';
-            if (!audio) html += '<i class="fas fa-microphone-slash icon-off"></i>';
-            if (!video) html += '<i class="fas fa-video-slash icon-off"></i>';
-            document.getElementById('local-indicators').innerHTML = html;
-        }
-
-        init();
     </script>
 </body>
 </html>
