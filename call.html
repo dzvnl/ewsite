@@ -37,6 +37,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            background: #000;
         }
 
         /* Local Video (Bottom Right, PIP) */
@@ -45,25 +46,24 @@
             bottom: 20px;
             right: 20px;
             width: 280px;
-            height: 157px; /* 16:9 aspect ratio */
+            height: 157px;
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0,0,0,0.8);
             border: 1px solid #333;
             background: #111;
             z-index: 10;
-            transition: all 0.3s ease;
         }
 
         #localVideo {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transform: scaleX(-1); /* Mirror local view */
+            transform: scaleX(-1);
         }
         
         #localVideo.screen-sharing {
-            transform: scaleX(1); /* Don't mirror text when sharing screen */
+            transform: scaleX(1);
         }
 
         /* --- Indicators --- */
@@ -111,21 +111,25 @@
         .btn.active { background: var(--accent); color: #000; }
         .btn.disabled-state { background: var(--danger); color: white; }
 
-        #room-info {
+        /* --- Debug/Status Overlay --- */
+        #status-log {
             position: absolute;
             top: 20px; left: 20px;
-            color: #666;
+            color: #0f0;
             font-size: 0.9rem;
             z-index: 100;
-            background: rgba(0,0,0,0.5);
-            padding: 5px 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
             border-radius: 4px;
+            max-width: 300px;
+            pointer-events: none;
+            font-family: 'Courier New', Courier, monospace;
         }
     </style>
 </head>
 <body>
 
-    <div id="room-info">Initializing Secure Link...</div>
+    <div id="status-log">Initializing...</div>
 
     <div id="videos-container">
         <video id="remoteVideo" autoplay playsinline></video>
@@ -136,27 +140,17 @@
         </div>
 
         <div id="controls">
-            <button class="btn" id="btn-mic" title="Toggle Mic">
-                <i class="fas fa-microphone"></i>
-            </button>
-            <button class="btn" id="btn-cam" title="Toggle Camera">
-                <i class="fas fa-video"></i>
-            </button>
-            <button class="btn" id="btn-screen" title="Share Screen">
-                <i class="fas fa-desktop"></i>
-            </button>
-            <button class="btn" id="btn-hangup" title="Hangup" style="background-color: #ef4444;">
-                <i class="fas fa-phone-slash"></i>
-            </button>
+            <button class="btn" id="btn-mic"><i class="fas fa-microphone"></i></button>
+            <button class="btn" id="btn-cam"><i class="fas fa-video"></i></button>
+            <button class="btn" id="btn-screen"><i class="fas fa-desktop"></i></button>
+            <button class="btn" id="btn-hangup" style="background-color: #ef4444;"><i class="fas fa-phone-slash"></i></button>
         </div>
     </div>
 
     <script type="module">
-        // Using the exact same version as your users.html for compatibility
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-        // Your Config
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
             authDomain: "ewsitechat.firebaseapp.com",
@@ -170,7 +164,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- WebRTC Configuration ---
+        // WebRTC Config (Using Google STUN)
         const servers = {
             iceServers: [
                 { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
@@ -186,184 +180,159 @@
         // HTML Elements
         const localVideo = document.getElementById('localVideo');
         const remoteVideo = document.getElementById('remoteVideo');
+        const statusLog = document.getElementById('status-log');
         const btnMic = document.getElementById('btn-mic');
         const btnCam = document.getElementById('btn-cam');
         const btnScreen = document.getElementById('btn-screen');
-        const btnHangup = document.getElementById('btn-hangup');
-        const roomInfo = document.getElementById('room-info');
-        const localIndicators = document.getElementById('local-indicators');
+
+        function log(msg) {
+            statusLog.innerText = msg;
+            console.log(msg);
+        }
 
         async function init() {
-            // 1. Get Room ID from URL (passed by users.html)
             const urlParams = new URLSearchParams(window.location.search);
             const roomId = urlParams.get('room');
+            const recipient = urlParams.get('recipient');
+            const myIdentity = localStorage.getItem('chat_identity');
 
             if (!roomId) {
-                alert("Invalid Call ID.");
-                window.location.href = "users.html";
+                log("Error: No Room ID");
                 return;
             }
 
-            roomInfo.innerText = `Connected: ${roomId}`;
+            // --- 1. Determine Role (Fixes Black Screen Race Condition) ---
+            // If the URL recipient is NOT me, I am calling THEM. So I am the Caller.
+            // If the URL recipient IS me, I am receiving. So I am the Callee.
+            const isCaller = (recipient !== myIdentity);
+            log(`Room: ${roomId} | Role: ${isCaller ? 'CALLER' : 'RECEIVER'}`);
 
-            // 2. Setup Local Media
+            // --- 2. Setup Local Media ---
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 localVideo.srcObject = localStream;
                 localCamTrack = localStream.getVideoTracks()[0];
 
-                // Add tracks to PeerConnection
-                localStream.getTracks().forEach(track => {
-                    pc.addTrack(track, localStream);
-                });
+                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-                // Prepare to receive remote stream
+                // Prepare Remote Stream
                 remoteStream = new MediaStream();
                 remoteVideo.srcObject = remoteStream;
 
                 pc.ontrack = event => {
+                    log("Stream received!");
                     event.streams[0].getTracks().forEach(track => {
                         remoteStream.addTrack(track);
                     });
+                    // Force play
+                    remoteVideo.play().catch(e => console.error("Autoplay blocked:", e));
                 };
 
-                // 3. Start Signaling (Handshake)
-                await startSignaling(roomId);
+                // Setup Signaling
+                startSignaling(roomId, isCaller);
 
             } catch (err) {
-                console.error("Media Error:", err);
-                alert("Could not access Camera/Mic. Please allow permissions.");
+                log("Error: " + err.message);
             }
         }
 
-        // --- Signaling Logic (REALTIME DATABASE) ---
-        async function startSignaling(roomId) {
-            // We use 'rooms' path for the heavy WebRTC SDP data to keep 'calls' light
+        async function startSignaling(roomId, isCaller) {
             const roomRef = ref(db, `rooms/${roomId}`);
-            
-            // Check if there is already an offer
-            // Note: Since we use onValue, this runs once immediately
-            onValue(roomRef, async (snapshot) => {
-                const data = snapshot.val();
 
-                // Logic: If NO data exists yet, I am the CALLER.
-                // If data DOES exist (an offer), I am the CALLEE.
+            if (isCaller) {
+                // --- I AM CALLER ---
+                log("Creating Offer...");
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+
+                await set(roomRef, {
+                    offer: { type: offer.type, sdp: offer.sdp }
+                });
+                log("Offer sent. Waiting for answer...");
+
+                // Listen for Answer
+                onValue(ref(db, `rooms/${roomId}/answer`), (snap) => {
+                    const answer = snap.val();
+                    if (answer && !pc.currentRemoteDescription) {
+                        log("Answer received! Connecting...");
+                        const rtcAnswer = new RTCSessionDescription(answer);
+                        pc.setRemoteDescription(rtcAnswer);
+                    }
+                });
+
+                // ICE Candidates logic (Caller sends to 'callerCandidates')
+                pc.onicecandidate = event => {
+                    if (event.candidate) push(ref(db, `rooms/${roomId}/callerCandidates`), event.candidate.toJSON());
+                };
                 
-                // This check ensures we only run the setup once per page load
-                if (pc.signalingState !== "stable") return; 
+                // Listen for Callee candidates
+                onChildAdded(ref(db, `rooms/${roomId}/calleeCandidates`), (snap) => {
+                    pc.addIceCandidate(new RTCIceCandidate(snap.val()));
+                });
 
-                if (!data) {
-                    // --- I AM THE CALLER ---
-                    console.log("Creating Offer...");
-                    
-                    // 1. Create Offer
-                    const offer = await pc.createOffer();
-                    await pc.setLocalDescription(offer);
+            } else {
+                // --- I AM RECEIVER ---
+                log("Waiting for offer...");
+                
+                onValue(ref(db, `rooms/${roomId}/offer`), async (snap) => {
+                    const offer = snap.val();
+                    if (offer && !pc.currentRemoteDescription) {
+                        log("Offer found! Sending Answer...");
+                        
+                        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+                        
+                        const answer = await pc.createAnswer();
+                        await pc.setLocalDescription(answer);
 
-                    // 2. Send Offer to DB
-                    await set(roomRef, {
-                        offer: {
-                            type: offer.type,
-                            sdp: offer.sdp
-                        }
-                    });
+                        await set(ref(db, `rooms/${roomId}/answer`), {
+                            type: answer.type, sdp: answer.sdp
+                        });
+                        log("Answer sent.");
 
-                    // 3. Listen for Answer
-                    onValue(ref(db, `rooms/${roomId}/answer`), (snap) => {
-                        const answer = snap.val();
-                        if (answer && !pc.currentRemoteDescription) {
-                            const rtcAnswer = new RTCSessionDescription(answer);
-                            pc.setRemoteDescription(rtcAnswer);
-                        }
-                    });
+                        // ICE Candidates logic (Receiver sends to 'calleeCandidates')
+                        pc.onicecandidate = event => {
+                            if (event.candidate) push(ref(db, `rooms/${roomId}/calleeCandidates`), event.candidate.toJSON());
+                        };
 
-                    // 4. Send my ICE candidates
-                    pc.onicecandidate = event => {
-                        if (event.candidate) {
-                            push(ref(db, `rooms/${roomId}/callerCandidates`), event.candidate.toJSON());
-                        }
-                    };
+                        // Listen for Caller candidates
+                        onChildAdded(ref(db, `rooms/${roomId}/callerCandidates`), (snap) => {
+                            pc.addIceCandidate(new RTCIceCandidate(snap.val()));
+                        });
+                    }
+                });
+            }
 
-                    // 5. Listen for Callee ICE candidates
-                    onChildAdded(ref(db, `rooms/${roomId}/calleeCandidates`), (snap) => {
-                        const candidate = new RTCIceCandidate(snap.val());
-                        pc.addIceCandidate(candidate);
-                    });
-
-                } else if (data.offer && !data.answer) {
-                    // --- I AM THE CALLEE ---
-                    console.log("Answering Call...");
-
-                    // 1. Set Remote Description (the offer)
-                    await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-
-                    // 2. Create Answer
-                    const answer = await pc.createAnswer();
-                    await pc.setLocalDescription(answer);
-
-                    // 3. Send Answer to DB
-                    await set(ref(db, `rooms/${roomId}/answer`), {
-                        type: answer.type,
-                        sdp: answer.sdp
-                    });
-
-                    // 4. Send my ICE candidates
-                    pc.onicecandidate = event => {
-                        if (event.candidate) {
-                            push(ref(db, `rooms/${roomId}/calleeCandidates`), event.candidate.toJSON());
-                        }
-                    };
-
-                    // 5. Listen for Caller ICE candidates
-                    onChildAdded(ref(db, `rooms/${roomId}/callerCandidates`), (snap) => {
-                        const candidate = new RTCIceCandidate(snap.val());
-                        pc.addIceCandidate(candidate);
-                    });
-                }
-            }, { onlyOnce: true });
+            // Monitor Connection State
+            pc.onconnectionstatechange = () => {
+                log(`Connection: ${pc.connectionState}`);
+            };
         }
 
-        // --- UI Controls ---
-
-        // 1. Mic
+        // --- Controls ---
         btnMic.onclick = () => {
             const track = localStream.getAudioTracks()[0];
-            if (track) {
-                track.enabled = !track.enabled;
-                toggleBtn(btnMic, track.enabled);
-                updateIndicators();
-            }
+            if (track) { track.enabled = !track.enabled; toggleBtn(btnMic, track.enabled); updateIndicators(); }
         };
 
-        // 2. Cam
         btnCam.onclick = () => {
             const track = localStream.getVideoTracks()[0];
-            if (track) {
-                track.enabled = !track.enabled;
-                toggleBtn(btnCam, track.enabled);
-                updateIndicators();
-            }
+            if (track) { track.enabled = !track.enabled; toggleBtn(btnCam, track.enabled); updateIndicators(); }
         };
 
-        // 3. Screen Share
         btnScreen.onclick = async () => {
             if (!isScreenSharing) {
                 try {
                     const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
                     const screenTrack = displayStream.getVideoTracks()[0];
-
                     const sender = pc.getSenders().find(s => s.track.kind === 'video');
                     if (sender) sender.replaceTrack(screenTrack);
-
+                    
                     localVideo.srcObject = displayStream;
                     localVideo.classList.add('screen-sharing');
-                    
                     isScreenSharing = true;
                     btnScreen.classList.add('active');
-
-                    // If user clicks "Stop Sharing" on browser banner
-                    screenTrack.onended = () => stopScreenSharing();
-                } catch (e) { console.error(e); }
+                    screenTrack.onended = stopScreenSharing;
+                } catch(e) { console.log(e); }
             } else {
                 stopScreenSharing();
             }
@@ -373,31 +342,23 @@
             if (!isScreenSharing) return;
             const sender = pc.getSenders().find(s => s.track.kind === 'video');
             if (sender && localCamTrack) sender.replaceTrack(localCamTrack);
-
             localVideo.srcObject = localStream;
             localVideo.classList.remove('screen-sharing');
             isScreenSharing = false;
             btnScreen.classList.remove('active');
         }
 
-        // 4. Hangup
-        btnHangup.onclick = () => {
-            pc.close();
-            window.location.href = "users.html";
-        };
+        document.getElementById('btn-hangup').onclick = () => window.location.href = "users.html";
 
-        // Helper: Styles
         function toggleBtn(btn, isActive) {
             if (isActive) {
                 btn.classList.remove('disabled-state');
                 const i = btn.querySelector('i');
-                if(i.classList.contains('fa-microphone-slash')) i.className = 'fas fa-microphone';
-                if(i.classList.contains('fa-video-slash')) i.className = 'fas fa-video';
+                i.className = i.className.replace('-slash', '');
             } else {
                 btn.classList.add('disabled-state');
                 const i = btn.querySelector('i');
-                if(i.classList.contains('fa-microphone')) i.className = 'fas fa-microphone-slash';
-                if(i.classList.contains('fa-video')) i.className = 'fas fa-video-slash';
+                if(!i.className.includes('-slash')) i.className += '-slash';
             }
         }
 
@@ -407,12 +368,10 @@
             let html = '';
             if (!audio) html += '<i class="fas fa-microphone-slash icon-off"></i>';
             if (!video) html += '<i class="fas fa-video-slash icon-off"></i>';
-            localIndicators.innerHTML = html;
+            document.getElementById('local-indicators').innerHTML = html;
         }
 
-        // Start
         init();
-
     </script>
 </body>
 </html>
