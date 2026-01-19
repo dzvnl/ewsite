@@ -73,16 +73,14 @@
 
         const pc = new RTCPeerConnection(servers);
         let localStream = null;
-        let candidatesQueue = []; // <--- THE FIX: Buffer for early candidates
+        let candidatesQueue = []; 
 
-        // Logs
         const statusLog = document.getElementById('status-log');
         function log(msg) {
             console.log(msg);
             statusLog.innerText = msg + "\n" + statusLog.innerText.split('\n').slice(0, 4).join('\n');
         }
 
-        // Start Button
         document.getElementById('start-btn').onclick = async () => {
             document.getElementById('start-overlay').style.display = 'none';
             await init();
@@ -102,18 +100,24 @@
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
-                
                 localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
+                // --- FIXED ONTRACK LOGIC ---
                 pc.ontrack = event => {
-                    log("REMOTE STREAM RECEIVED");
                     const remoteVid = document.getElementById('remoteVideo');
-                    remoteVid.srcObject = event.streams[0];
-                    remoteVid.play().catch(e => console.error(e));
-                };
-
-                pc.oniceconnectionstatechange = () => {
-                    log(`ICE State: ${pc.iceConnectionState}`);
+                    
+                    // PREVENT DOUBLE LOADING:
+                    // Only assign the stream if it's new.
+                    if (remoteVid.srcObject !== event.streams[0]) {
+                        log("Stream Tracks Received - Initializing Player");
+                        remoteVid.srcObject = event.streams[0];
+                        
+                        remoteVid.onloadedmetadata = () => {
+                            remoteVid.play().catch(e => log("Play Error: " + e.message));
+                        };
+                    } else {
+                        console.log("Track received but stream already active. Ignoring.");
+                    }
                 };
 
                 startSignaling(roomId, isCaller);
@@ -126,7 +130,6 @@
         async function startSignaling(roomId, isCaller) {
             const roomRef = ref(db, `rooms/${roomId}`);
 
-            // 1. Handle ICE Candidates (Send)
             pc.onicecandidate = event => {
                 if (event.candidate) {
                     const target = isCaller ? 'callerCandidates' : 'calleeCandidates';
@@ -135,7 +138,6 @@
             };
 
             if (isCaller) {
-                // --- CALLER LOGIC ---
                 const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
                 await set(roomRef, { offer: { type: offer.type, sdp: offer.sdp } });
@@ -144,27 +146,23 @@
                 onValue(ref(db, `rooms/${roomId}/answer`), async (snap) => {
                     const answer = snap.val();
                     if (answer && !pc.currentRemoteDescription) {
-                        log("Answer Received. Setting Remote...");
+                        log("Answer Received.");
                         const rtcAnswer = new RTCSessionDescription(answer);
                         await pc.setRemoteDescription(rtcAnswer);
-                        processCandidateQueue(); // <--- Process buffered candidates
+                        processCandidateQueue(); 
                     }
                 });
 
-                // Listen for Callee Candidates
-                onChildAdded(ref(db, `rooms/${roomId}/calleeCandidates`), (snap) => {
-                    handleCandidate(snap.val());
-                });
+                onChildAdded(ref(db, `rooms/${roomId}/calleeCandidates`), (snap) => handleCandidate(snap.val()));
 
             } else {
-                // --- RECEIVER LOGIC ---
                 log("Waiting for Offer...");
                 onValue(ref(db, `rooms/${roomId}/offer`), async (snap) => {
                     const offer = snap.val();
                     if (offer && !pc.currentRemoteDescription) {
-                        log("Offer Received. Setting Remote...");
+                        log("Offer Received.");
                         await pc.setRemoteDescription(new RTCSessionDescription(offer));
-                        processCandidateQueue(); // <--- Process buffered candidates
+                        processCandidateQueue(); 
                         
                         const answer = await pc.createAnswer();
                         await pc.setLocalDescription(answer);
@@ -173,29 +171,21 @@
                     }
                 });
 
-                // Listen for Caller Candidates
-                onChildAdded(ref(db, `rooms/${roomId}/callerCandidates`), (snap) => {
-                    handleCandidate(snap.val());
-                });
+                onChildAdded(ref(db, `rooms/${roomId}/callerCandidates`), (snap) => handleCandidate(snap.val()));
             }
         }
 
-        // --- THE FIX: Candidate Handling with Queue ---
         function handleCandidate(candidateVal) {
             const candidate = new RTCIceCandidate(candidateVal);
             if (pc.remoteDescription) {
-                // If we are ready, add it immediately
                 pc.addIceCandidate(candidate).catch(e => console.error("ICE Error", e));
             } else {
-                // If not ready, QUEUE IT
-                log("Buffering Candidate...");
                 candidatesQueue.push(candidate);
             }
         }
 
         function processCandidateQueue() {
             if (candidatesQueue.length > 0) {
-                log(`Processing ${candidatesQueue.length} buffered candidates`);
                 candidatesQueue.forEach(cand => {
                     pc.addIceCandidate(cand).catch(e => console.error("ICE Error", e));
                 });
@@ -203,7 +193,6 @@
             }
         }
 
-        // Controls
         document.getElementById('btn-hangup').onclick = () => window.location.href = "users.html";
     </script>
 </body>
