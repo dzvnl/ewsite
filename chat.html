@@ -2,216 +2,244 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>canvas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
     <style>
+        /* --- EXACT VISUAL STYLE FROM INDEX --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body {
-            font-family: 'Special Elite', monospace; 
-            background: url('IMG_4928.jpeg') no-repeat center center fixed;
-            background-size: cover;
+            background-color: #000;
+            color: #ccc;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            line-height: 1.4;
             height: 100vh;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-            overflow: hidden; 
-        }
-
-        #chat-container {
-            width: 95%;
-            max-width: 800px;
-            height: 85vh;
-            background: rgba(0, 0, 0, 0.6); 
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 2px solid #969696;
             display: flex;
             flex-direction: column;
-            position: relative;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            resize: both;        
-            overflow: hidden;    
-            min-width: 300px;    
-            min-height: 400px;   
-            max-height: 95vh;    
-            max-width: 95vw;     
         }
 
-        @media (max-width: 768px) {
-            body { padding: 0; }
-            #chat-container {
-                width: 100%; height: 100%; max-width: 100%; max-height: 100%;
-                border: none; border-radius: 0; resize: none;
-            }
-            .msg-avatar { width: 32px; height: 32px; }
-            #chat-messages { padding: 10px; }
-            #chat-input-area { padding: 8px; }
+        a { color: #fff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* --- LAYOUT CONTAINER --- */
+        .container {
+            width: 900px;
+            margin: 0 auto;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
 
-        #chat-messages {
-            flex-grow: 1;
+        /* --- HEADER --- */
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        .top-links span { margin: 0 5px; color: #444; }
+        .brand-logo {
+            font-family: "Times New Roman", serif;
+            font-size: 24px;
+            color: #fff;
+            letter-spacing: 2px;
+        }
+
+        /* --- CHAT INTERFACE LAYOUT --- */
+        .chat-wrapper {
+            display: flex;
+            flex: 1; /* Fills remaining height */
+            gap: 10px;
+            min-height: 0; /* Firefox flex fix */
+        }
+
+        /* Main Chat Window */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #333;
+            background-color: #111;
+        }
+
+        .chat-header-bar {
+            background-color: #666;
+            color: #fff;
+            padding: 3px 5px;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .chat-log {
+            flex: 1;
             overflow-y: auto;
-            padding: 15px;
-            color: #e5e5e5;
-            font-size: 1.1rem;
-            line-height: 1.2;
-            text-shadow: 1px 1px 2px black; 
-            display: flex;             
-            flex-direction: column;  
-            gap: 2px;               
+            padding: 10px;
+            font-size: 12px;
+            background-color: #000;
         }
 
-        /* Message Styling */
-        .message-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; transition: margin 0.2s; }
-        .message-row.grouped { margin-bottom: 2px; margin-top: 0; }
-        .message-row.grouped .msg-avatar { visibility: hidden; }
-        .message-row.grouped .msg-header { display: none; }
+        /* Message Styles */
+        .message { margin-bottom: 6px; line-height: 1.5; }
+        .msg-time { color: #555; font-size: 10px; margin-right: 5px; }
+        .msg-user { color: #fff; font-weight: bold; margin-right: 2px; }
+        .msg-text { color: #ccc; }
+        .msg-system { color: #facc15; font-style: italic; }
 
-        .msg-avatar {
-            width: 40px; height: 40px; border-radius: 50%; object-fit: cover; 
-            border: 2px solid #facc15; flex-shrink: 0; background: #000;      
+        /* Sidebar (User List) */
+        .chat-sidebar {
+            width: 180px;
+            border: 1px solid #333;
+            background-color: #111;
+            display: flex;
+            flex-direction: column;
         }
-        .message-content { display: flex; flex-direction: column; max-width: 85%; }
-        .msg-header { margin-bottom: 2px; line-height: 1; }
-        .msg-username { color: #facc15; font-size: 0.8rem; opacity: 0.8; }
-        .msg-text { word-wrap: break-word; }
-
-        .date-separator {
-            display: flex; align-items: center; justify-content: center; margin: 20px 0;
-            color: #888; font-size: 0.8rem;
+        
+        .user-list {
+            list-style: none;
+            padding: 5px;
+            overflow-y: auto;
         }
-        .date-separator::before, .date-separator::after { content: ''; flex: 1; border-bottom: 1px solid #444; }
-        .date-separator span { padding: 0 10px; background: rgba(0,0,0,0.3); border-radius: 10px; }
+        .user-list li {
+            padding: 2px 0;
+            color: #888;
+            display: flex;
+            align-items: center;
+        }
+        .user-list li::before {
+            content: ""; display: inline-block; width: 6px; height: 6px;
+            background-color: #444; margin-right: 6px; border-radius: 50%;
+        }
+        .user-list li.online::before { background-color: #fff; box-shadow: 0 0 4px #fff; }
+        .user-list li span { color: #bbb; }
 
         /* Input Area */
-        #chat-input-area {
-            border-top: 1px dotted #999; padding: 10px; display: flex; gap: 8px;
-            background: rgba(0,0,0,0.4); align-items: center; flex-shrink: 0; 
+        .chat-input-area {
+            margin-top: 10px;
+            background-color: #222;
+            padding: 5px;
+            border: 1px solid #333;
+            display: flex;
+            gap: 5px;
         }
-        input[type="text"] {
-            flex-grow: 1; background: rgba(0, 0, 0, 0.6); border: 1px solid #666;
-            color: #facc15; padding: 8px 10px; outline: none; font-size: 1rem;
-            font-family: 'Special Elite', monospace; border-radius: 4px;
-        }
-        button {
-            font-family: 'Special Elite', monospace; background: none; border: 1px solid #facc15;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 4px;
-        }
-        button:hover { background: rgba(250, 204, 21, 0.2); }
-        .upload-icon { width: 20px; height: 20px; fill: #facc15; filter: drop-shadow(1px 1px 1px black); }
-
-        /* Online Indicator */
-        #online-indicator-btn {
-            position: absolute; top: 12px; left: 12px; display: flex;
-            align-items: center; gap: 6px; color: #4ade80;
-            background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 4px;
-            z-index: 10; cursor: pointer; transition: background 0.2s;
-            border: 1px solid transparent;
-        }
-        #online-indicator-btn:hover { background: rgba(0,0,0,0.8); border: 1px solid #4ade80; }
-        .dot { width: 9px; height: 9px; background: #4ade80; border-radius: 100%; box-shadow: 0 0 5px #4ade80; }
         
-        .user-menu { position: absolute; top: 8px; right: 12px; z-index: 20; }
-        #user-display-btn { background: none; border: none; cursor: pointer; padding: 4px; }
-        .person-icon { width: 24px; height: 24px; fill: #facc15; filter: drop-shadow(1px 1px 2px black); }
+        .chat-input {
+            flex: 1;
+            background-color: #000;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 5px;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+        }
+        .chat-input:focus { outline: 1px solid #666; }
 
-        .dropdown {
-            display: none; position: absolute; right: 0; top: 100%;
-            background: rgba(26, 26, 26, 0.95); border: 1px solid #969696;
-            min-width: 130px; z-index: 100;
+        .send-btn {
+            background-color: #444;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 0 15px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
         }
-        .dropdown a {
-            display: block; padding: 10px; color: #969696; text-decoration: none;
-            font-size: 1rem; border-bottom: 1px solid #333;
-        }
-        .dropdown a:last-child { border-bottom: none; }
-        .dropdown a:hover { background: #333; color: #facc15; }
-        .show { display: block; }
+        .send-btn:hover { background-color: #666; }
 
-        /* Modal Styles */
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8); z-index: 999;
-            justify-content: center; align-items: center; backdrop-filter: blur(5px);
-        }
-        .modal-overlay.open { display: flex; }
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #333; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
 
-        .modal-box {
-            background: rgba(20, 20, 20, 0.95); border: 2px solid #facc15;
-            width: 300px; max-height: 80vh; display: flex; flex-direction: column;
-            box-shadow: 0 0 25px rgba(250, 204, 21, 0.2);
-        }
-        .modal-header {
-            padding: 10px 15px; border-bottom: 1px solid #666; display: flex;
-            justify-content: space-between; align-items: center; background: rgba(250, 204, 21, 0.1);
-        }
-        .modal-title { color: #facc15; font-size: 1.1rem; }
-        .close-btn { color: #999; border: none; font-size: 1.2rem; cursor: pointer; padding: 0 5px; }
-        .close-btn:hover { color: #fff; }
-
-        .modal-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; }
-        .modal-list li {
-            padding: 10px 15px; border-bottom: 1px solid #333; color: #ccc;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .modal-list li:hover { background: rgba(255, 255, 255, 0.05); }
-        .list-dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; }
     </style>
 </head>
 <body>
 
-    <div id="chat-container">
+    <div class="container">
         
-        <div id="online-indicator-btn" title="View Online Users">
-            <div class="dot"></div>
-            <span id="user-count">0</span>
-        </div>
-
-        <div class="user-menu">
-            <button id="user-display-btn">
-                <svg class="person-icon" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-                </svg>
-            </button>
-            <div id="user-dropdown" class="dropdown">
-                <a href="folk" id="display-name" style="color:#fff; pointer-events:none;"></a>
-                <a href="settings">settings</a>
-                <a href="users">users</a>
-                <a href="#" id="logout-btn">logout</a>
+        <div class="top-header">
+            <div class="brand-logo">CHAT_NET</div>
+            <div class="top-links">
+                <a href="index.html">Index</a> <span>|</span>
+                <a href="list.html">List</a> <span>|</span> 
+                <a href="settings.html">Settings</a>
             </div>
         </div>
 
-        <div id="chat-messages"></div>
-
-        <div id="chat-input-area">
-            <input type="file" id="image-upload" accept="image/*" style="display: none;">
+        <div class="chat-wrapper">
             
-            <input type="text" id="msg-input" placeholder="Type..." autocomplete="off">
-            
-            <button id="upload-btn" title="Upload Image" style="padding: 5px 10px;">
-                <svg class="upload-icon" viewBox="0 0 24 24">
-                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                </svg>
-            </button>
+            <main class="chat-main">
+                <div class="chat-header-bar">
+                    <span>#general</span>
+                    <span id="user-count">Users: 4</span>
+                </div>
+                
+                <div class="chat-log" id="chat-log">
+                </div>
 
-            <button id="send-btn" style="color: #facc15; padding: 6px 15px;">SEND</button>
-        </div>
-    </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="message-input" placeholder="Type a message..." autocomplete="off">
+                    <button class="send-btn" id="send-btn">SEND</button>
+                </div>
+            </main>
 
-    <div id="user-list-modal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">
-                <span class="modal-title">Active Users</span>
-                <button id="modal-close-btn" class="close-btn">✕</button>
-            </div>
-            <ul id="online-users-list" class="modal-list">
+            <aside class="chat-sidebar">
+                <div class="chat-header-bar">Users</div>
+                <ul class="user-list">
+                    <li class="online"><span>Admin</span></li>
+                    <li class="online"><span>You</span></li>
+                    <li><span>Guest_99</span></li>
+                    <li><span>User_02</span></li>
                 </ul>
+            </aside>
+
         </div>
+
+        <div style="text-align: center; color: #444; font-size: 10px; margin-top: 10px;">
+            Connection Established. 
+        </div>
+
     </div>
 
-    <script type="module" src="chat.js"></script>
+    <script>
+        const input = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const chatLog = document.getElementById('chat-log');
+
+        function addMessage(text, isUser = true) {
+            const div = document.createElement('div');
+            div.className = 'message';
+            
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const user = isUser ? "You" : "System";
+            const userClass = isUser ? "msg-user" : "msg-system";
+
+            div.innerHTML = `<span class="msg-time">[${time}]</span> <span class="${userClass}">${user}:</span> <span class="msg-text">${text}</span>`;
+            
+            chatLog.appendChild(div);
+            chatLog.scrollTop = chatLog.scrollHeight; 
+        }
+
+        function handleSend() {
+            const text = input.value.trim();
+            if (text) {
+                addMessage(text, true);
+                input.value = '';
+            }
+        }
+
+        sendBtn.addEventListener('click', handleSend);
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSend();
+        });
+        
+        input.focus();
+    </script>
 </body>
 </html>
