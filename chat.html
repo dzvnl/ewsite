@@ -10,7 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
     <style>
-        /* --- EXACT VISUAL STYLE FROM INDEX --- */
+        /* --- RESET & BASE STYLES --- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body {
@@ -41,29 +41,27 @@
         /* --- HEADER --- */
         .top-header {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
+            justify-content: flex-end; /* Pushes links to right */
+            align-items: center;
             margin-bottom: 10px;
             padding-bottom: 10px;
             border-bottom: 1px solid #333;
+            height: 40px;
         }
+        /* Brand removed as requested */
+        
+        .top-links { font-size: 11px; }
         .top-links span { margin: 0 5px; color: #444; }
-        .brand-logo {
-            font-family: "Times New Roman", serif;
-            font-size: 24px;
-            color: #fff;
-            letter-spacing: 2px;
-        }
 
-        /* --- CHAT INTERFACE LAYOUT --- */
+        /* --- CHAT WRAPPER --- */
         .chat-wrapper {
             display: flex;
-            flex: 1; /* Fills remaining height */
+            flex: 1;
             gap: 10px;
-            min-height: 0; /* Firefox flex fix */
+            min-height: 0; 
         }
 
-        /* Main Chat Window */
+        /* --- MAIN CHAT WINDOW --- */
         .chat-main {
             flex: 1;
             display: flex;
@@ -82,6 +80,9 @@
             justify-content: space-between;
         }
 
+        /* Special filler pattern styling */
+        .filler-pattern { letter-spacing: 2px; color: #ccc; font-family: monospace; }
+
         .chat-log {
             flex: 1;
             overflow-y: auto;
@@ -90,14 +91,26 @@
             background-color: #000;
         }
 
-        /* Message Styles */
-        .message { margin-bottom: 6px; line-height: 1.5; }
+        /* --- MESSAGE STYLES --- */
+        .message { margin-bottom: 6px; line-height: 1.5; position: relative; }
+        .message:hover .delete-btn { display: inline; } /* Show delete on hover for admins */
+        
         .msg-time { color: #555; font-size: 10px; margin-right: 5px; }
         .msg-user { color: #fff; font-weight: bold; margin-right: 2px; }
         .msg-text { color: #ccc; }
         .msg-system { color: #facc15; font-style: italic; }
+        .msg-alert { color: #f00; font-weight: bold; } /* For ban/mute notices */
 
-        /* Sidebar (User List) */
+        .delete-btn {
+            display: none;
+            color: #f00;
+            cursor: pointer;
+            font-size: 10px;
+            margin-right: 5px;
+            font-weight: bold;
+        }
+
+        /* --- SIDEBAR --- */
         .chat-sidebar {
             width: 180px;
             border: 1px solid #333;
@@ -110,6 +123,7 @@
             list-style: none;
             padding: 5px;
             overflow-y: auto;
+            flex: 1; 
         }
         .user-list li {
             padding: 2px 0;
@@ -117,7 +131,6 @@
             display: flex;
             align-items: center;
         }
-        /* GREENDOT VISUALS */
         .user-list li::before {
             content: ""; display: inline-block; width: 6px; height: 6px;
             background-color: #444; margin-right: 6px; border-radius: 50%;
@@ -125,7 +138,29 @@
         .user-list li.online::before { background-color: #fff; box-shadow: 0 0 4px #fff; }
         .user-list li span { color: #bbb; }
 
-        /* Input Area */
+        /* --- MINI MUSIC PLAYER (Sidebar) --- */
+        .mini-player {
+            border-top: 1px solid #333;
+            background: #000;
+            padding: 8px;
+            text-align: center;
+        }
+        .mini-track-info {
+            font-size: 10px;
+            color: #fff;
+            margin-bottom: 4px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .mini-controls {
+            display: flex; justify-content: center; gap: 5px;
+        }
+        .mini-btn {
+            background: #333; border: 1px solid #444; color: #fff;
+            width: 20px; height: 18px; font-size: 9px; cursor: pointer;
+        }
+        .mini-btn:hover { background: #555; }
+
+        /* --- INPUT AREA --- */
         .chat-input-area {
             margin-top: 10px;
             background-color: #222;
@@ -145,6 +180,7 @@
             font-size: 12px;
         }
         .chat-input:focus { outline: 1px solid #666; }
+        .chat-input:disabled { background-color: #220000; color: #777; border-color: #500; cursor: not-allowed; }
 
         .send-btn {
             background-color: #444;
@@ -157,7 +193,7 @@
         }
         .send-btn:hover { background-color: #666; }
 
-        /* Scrollbar styling */
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #111; }
         ::-webkit-scrollbar-thumb { background: #333; }
@@ -170,7 +206,6 @@
     <div class="container">
         
         <div class="top-header">
-            <div class="brand-logo"></div>
             <div class="top-links">
                 <a href="index.html">Index</a> <span>|</span>
                 <a href="list.html">List</a> <span>|</span> 
@@ -182,12 +217,12 @@
             
             <main class="chat-main">
                 <div class="chat-header-bar">
-                    <span>#general</span>
+                    <span class="filler-pattern">[>::<]  [>::<]  [>::<]</span>
                     <span id="user-count">Users: 0</span>
                 </div>
                 
                 <div class="chat-log" id="chat-log">
-                    <div class="message"><span class="msg-time">[SYSTEM]</span> <span class="msg-system">Connecting to database...</span></div>
+                    <div class="message"><span class="msg-time">[SYSTEM]</span> <span class="msg-system">connecting...</span></div>
                 </div>
 
                 <div class="chat-input-area">
@@ -200,6 +235,15 @@
                 <div class="chat-header-bar">Users</div>
                 <ul class="user-list" id="user-list">
                     </ul>
+
+                <div class="mini-player">
+                    <div id="mini-track-info" class="mini-track-info">stopped</div>
+                    <div class="mini-controls">
+                        <button id="mini-prev" class="mini-btn">&lt;</button>
+                        <button id="mini-play" class="mini-btn">&gt;</button>
+                        <button id="mini-next" class="mini-btn">&gt;&gt;</button>
+                    </div>
+                </div>
             </aside>
 
         </div>
@@ -210,185 +254,298 @@
 
     </div>
 
+    <audio id="audio-player"></audio>
+
     <script>
-        // --- 1. FIREBASE CONFIGURATION ---
+        // --- 1. FIREBASE CONFIGURATION (User Provided) ---
         const firebaseConfig = {
-    apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
-    authDomain: "ewsitechat.firebaseapp.com",
-    databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
-    projectId: "ewsitechat",
-    storageBucket: "ewsitechat.firebasestorage.app",
-    messagingSenderId: "282495574514",
-    appId: "1:282495574514:web:e2781da630d93fc1ce8b6b",
-    measurementId: "G-GTN3TL1P2K"
+            apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
+            authDomain: "ewsitechat.firebaseapp.com",
+            databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
+            projectId: "ewsitechat",
+            storageBucket: "ewsitechat.firebasestorage.app",
+            messagingSenderId: "282495574514",
+            appId: "1:282495574514:web:e2781da630d93fc1ce8b6b",
+            measurementId: "G-GTN3TL1P2K"
         };
         
-        // Initialize Firebase
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.database();
         const auth = firebase.auth();
 
-        // --- 2. DOM ELEMENTS ---
+        // --- 2. CONFIGURATION & STATE ---
+        const ADMINS = ["root", "futtbucker67"];
+        
+        let myUsername = localStorage.getItem('username') || "Guest_" + Math.floor(Math.random() * 9999);
+        let myUid = null;
+        let onlineUsers = {}; // Map UID -> Username
+
+        // --- 3. DOM ELEMENTS ---
         const input = document.getElementById('message-input');
         const sendBtn = document.getElementById('send-btn');
         const chatLog = document.getElementById('chat-log');
         const userListEl = document.getElementById('user-list');
         const userCountEl = document.getElementById('user-count');
 
-        // --- 3. AUTH & USERNAME ---
-        let myUsername = localStorage.getItem('username') || "Guest_" + Math.floor(Math.random() * 9999);
-        let myUid = null;
-
+        // --- 4. AUTHENTICATION ---
         auth.signInAnonymously().catch((error) => {
             console.error("Auth Error:", error);
-            addLogMessage("System", "Authentication failed.", false);
+            addLogMessage("System", "auth failed", false, true);
         });
 
         auth.onAuthStateChanged((user) => {
             if (user) {
                 myUid = user.uid;
-                initPresence(); // Start Green Dot Logic
-                initChat();     // Start Chat Logic
+                initPresence();
+                initChat();
+                initModerationListener(); // Check if I am banned
                 
-                // Clear the "Connecting..." placeholder
                 chatLog.innerHTML = '';
-                addLogMessage("System", "Welcome to the server.", false, true);
+                addLogMessage("System", "welcome", false, true);
             }
         });
 
-        // --- 4. GREENDOT.JS LOGIC (Presence) ---
+        // --- 5. PRESENCE (Green Dot) ---
         function initPresence() {
-            const userStatusDatabaseRef = db.ref('/status/' + myUid);
-            const isOfflineForDatabase = {
-                state: 'offline',
-                last_changed: firebase.database.ServerValue.TIMESTAMP,
-                username: myUsername
-            };
-            const isOnlineForDatabase = {
-                state: 'online',
-                last_changed: firebase.database.ServerValue.TIMESTAMP,
-                username: myUsername
-            };
+            const userStatusRef = db.ref('/status/' + myUid);
+            const isOffline = { state: 'offline', last_changed: firebase.database.ServerValue.TIMESTAMP, username: myUsername };
+            const isOnline = { state: 'online', last_changed: firebase.database.ServerValue.TIMESTAMP, username: myUsername };
 
-            // Manage connection state
             db.ref('.info/connected').on('value', (snapshot) => {
-                if (snapshot.val() === false) return;
-
-                userStatusDatabaseRef.onDisconnect().set(isOfflineForDatabase).then(() => {
-                    userStatusDatabaseRef.set(isOnlineForDatabase);
+                if (!snapshot.val()) return;
+                userStatusRef.onDisconnect().set(isOffline).then(() => {
+                    userStatusRef.set(isOnline);
                 });
             });
 
-            // Listen for other users online
             db.ref('/status').on('value', (snapshot) => {
-                userListEl.innerHTML = ''; // Clear list to rebuild
-                let onlineCount = 0;
+                userListEl.innerHTML = ''; 
+                onlineUsers = {};
+                let count = 0;
                 
-                snapshot.forEach((childSnapshot) => {
-                    const data = childSnapshot.val();
-                    if (data.state === 'online') {
-                        onlineCount++;
-                        const li = document.createElement('li');
-                        li.className = 'online'; // Adds the glowing dot CSS
-                        
-                        const span = document.createElement('span');
-                        span.textContent = data.username || "Anonymous";
-                        
-                        // Highlight yourself
-                        if (data.username === myUsername) {
-                            span.textContent += " (You)";
-                            span.style.color = "#fff";
-                        }
+                snapshot.forEach((child) => {
+                    const data = child.val();
+                    // Store for ID lookup later
+                    onlineUsers[child.key] = data.username;
 
+                    if (data.state === 'online') {
+                        count++;
+                        const li = document.createElement('li');
+                        li.className = 'online';
+                        const span = document.createElement('span');
+                        span.textContent = data.username;
+                        if (data.username === myUsername) {
+                            span.style.color = "#fff";
+                            span.textContent += " (You)";
+                        }
                         li.appendChild(span);
                         userListEl.appendChild(li);
                     }
                 });
-                userCountEl.textContent = `Users: ${onlineCount}`;
+                userCountEl.textContent = `Users: ${count}`;
             });
         }
 
-        // --- 5. CHAT.JS LOGIC (Messages & 48h Cleanup) ---
+        // --- 6. CHAT LOGIC ---
         function initChat() {
             const messagesRef = db.ref('messages');
             
-            // Limit to last 100 messages to prevent browser lag, but filter strictly by time below
             messagesRef.limitToLast(100).on('child_added', (snapshot) => {
                 const data = snapshot.val();
                 if (!data) return;
 
-                // --- 48 HOUR LOGIC ---
-                // 48 hours in milliseconds = 48 * 60 * 60 * 1000 = 172,800,000
-                const messageAge = Date.now() - data.timestamp;
-                const fortyEightHours = 172800000;
+                // 48h Cleanup
+                if (Date.now() - data.timestamp > 172800000) return;
 
-                if (messageAge > fortyEightHours) {
-                    // Message is too old. 
-                    // Optional: Clean it up from DB so it doesn't load next time
-                    // snapshot.ref.remove(); 
-                    return; // Do NOT display it
-                }
+                addLogMessage(data.username, data.text, (data.username === myUsername), false, data.timestamp, snapshot.key);
+            });
 
-                // Display message
-                const isMe = (data.username === myUsername);
-                addLogMessage(data.username, data.text, isMe, false, data.timestamp);
+            messagesRef.on('child_removed', (snapshot) => {
+                const msgDiv = document.getElementById(`msg-${snapshot.key}`);
+                if (msgDiv) msgDiv.remove();
             });
         }
 
-        // --- 6. SENDING MESSAGES ---
         function sendMessage() {
             const text = input.value.trim();
             if (text === "") return;
 
-            const messagesRef = db.ref('messages');
-            const newMessageRef = messagesRef.push();
-            
-            newMessageRef.set({
+            // Check for Commands (Only if Admin)
+            if (text.startsWith('/') && ADMINS.includes(myUsername)) {
+                handleCommand(text);
+                input.value = '';
+                return;
+            }
+
+            db.ref('messages').push({
                 username: myUsername,
                 text: text,
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             });
-
             input.value = '';
         }
 
-        // --- 7. UI HELPERS ---
-        function addLogMessage(user, text, isMe, isSystem = false, timestamp = Date.now()) {
+        // --- 7. MODERATION COMMANDS ---
+        function handleCommand(cmdStr) {
+            // Format: /ban [time] [user]
+            const parts = cmdStr.split(' ');
+            const command = parts[0];
+            const durationStr = parts[1]; // 30s, 10m, inf
+            const targetUser = parts[2];
+
+            if (!targetUser) return;
+
+            // 1. Find UID of targetUser
+            let targetUid = Object.keys(onlineUsers).find(key => onlineUsers[key] === targetUser);
+            
+            if (!targetUid) {
+                // If user is offline, we can't look them up easily in this simple system
+                // Fallback: This only bans currently known users.
+                addLogMessage("System", `User ${targetUser} not found or offline.`, false, true);
+                return;
+            }
+
+            // 2. Parse Duration
+            let durationMs = 0;
+            if (durationStr === 'inf') durationMs = 3153600000000; // 100 years
+            else if (durationStr.endsWith('s')) durationMs = parseInt(durationStr) * 1000;
+            else if (durationStr.endsWith('m')) durationMs = parseInt(durationStr) * 60000;
+            else if (durationStr.endsWith('h')) durationMs = parseInt(durationStr) * 3600000;
+            else { durationMs = 30000; } // Default 30s
+
+            const endTime = Date.now() + durationMs;
+            const type = (command === '/ban') ? 'ban' : 'mute';
+
+            // 3. Set Moderation Record in DB
+            db.ref('moderation/' + targetUid).set({
+                type: type,
+                until: endTime,
+                reason: "Admin Action"
+            });
+
+            // 4. Announce it
+            const verb = (type === 'ban') ? 'banned' : 'muted';
+            db.ref('messages').push({
+                username: "System",
+                text: `*** ${targetUser} was ${verb} for ${durationStr} ***`,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+        }
+
+        function initModerationListener() {
+            db.ref('moderation/' + myUid).on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.until > Date.now()) {
+                    // USER IS RESTRICTED
+                    input.disabled = true;
+                    input.value = "";
+                    input.placeholder = `You are ${data.type}ed until ${new Date(data.until).toLocaleTimeString()}`;
+                    
+                    // Set external notification flag
+                    localStorage.setItem('notification_status', `You have been ${data.type}ed.`);
+                } else {
+                    // USER IS FREE
+                    input.disabled = false;
+                    input.placeholder = "Type a message...";
+                    localStorage.removeItem('notification_status');
+                }
+            });
+        }
+
+        function deleteMessage(msgId) {
+            if (confirm("Delete this message?")) {
+                db.ref('messages/' + msgId).remove();
+            }
+        }
+
+        // --- 8. UI HELPERS ---
+        function addLogMessage(user, text, isMe, isSystem, timestamp = Date.now(), msgId = null) {
             const div = document.createElement('div');
             div.className = 'message';
+            if(msgId) div.id = `msg-${msgId}`;
             
-            // Convert timestamp to time string
             const dateObj = new Date(timestamp);
             const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-            const userClass = isMe ? "msg-user" : (isSystem ? "msg-system" : "msg-user");
-            
-            // Apply different color if it's not you and not system
-            let userStyle = "";
-            if (!isMe && !isSystem) {
-                userStyle = "color: #888;"; // Grey for others
+            // Check if text indicates a system ban alert
+            if (text.startsWith('***')) {
+                div.innerHTML = `<span class="msg-time">[${timeStr}]</span> <span class="msg-alert">${text}</span>`;
+                chatLog.appendChild(div);
+                chatLog.scrollTop = chatLog.scrollHeight;
+                return;
             }
 
-            // HTML Structure matches your CSS
+            const userClass = isSystem ? "msg-system" : "msg-user";
+            let userStyle = (!isMe && !isSystem) ? "color: #888;" : "";
+            
+            // Delete Button (Only for Admins)
+            let deleteHtml = "";
+            if (ADMINS.includes(myUsername) && !isSystem && msgId) {
+                deleteHtml = `<span class="delete-btn" onclick="deleteMessage('${msgId}')">[x]</span>`;
+            }
+
             if (isSystem) {
                 div.innerHTML = `<span class="msg-time">[${timeStr}]</span> <span class="msg-system">${text}</span>`;
             } else {
-                div.innerHTML = `<span class="msg-time">[${timeStr}]</span> <span class="${userClass}" style="${userStyle}">${user}:</span> <span class="msg-text">${text}</span>`;
+                div.innerHTML = `${deleteHtml}<span class="msg-time">[${timeStr}]</span> <span class="${userClass}" style="${userStyle}">${user}:</span> <span class="msg-text">${text}</span>`;
             }
             
             chatLog.appendChild(div);
-            chatLog.scrollTop = chatLog.scrollHeight; // Auto-scroll
+            chatLog.scrollTop = chatLog.scrollHeight; 
         }
 
-        // Event Listeners
         sendBtn.addEventListener('click', sendMessage);
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
+
+        // --- 9. MUSIC PLAYER LOGIC (From previous requests) ---
+        const playlist = [
+            { title: "Xtal", src: "https://ewsmusic1.netlify.app/xtal.mp3" },
+            { title: "Exit Music", src: "https://ewsmusic1.netlify.app/exitmusic.mp3" },
+            { title: "Luper", src: "https://ewsmusic1.netlify.app/luper.mp3" },
+            { title: "Hit the home", src: "https://ewsmusic1.netlify.app/clock.mp3" }
+            // (Add remaining songs here as needed)
+        ];
         
-        input.focus();
+        const audioPlayer = document.getElementById('audio-player');
+        const miniTitle = document.getElementById('mini-track-info');
+        const miniPlayBtn = document.getElementById('mini-play');
+        let currentSongIndex = 0;
+        let isPlaying = false;
+
+        function loadMiniSong(index) {
+            const song = playlist[index];
+            audioPlayer.src = song.src;
+            miniTitle.textContent = song.title;
+        }
+
+        document.getElementById('mini-play').addEventListener('click', () => {
+            if(audioPlayer.paused) {
+                if(!audioPlayer.src) loadMiniSong(currentSongIndex);
+                audioPlayer.play();
+                miniPlayBtn.textContent = "||";
+            } else {
+                audioPlayer.pause();
+                miniPlayBtn.textContent = ">";
+            }
+        });
+
+        document.getElementById('mini-next').addEventListener('click', () => {
+            currentSongIndex = (currentSongIndex + 1) % playlist.length;
+            loadMiniSong(currentSongIndex);
+            audioPlayer.play();
+            miniPlayBtn.textContent = "||";
+        });
+
+        document.getElementById('mini-prev').addEventListener('click', () => {
+            currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
+            loadMiniSong(currentSongIndex);
+            audioPlayer.play();
+            miniPlayBtn.textContent = "||";
+        });
 
     </script>
 </body>
