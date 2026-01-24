@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>canvas</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
     <style>
         /* --- EXACT VISUAL STYLE FROM INDEX --- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -112,6 +117,7 @@
             display: flex;
             align-items: center;
         }
+        /* GREENDOT VISUALS */
         .user-list li::before {
             content: ""; display: inline-block; width: 6px; height: 6px;
             background-color: #444; margin-right: 6px; border-radius: 50%;
@@ -164,7 +170,7 @@
     <div class="container">
         
         <div class="top-header">
-            <div class="brand-logo">CHAT_NET</div>
+            <div class="brand-logo"></div>
             <div class="top-links">
                 <a href="index.html">Index</a> <span>|</span>
                 <a href="list.html">List</a> <span>|</span> 
@@ -177,10 +183,11 @@
             <main class="chat-main">
                 <div class="chat-header-bar">
                     <span>#general</span>
-                    <span id="user-count">Users: 4</span>
+                    <span id="user-count">Users: 0</span>
                 </div>
                 
                 <div class="chat-log" id="chat-log">
+                    <div class="message"><span class="msg-time">[SYSTEM]</span> <span class="msg-system">Connecting to database...</span></div>
                 </div>
 
                 <div class="chat-input-area">
@@ -191,9 +198,8 @@
 
             <aside class="chat-sidebar">
                 <div class="chat-header-bar">Users</div>
-                <ul class="user-list">
-
-                </ul>
+                <ul class="user-list" id="user-list">
+                    </ul>
             </aside>
 
         </div>
@@ -205,38 +211,184 @@
     </div>
 
     <script>
+        // --- 1. FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+        const auth = firebase.auth();
+
+        // --- 2. DOM ELEMENTS ---
         const input = document.getElementById('message-input');
         const sendBtn = document.getElementById('send-btn');
         const chatLog = document.getElementById('chat-log');
+        const userListEl = document.getElementById('user-list');
+        const userCountEl = document.getElementById('user-count');
 
-        function addMessage(text, isUser = true) {
+        // --- 3. AUTH & USERNAME ---
+        let myUsername = localStorage.getItem('username') || "Guest_" + Math.floor(Math.random() * 9999);
+        let myUid = null;
+
+        auth.signInAnonymously().catch((error) => {
+            console.error("Auth Error:", error);
+            addLogMessage("System", "Authentication failed.", false);
+        });
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                myUid = user.uid;
+                initPresence(); // Start Green Dot Logic
+                initChat();     // Start Chat Logic
+                
+                // Clear the "Connecting..." placeholder
+                chatLog.innerHTML = '';
+                addLogMessage("System", "Welcome to the server.", false, true);
+            }
+        });
+
+        // --- 4. GREENDOT.JS LOGIC (Presence) ---
+        function initPresence() {
+            const userStatusDatabaseRef = db.ref('/status/' + myUid);
+            const isOfflineForDatabase = {
+                state: 'offline',
+                last_changed: firebase.database.ServerValue.TIMESTAMP,
+                username: myUsername
+            };
+            const isOnlineForDatabase = {
+                state: 'online',
+                last_changed: firebase.database.ServerValue.TIMESTAMP,
+                username: myUsername
+            };
+
+            // Manage connection state
+            db.ref('.info/connected').on('value', (snapshot) => {
+                if (snapshot.val() === false) return;
+
+                userStatusDatabaseRef.onDisconnect().set(isOfflineForDatabase).then(() => {
+                    userStatusDatabaseRef.set(isOnlineForDatabase);
+                });
+            });
+
+            // Listen for other users online
+            db.ref('/status').on('value', (snapshot) => {
+                userListEl.innerHTML = ''; // Clear list to rebuild
+                let onlineCount = 0;
+                
+                snapshot.forEach((childSnapshot) => {
+                    const data = childSnapshot.val();
+                    if (data.state === 'online') {
+                        onlineCount++;
+                        const li = document.createElement('li');
+                        li.className = 'online'; // Adds the glowing dot CSS
+                        
+                        const span = document.createElement('span');
+                        span.textContent = data.username || "Anonymous";
+                        
+                        // Highlight yourself
+                        if (data.username === myUsername) {
+                            span.textContent += " (You)";
+                            span.style.color = "#fff";
+                        }
+
+                        li.appendChild(span);
+                        userListEl.appendChild(li);
+                    }
+                });
+                userCountEl.textContent = `Users: ${onlineCount}`;
+            });
+        }
+
+        // --- 5. CHAT.JS LOGIC (Messages & 48h Cleanup) ---
+        function initChat() {
+            const messagesRef = db.ref('messages');
+            
+            // Limit to last 100 messages to prevent browser lag, but filter strictly by time below
+            messagesRef.limitToLast(100).on('child_added', (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
+
+                // --- 48 HOUR LOGIC ---
+                // 48 hours in milliseconds = 48 * 60 * 60 * 1000 = 172,800,000
+                const messageAge = Date.now() - data.timestamp;
+                const fortyEightHours = 172800000;
+
+                if (messageAge > fortyEightHours) {
+                    // Message is too old. 
+                    // Optional: Clean it up from DB so it doesn't load next time
+                    // snapshot.ref.remove(); 
+                    return; // Do NOT display it
+                }
+
+                // Display message
+                const isMe = (data.username === myUsername);
+                addLogMessage(data.username, data.text, isMe, false, data.timestamp);
+            });
+        }
+
+        // --- 6. SENDING MESSAGES ---
+        function sendMessage() {
+            const text = input.value.trim();
+            if (text === "") return;
+
+            const messagesRef = db.ref('messages');
+            const newMessageRef = messagesRef.push();
+            
+            newMessageRef.set({
+                username: myUsername,
+                text: text,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            input.value = '';
+        }
+
+        // --- 7. UI HELPERS ---
+        function addLogMessage(user, text, isMe, isSystem = false, timestamp = Date.now()) {
             const div = document.createElement('div');
             div.className = 'message';
             
-            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const user = isUser ? "You" : "System";
-            const userClass = isUser ? "msg-user" : "msg-system";
+            // Convert timestamp to time string
+            const dateObj = new Date(timestamp);
+            const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-            div.innerHTML = `<span class="msg-time">[${time}]</span> <span class="${userClass}">${user}:</span> <span class="msg-text">${text}</span>`;
+            const userClass = isMe ? "msg-user" : (isSystem ? "msg-system" : "msg-user");
+            
+            // Apply different color if it's not you and not system
+            let userStyle = "";
+            if (!isMe && !isSystem) {
+                userStyle = "color: #888;"; // Grey for others
+            }
+
+            // HTML Structure matches your CSS
+            if (isSystem) {
+                div.innerHTML = `<span class="msg-time">[${timeStr}]</span> <span class="msg-system">${text}</span>`;
+            } else {
+                div.innerHTML = `<span class="msg-time">[${timeStr}]</span> <span class="${userClass}" style="${userStyle}">${user}:</span> <span class="msg-text">${text}</span>`;
+            }
             
             chatLog.appendChild(div);
-            chatLog.scrollTop = chatLog.scrollHeight; 
+            chatLog.scrollTop = chatLog.scrollHeight; // Auto-scroll
         }
 
-        function handleSend() {
-            const text = input.value.trim();
-            if (text) {
-                addMessage(text, true);
-                input.value = '';
-            }
-        }
-
-        sendBtn.addEventListener('click', handleSend);
+        // Event Listeners
+        sendBtn.addEventListener('click', sendMessage);
         input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleSend();
+            if (e.key === 'Enter') sendMessage();
         });
         
         input.focus();
+
     </script>
 </body>
 </html>
