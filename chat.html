@@ -390,7 +390,7 @@
                             link.textContent = data.username;
                             link.className = "user-link";
                             // Sends user to profile.html with query param
-                            link.href = `users.html?user=${data.username}`; 
+                            link.href = `profile.html?user=${data.username}`; 
                         }
 
                         li.appendChild(link);
@@ -431,7 +431,7 @@
             const text = input.value.trim();
             if (text === "") return;
 
-            if (text.startsWith('/') && ADMINS.includes(myUsername)) {
+            if (text.startsWith('/') && admins.includes(myUsername)) {
                 handleCommand(text);
                 input.value = '';
                 return;
