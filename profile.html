@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        body {
+            font-family: 'VT323', monospace;
+            background-color: #050505;
+            color: #e5e5e5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: radial-gradient(circle, #111 0%, #000 100%);
+        }
+
+        .profile-card {
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid #333;
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .pfp-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 2px solid #facc15;
+            margin: 0 auto 20px;
+            object-fit: cover;
+            background: #222;
+        }
+
+        h1 { font-size: 2.5rem; color: #fff; margin: 0; text-transform: uppercase; }
+        .bio-text { color: #888; font-size: 1.2rem; margin: 15px 0 25px; min-height: 1.5em; }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px;
+            border: 1px solid #444;
+            background: #111;
+            color: #fff;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            transition: 0.2s;
+        }
+
+        .btn:hover { background: #facc15; color: #000; border-color: #facc15; }
+        .btn-block { color: #ef4444; border-color: #500; }
+        .btn-block:hover { background: #ef4444; color: #fff; }
+        
+        .nav-back {
+            display: block;
+            margin-top: 20px;
+            color: #555;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+        .nav-back:hover { color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="profile-card">
+        <img id="pfp" src="https://via.placeholder.com/120/111/333?text=?" class="pfp-large">
+        <h1 id="username">Loading...</h1>
+        <div id="bio" class="bio-text">Fetching user data...</div>
+
+        <div class="action-grid">
+            <button class="btn" id="btn-pm">Message</button>
+            <button class="btn" id="btn-call">Call</button>
+            <button class="btn btn-block" id="btn-block" style="grid-column: span 2;">Block User</button>
+        </div>
+
+        <a href="index.html" class="nav-back">← RETURN TO TERMINAL</a>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
+            authDomain: "ewsitechat.firebaseapp.com",
+            databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
+            projectId: "ewsitechat",
+            storageBucket: "ewsitechat.firebasestorage.app",
+            messagingSenderId: "282495574514",
+            appId: "1:282495574514:web:e2781da630d93fc1ce8b6b"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 1. Get user from URL
+        const params = new URLSearchParams(window.location.search);
+        const targetUser = params.get('user');
+        const myUsername = localStorage.getItem('username') || "Guest";
+
+        if (!targetUser) {
+            document.body.innerHTML = "<h1>User not found.</h1>";
+        } else {
+            // 2. Load User Data
+            db.ref('users/' + targetUser).once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    document.getElementById('username').innerText = data.username;
+                    document.getElementById('bio').innerText = data.bio || "No bio set.";
+                    if (data.pfp) document.getElementById('pfp').src = data.pfp;
+                } else {
+                    document.getElementById('username').innerText = "Unknown";
+                    document.getElementById('bio').innerText = "This user hasn't initialized their profile.";
+                }
+            });
+        }
+
+        // 3. Actions
+        document.getElementById('btn-pm').onclick = () => {
+            // Send notification to target so they see the popup
+            db.ref('notifications/' + targetUser).push({
+                from: myUsername,
+                type: 'pm',
+                timestamp: Date.now()
+            });
+            // Redirect to PM page
+            window.location.href = `pm.html?with=${targetUser}`;
+        };
+
+        document.getElementById('btn-call').onclick = () => {
+             db.ref('notifications/' + targetUser).push({
+                from: myUsername,
+                type: 'call',
+                timestamp: Date.now()
+            });
+            window.location.href = `call.html?user=${targetUser}`;
+        };
+
+        document.getElementById('btn-block').onclick = () => {
+            if(confirm(`Block ${targetUser}? You will no longer see their messages.`)) {
+                let blocks = JSON.parse(localStorage.getItem('blocked_users') || "[]");
+                if(!blocks.includes(targetUser)) blocks.push(targetUser);
+                localStorage.setItem('blocked_users', JSON.stringify(blocks));
+                alert("User blocked locally.");
+                window.location.href = "index.html";
+            }
+        };
+    </script>
+</body>
+</html>
