@@ -41,14 +41,13 @@
         /* --- HEADER --- */
         .top-header {
             display: flex;
-            justify-content: flex-end; /* Pushes links to right */
+            justify-content: flex-end; 
             align-items: center;
             margin-bottom: 10px;
             padding-bottom: 10px;
             border-bottom: 1px solid #333;
             height: 40px;
         }
-        /* Brand removed as requested */
         
         .top-links { font-size: 11px; }
         .top-links span { margin: 0 5px; color: #444; }
@@ -80,7 +79,6 @@
             justify-content: space-between;
         }
 
-        /* Special filler pattern styling */
         .filler-pattern { letter-spacing: 2px; color: #ccc; font-family: monospace; }
 
         .chat-log {
@@ -93,13 +91,13 @@
 
         /* --- MESSAGE STYLES --- */
         .message { margin-bottom: 6px; line-height: 1.5; position: relative; }
-        .message:hover .delete-btn { display: inline; } /* Show delete on hover for admins */
+        .message:hover .delete-btn { display: inline; } 
         
         .msg-time { color: #555; font-size: 10px; margin-right: 5px; }
         .msg-user { color: #fff; font-weight: bold; margin-right: 2px; }
         .msg-text { color: #ccc; }
         .msg-system { color: #facc15; font-style: italic; }
-        .msg-alert { color: #f00; font-weight: bold; } /* For ban/mute notices */
+        .msg-alert { color: #f00; font-weight: bold; }
 
         .delete-btn {
             display: none;
@@ -145,11 +143,16 @@
             padding: 8px;
             text-align: center;
         }
+        /* ADDED THIS CLASS BACK */
         .player-cover-art {
-            width: 100%; height: auto;
+            width: 100%; 
+            height: auto;
+            aspect-ratio: 1/1; 
+            object-fit: cover;
             border: 1px solid #444;
             margin-bottom: 8px;
-            background-color: #000;
+            background-color: #111;
+            display: block;
         }
         .mini-track-info {
             font-size: 10px;
@@ -199,7 +202,6 @@
         }
         .send-btn:hover { background-color: #666; }
 
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #111; }
         ::-webkit-scrollbar-thumb { background: #333; }
@@ -243,6 +245,7 @@
                     </ul>
 
                 <div class="mini-player">
+                    <img id="player-cover-art" class="player-cover-art" src="" alt="cover">
                     <div id="mini-track-info" class="mini-track-info">stopped</div>
                     <div class="mini-controls">
                         <button id="mini-prev" class="mini-btn">&lt;</button>
@@ -263,7 +266,7 @@
     <audio id="audio-player"></audio>
 
     <script>
-        // --- 1. FIREBASE CONFIGURATION (User Provided) ---
+        // --- 1. FIREBASE CONFIGURATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
             authDomain: "ewsitechat.firebaseapp.com",
@@ -286,7 +289,7 @@
         
         let myUsername = localStorage.getItem('username') || "Guest_" + Math.floor(Math.random() * 9999);
         let myUid = null;
-        let onlineUsers = {}; // Map UID -> Username
+        let onlineUsers = {}; 
 
         // --- 3. DOM ELEMENTS ---
         const input = document.getElementById('message-input');
@@ -306,14 +309,14 @@
                 myUid = user.uid;
                 initPresence();
                 initChat();
-                initModerationListener(); // Check if I am banned
+                initModerationListener();
                 
                 chatLog.innerHTML = '';
                 addLogMessage("System", "welcome", false, true);
             }
         });
 
-        // --- 5. PRESENCE (Green Dot) ---
+        // --- 5. PRESENCE ---
         function initPresence() {
             const userStatusRef = db.ref('/status/' + myUid);
             const isOffline = { state: 'offline', last_changed: firebase.database.ServerValue.TIMESTAMP, username: myUsername };
@@ -333,7 +336,6 @@
                 
                 snapshot.forEach((child) => {
                     const data = child.val();
-                    // Store for ID lookup later
                     onlineUsers[child.key] = data.username;
 
                     if (data.state === 'online') {
@@ -357,17 +359,12 @@
         // --- 6. CHAT LOGIC ---
         function initChat() {
             const messagesRef = db.ref('messages');
-            
             messagesRef.limitToLast(100).on('child_added', (snapshot) => {
                 const data = snapshot.val();
                 if (!data) return;
-
-                // 48h Cleanup
                 if (Date.now() - data.timestamp > 172800000) return;
-
                 addLogMessage(data.username, data.text, (data.username === myUsername), false, data.timestamp, snapshot.key);
             });
-
             messagesRef.on('child_removed', (snapshot) => {
                 const msgDiv = document.getElementById(`msg-${snapshot.key}`);
                 if (msgDiv) msgDiv.remove();
@@ -378,7 +375,6 @@
             const text = input.value.trim();
             if (text === "") return;
 
-            // Check for Commands (Only if Admin)
             if (text.startsWith('/') && ADMINS.includes(myUsername)) {
                 handleCommand(text);
                 input.value = '';
@@ -395,43 +391,35 @@
 
         // --- 7. MODERATION COMMANDS ---
         function handleCommand(cmdStr) {
-            // Format: /ban [time] [user]
             const parts = cmdStr.split(' ');
             const command = parts[0];
-            const durationStr = parts[1]; // 30s, 10m, inf
+            const durationStr = parts[1];
             const targetUser = parts[2];
 
             if (!targetUser) return;
 
-            // 1. Find UID of targetUser
             let targetUid = Object.keys(onlineUsers).find(key => onlineUsers[key] === targetUser);
-            
             if (!targetUid) {
-                // If user is offline, we can't look them up easily in this simple system
-                // Fallback: This only bans currently known users.
                 addLogMessage("System", `User ${targetUser} not found or offline.`, false, true);
                 return;
             }
 
-            // 2. Parse Duration
             let durationMs = 0;
-            if (durationStr === 'inf') durationMs = 3153600000000; // 100 years
+            if (durationStr === 'inf') durationMs = 3153600000000;
             else if (durationStr.endsWith('s')) durationMs = parseInt(durationStr) * 1000;
             else if (durationStr.endsWith('m')) durationMs = parseInt(durationStr) * 60000;
             else if (durationStr.endsWith('h')) durationMs = parseInt(durationStr) * 3600000;
-            else { durationMs = 30000; } // Default 30s
+            else { durationMs = 30000; } 
 
             const endTime = Date.now() + durationMs;
             const type = (command === '/ban') ? 'ban' : 'mute';
 
-            // 3. Set Moderation Record in DB
             db.ref('moderation/' + targetUid).set({
                 type: type,
                 until: endTime,
                 reason: "Admin Action"
             });
 
-            // 4. Announce it
             const verb = (type === 'ban') ? 'banned' : 'muted';
             db.ref('messages').push({
                 username: "System",
@@ -444,15 +432,11 @@
             db.ref('moderation/' + myUid).on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data && data.until > Date.now()) {
-                    // USER IS RESTRICTED
                     input.disabled = true;
                     input.value = "";
                     input.placeholder = `You are ${data.type}ed until ${new Date(data.until).toLocaleTimeString()}`;
-                    
-                    // Set external notification flag
                     localStorage.setItem('notification_status', `You have been ${data.type}ed.`);
                 } else {
-                    // USER IS FREE
                     input.disabled = false;
                     input.placeholder = "Type a message...";
                     localStorage.removeItem('notification_status');
@@ -475,7 +459,6 @@
             const dateObj = new Date(timestamp);
             const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-            // Check if text indicates a system ban alert
             if (text.startsWith('***')) {
                 div.innerHTML = `<span class="msg-time">[${timeStr}]</span> <span class="msg-alert">${text}</span>`;
                 chatLog.appendChild(div);
@@ -486,7 +469,6 @@
             const userClass = isSystem ? "msg-system" : "msg-user";
             let userStyle = (!isMe && !isSystem) ? "color: #888;" : "";
             
-            // Delete Button (Only for Admins)
             let deleteHtml = "";
             if (ADMINS.includes(myUsername) && !isSystem && msgId) {
                 deleteHtml = `<span class="delete-btn" onclick="deleteMessage('${msgId}')">[x]</span>`;
@@ -507,45 +489,45 @@
             if (e.key === 'Enter') sendMessage();
         });
 
-        // --- 9. MUSIC PLAYER LOGIC (From previous requests) ---
-            const baseURL = "https://ewsmusic1.netlify.app/"; 
-            const playlist = [
-                { title: "Xtal", artist: "Aphex Twin", src: baseURL + "xtal.mp3", cover: baseURL + "aphex.jpg" },
-                { title: "I Don't Wanna Be Me", artist: "Type O Negative", src: baseURL + "idontwannabeme.mp3", cover: baseURL + "ton.jpg" },
-                { title: "Life Is Killing Me", artist: "Type O Negative", src: baseURL + "lifeiskilling.mp3", cover: baseURL + "ton.jpg" },
-                { title: "Exit Music (For a Film)", artist: "Radiohead", src: baseURL + "exitmusic.mp3", cover: baseURL + "radiohead.jpg" },
-                { title: "Alternative Outro", artist: "LUCKI", src: baseURL + "alternativeoutro.mp3", cover: baseURL + "lucki.jpg" },
-                { title: "Bite My Lip", artist: "fakemink", src: baseURL + "bitemylip.mp3", cover: baseURL + "fakemink.jpg" },
-                { title: "Ambilux", artist: "fakemink", src: baseURL + "ambilux.mp3", cover: baseURL + "fakemink3.jpg" },
-                { title: "I'm Like Why", artist: "xaviersobased", src: baseURL + "imlikewhy.mp3", cover: baseURL + "xav.jpg" },
-                { title: "Love Hate", artist: "xaviersobased", src: baseURL + "lovehate.mp3", cover: baseURL + "xav2.jpg" },
-                { title: "Foamposite Interlude", artist: "smokedope2016", src: baseURL + "foamposite.mp3", cover: baseURL + "smokedope2016.jpg" },
-                { title: "Abysmal Depths Are Flooded", artist: "Xasthur", src: baseURL + "abysmaldepthsareflooded.mp3", cover: baseURL + "xasthur.jpg" },
-                { title: "Diamonds", artist: "Chris Travis", src: baseURL + "diamonds.mp3", cover: baseURL + "christravis.jpg" },
-                { title: "Black Magic", artist: "Ethel Wulf", src: baseURL + "blackmagic.mp3", cover: baseURL + "ethel.jpg" },
-                { title: "4 Raws", artist: "EsDeeKid", src: baseURL + "4raws.mp3", cover: baseURL + "esdee.jpg" },
-                { title: "Fever", artist: "fakemink/buckshot", src: baseURL + "fever.mp3", cover: baseURL + "buckshot.jpg" },
-                { title: "Stalks", artist: "Ghost Mountain", src: baseURL + "stalks.mp3", cover: baseURL + "ghostmountain.jpg" },
-                { title: "MIA", artist: "feng", src: baseURL + "mia.mp3", cover: baseURL + "feng.jpg" },
-                { title: "head in the ceiling fan", artist: "Title Fight", src: baseURL + "titlefight.mp3", cover: baseURL + "title-fih.jpg" },
-                { title: "Turn Me Loose", artist: "limpbizkit/eminem", src: baseURL + "turnmeloose.mp3", cover: baseURL + "limp.jpg" },
-                { title: "black beetles", artist: "esdeekid", src: baseURL + "bbr.mp3", cover: baseURL + "esdee2.jpg" },
-                { title: "apathy", artist: "esdeekid", src: baseURL + "apathy.mp3", cover: baseURL + "esdee3.jpg" },
-                { title: "bring it back", artist: "chris travis", src: baseURL + "bib.mp3", cover: baseURL + "chris2.jpg" },
-                { title: "die til you live", artist: "fakemink", src: baseURL + "dtyl.mp3", cover: baseURL + "fakemink5.jpg" },
-                { title: "worthit", artist: "xaviersobased", src: baseURL + "worthit.mp3", cover: baseURL + "81853ABB-FB87-4A20-9303-9624B777245B.jpeg" },
-                { title: "in da party", artist: "smokedope2016", src: baseURL + "indaparty.mp3", cover: baseURL + "smokedope4.jpg" },
-                { title: "say it aint dro", artist: "smokedope2016", src: baseURL + "dro.mp3", cover: baseURL + "smokedope3.jpg" },
-                { title: "blunts on my mind", artist: "ethel wulf", src: baseURL + "bluntsomm.mp3", cover: baseURL + "ethel2.jpg" },
-                { title: "luper", artist: "earl sweatshirt", src: baseURL + "luper.mp3", cover: baseURL + "earl.jpg" },
-                { title: "frat", artist: "smokedope2016", src: baseURL + "frat.mp3", cover: baseURL + "smokedope2.jpg" },
-                { title: "hit the home", artist: "the hand of peace", src: baseURL + "clock.mp3", cover: baseURL + "handofpeace.jpg" },
-                { title: "blow me", artist: "fakemink", src: baseURL + "blowme.mp3", cover: baseURL + "fakeminkk.jpg" },
-                { title: "minerva", artist: "deftones", src: baseURL + "minerva.mp3", cover: baseURL + "deftones.jpg" },
-                { title: "hold on", artist: "limpbizkit", src: baseURL + "holdon.mp3", cover: baseURL + "limpbizkit.jpg" },
-                { title: "my way", artist: "limpbizkit", src: baseURL + "myway.mp3", cover: baseURL + "limpbizkit.jpg" },
-                { title: "new update soon", artist: "-nl", src: baseURL + "xtal.mp3", cover: baseURL + "aphextwin.jpg" }
-            ];
+        // --- 9. MUSIC PLAYER LOGIC ---
+        const baseURL = "https://ewsmusic1.netlify.app/"; 
+        const playlist = [
+            { title: "Xtal", artist: "Aphex Twin", src: baseURL + "xtal.mp3", cover: baseURL + "aphex.jpg" },
+            { title: "I Don't Wanna Be Me", artist: "Type O Negative", src: baseURL + "idontwannabeme.mp3", cover: baseURL + "ton.jpg" },
+            { title: "Life Is Killing Me", artist: "Type O Negative", src: baseURL + "lifeiskilling.mp3", cover: baseURL + "ton.jpg" },
+            { title: "Exit Music (For a Film)", artist: "Radiohead", src: baseURL + "exitmusic.mp3", cover: baseURL + "radiohead.jpg" },
+            { title: "Alternative Outro", artist: "LUCKI", src: baseURL + "alternativeoutro.mp3", cover: baseURL + "lucki.jpg" },
+            { title: "Bite My Lip", artist: "fakemink", src: baseURL + "bitemylip.mp3", cover: baseURL + "fakemink.jpg" },
+            { title: "Ambilux", artist: "fakemink", src: baseURL + "ambilux.mp3", cover: baseURL + "fakemink3.jpg" },
+            { title: "I'm Like Why", artist: "xaviersobased", src: baseURL + "imlikewhy.mp3", cover: baseURL + "xav.jpg" },
+            { title: "Love Hate", artist: "xaviersobased", src: baseURL + "lovehate.mp3", cover: baseURL + "xav2.jpg" },
+            { title: "Foamposite Interlude", artist: "smokedope2016", src: baseURL + "foamposite.mp3", cover: baseURL + "smokedope2016.jpg" },
+            { title: "Abysmal Depths Are Flooded", artist: "Xasthur", src: baseURL + "abysmaldepthsareflooded.mp3", cover: baseURL + "xasthur.jpg" },
+            { title: "Diamonds", artist: "Chris Travis", src: baseURL + "diamonds.mp3", cover: baseURL + "christravis.jpg" },
+            { title: "Black Magic", artist: "Ethel Wulf", src: baseURL + "blackmagic.mp3", cover: baseURL + "ethel.jpg" },
+            { title: "4 Raws", artist: "EsDeeKid", src: baseURL + "4raws.mp3", cover: baseURL + "esdee.jpg" },
+            { title: "Fever", artist: "fakemink/buckshot", src: baseURL + "fever.mp3", cover: baseURL + "buckshot.jpg" },
+            { title: "Stalks", artist: "Ghost Mountain", src: baseURL + "stalks.mp3", cover: baseURL + "ghostmountain.jpg" },
+            { title: "MIA", artist: "feng", src: baseURL + "mia.mp3", cover: baseURL + "feng.jpg" },
+            { title: "head in the ceiling fan", artist: "Title Fight", src: baseURL + "titlefight.mp3", cover: baseURL + "title-fih.jpg" },
+            { title: "Turn Me Loose", artist: "limpbizkit/eminem", src: baseURL + "turnmeloose.mp3", cover: baseURL + "limp.jpg" },
+            { title: "black beetles", artist: "esdeekid", src: baseURL + "bbr.mp3", cover: baseURL + "esdee2.jpg" },
+            { title: "apathy", artist: "esdeekid", src: baseURL + "apathy.mp3", cover: baseURL + "esdee3.jpg" },
+            { title: "bring it back", artist: "chris travis", src: baseURL + "bib.mp3", cover: baseURL + "chris2.jpg" },
+            { title: "die til you live", artist: "fakemink", src: baseURL + "dtyl.mp3", cover: baseURL + "fakemink5.jpg" },
+            { title: "worthit", artist: "xaviersobased", src: baseURL + "worthit.mp3", cover: baseURL + "81853ABB-FB87-4A20-9303-9624B777245B.jpeg" },
+            { title: "in da party", artist: "smokedope2016", src: baseURL + "indaparty.mp3", cover: baseURL + "smokedope4.jpg" },
+            { title: "say it aint dro", artist: "smokedope2016", src: baseURL + "dro.mp3", cover: baseURL + "smokedope3.jpg" },
+            { title: "blunts on my mind", artist: "ethel wulf", src: baseURL + "bluntsomm.mp3", cover: baseURL + "ethel2.jpg" },
+            { title: "luper", artist: "earl sweatshirt", src: baseURL + "luper.mp3", cover: baseURL + "earl.jpg" },
+            { title: "frat", artist: "smokedope2016", src: baseURL + "frat.mp3", cover: baseURL + "smokedope2.jpg" },
+            { title: "hit the home", artist: "the hand of peace", src: baseURL + "clock.mp3", cover: baseURL + "handofpeace.jpg" },
+            { title: "blow me", artist: "fakemink", src: baseURL + "blowme.mp3", cover: baseURL + "fakeminkk.jpg" },
+            { title: "minerva", artist: "deftones", src: baseURL + "minerva.mp3", cover: baseURL + "deftones.jpg" },
+            { title: "hold on", artist: "limpbizkit", src: baseURL + "holdon.mp3", cover: baseURL + "limpbizkit.jpg" },
+            { title: "my way", artist: "limpbizkit", src: baseURL + "myway.mp3", cover: baseURL + "limpbizkit.jpg" },
+            { title: "new update soon", artist: "-nl", src: baseURL + "xtal.mp3", cover: baseURL + "aphextwin.jpg" }
+        ];
         
         const audioPlayer = document.getElementById('audio-player');
         const miniTitle = document.getElementById('mini-track-info');
@@ -558,10 +540,18 @@
             const song = playlist[index];
             audioPlayer.src = song.src;
             miniTitle.textContent = song.title;
+            // FIXED: Update image src
+            if (playerCoverArt) {
+                playerCoverArt.src = song.cover;
+            }
         }
+        
+        // Initial load so image isn't blank
+        loadMiniSong(0);
 
         document.getElementById('mini-play').addEventListener('click', () => {
             if(audioPlayer.paused) {
+                // Check if src is set, if not load current
                 if(!audioPlayer.src) loadMiniSong(currentSongIndex);
                 audioPlayer.play();
                 miniPlayBtn.textContent = "||";
