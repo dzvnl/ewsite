@@ -90,7 +90,7 @@
         }
 
         /* --- MESSAGE STYLES --- */
-        .message { margin-bottom: 6px; line-height: 1.5; position: relative; }
+        .message { margin-bottom: 8px; line-height: 1.5; position: relative; word-wrap: break-word; }
         .message:hover .delete-btn { display: inline; } 
         
         .msg-time { color: #555; font-size: 10px; margin-right: 5px; }
@@ -98,7 +98,17 @@
         .msg-text { color: #ccc; }
         .msg-system { color: #facc15; font-style: italic; }
         .msg-alert { color: #f00; font-weight: bold; }
+        .msg-notification { color: #0ff; font-weight: bold; border: 1px dashed #0ff; padding: 2px 5px; display:inline-block; margin-top:5px;}
 
+        /* MEDIA STYLES */
+        .chat-media {
+            display: block;
+            max-width: 300px;
+            max-height: 200px;
+            margin-top: 5px;
+            border: 1px solid #333;
+        }
+        
         .delete-btn {
             display: none;
             color: #f00;
@@ -134,7 +144,11 @@
             background-color: #444; margin-right: 6px; border-radius: 50%;
         }
         .user-list li.online::before { background-color: #fff; box-shadow: 0 0 4px #fff; }
-        .user-list li span { color: #bbb; }
+        
+        /* Links in sidebar */
+        .user-link { color: #bbb; text-decoration: none; cursor: pointer; }
+        .user-link:hover { color: #fff; text-decoration: underline; }
+        .user-link.is-me { color: #fff; font-weight: bold; pointer-events: none; }
 
         /* --- MINI MUSIC PLAYER (Sidebar) --- */
         .mini-player {
@@ -143,7 +157,6 @@
             padding: 8px;
             text-align: center;
         }
-        /* ADDED THIS CLASS BACK */
         .player-cover-art {
             width: 100%; 
             height: auto;
@@ -177,6 +190,7 @@
             border: 1px solid #333;
             display: flex;
             gap: 5px;
+            align-items: center;
         }
         
         .chat-input {
@@ -191,6 +205,19 @@
         .chat-input:focus { outline: 1px solid #666; }
         .chat-input:disabled { background-color: #220000; color: #777; border-color: #500; cursor: not-allowed; }
 
+        .action-btn {
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 0 10px;
+            height: 26px; /* Match input height roughly */
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .action-btn:hover { background-color: #555; }
+
         .send-btn {
             background-color: #444;
             color: #fff;
@@ -199,6 +226,7 @@
             font-size: 11px;
             font-weight: bold;
             cursor: pointer;
+            height: 26px;
         }
         .send-btn:hover { background-color: #666; }
 
@@ -234,6 +262,10 @@
                 </div>
 
                 <div class="chat-input-area">
+                    <input type="file" id="media-input" accept="image/*,video/*" style="display: none;">
+                    
+                    <button class="action-btn" id="upload-trigger" title="Send Image/Video">[+]</button>
+                    
                     <input type="text" class="chat-input" id="message-input" placeholder="Type a message..." autocomplete="off">
                     <button class="send-btn" id="send-btn">SEND</button>
                 </div>
@@ -297,6 +329,8 @@
         const chatLog = document.getElementById('chat-log');
         const userListEl = document.getElementById('user-list');
         const userCountEl = document.getElementById('user-count');
+        const mediaInput = document.getElementById('media-input');
+        const uploadTrigger = document.getElementById('upload-trigger');
 
         // --- 4. AUTHENTICATION ---
         auth.signInAnonymously().catch((error) => {
@@ -310,13 +344,14 @@
                 initPresence();
                 initChat();
                 initModerationListener();
+                initNotificationListener(); // NEW: Listen for PMs
                 
                 chatLog.innerHTML = '';
                 addLogMessage("System", "welcome", false, true);
             }
         });
 
-        // --- 5. PRESENCE ---
+        // --- 5. PRESENCE & SIDEBAR LINKS ---
         function initPresence() {
             const userStatusRef = db.ref('/status/' + myUid);
             const isOffline = { state: 'offline', last_changed: firebase.database.ServerValue.TIMESTAMP, username: myUsername };
@@ -336,19 +371,29 @@
                 
                 snapshot.forEach((child) => {
                     const data = child.val();
-                    onlineUsers[child.key] = data.username;
+                    const uid = child.key;
+                    onlineUsers[uid] = data.username;
 
                     if (data.state === 'online') {
                         count++;
                         const li = document.createElement('li');
                         li.className = 'online';
-                        const span = document.createElement('span');
-                        span.textContent = data.username;
+                        
+                        // NEW: Create Link to Profile
+                        const link = document.createElement('a');
+                        
                         if (data.username === myUsername) {
-                            span.style.color = "#fff";
-                            span.textContent += " (You)";
+                            link.textContent = data.username + " (You)";
+                            link.className = "user-link is-me";
+                            link.href = "#"; // Disable link to self
+                        } else {
+                            link.textContent = data.username;
+                            link.className = "user-link";
+                            // Sends user to profile.html with query param
+                            link.href = `profile.html?user=${data.username}`; 
                         }
-                        li.appendChild(span);
+
+                        li.appendChild(link);
                         userListEl.appendChild(li);
                     }
                 });
@@ -362,8 +407,19 @@
             messagesRef.limitToLast(100).on('child_added', (snapshot) => {
                 const data = snapshot.val();
                 if (!data) return;
-                if (Date.now() - data.timestamp > 172800000) return;
-                addLogMessage(data.username, data.text, (data.username === myUsername), false, data.timestamp, snapshot.key);
+                // Basic cleanup for old messages if needed, here just checking basic validity
+                if (!data.timestamp) return;
+                
+                addLogMessage(
+                    data.username, 
+                    data.text, 
+                    (data.username === myUsername), 
+                    false, 
+                    data.timestamp, 
+                    snapshot.key,
+                    data.mediaType, // New: Image or Video?
+                    data.mediaData  // New: Base64 string
+                );
             });
             messagesRef.on('child_removed', (snapshot) => {
                 const msgDiv = document.getElementById(`msg-${snapshot.key}`);
@@ -389,7 +445,41 @@
             input.value = '';
         }
 
-        // --- 7. MODERATION COMMANDS ---
+        // --- 7. MEDIA UPLOAD LOGIC ---
+        uploadTrigger.addEventListener('click', () => {
+            mediaInput.click();
+        });
+
+        mediaInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Size limit check (2MB) because Realtime DB handles large strings poorly
+            if (file.size > 2097152) {
+                alert("File too large. Max 2MB.");
+                mediaInput.value = "";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const base64 = evt.target.result;
+                const type = file.type.startsWith('image') ? 'image' : 'video';
+
+                db.ref('messages').push({
+                    username: myUsername,
+                    text: "", // Empty text for media messages
+                    mediaType: type,
+                    mediaData: base64,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+            };
+            reader.readAsDataURL(file);
+            mediaInput.value = ""; // Reset
+        });
+
+
+        // --- 8. MODERATION COMMANDS ---
         function handleCommand(cmdStr) {
             const parts = cmdStr.split(' ');
             const command = parts[0];
@@ -435,11 +525,39 @@
                     input.disabled = true;
                     input.value = "";
                     input.placeholder = `You are ${data.type}ed until ${new Date(data.until).toLocaleTimeString()}`;
-                    localStorage.setItem('notification_status', `You have been ${data.type}ed.`);
+                    uploadTrigger.disabled = true; // Disable uploads too
                 } else {
                     input.disabled = false;
+                    uploadTrigger.disabled = false;
                     input.placeholder = "Type a message...";
-                    localStorage.removeItem('notification_status');
+                }
+            });
+        }
+
+        // --- 9. NOTIFICATION LISTENER (New) ---
+        function initNotificationListener() {
+            // Listens for 'notifications/myUsername'
+            // Used when someone sends a PM from profile.html
+            db.ref('notifications/' + myUsername).on('child_added', (snapshot) => {
+                const notif = snapshot.val();
+                if(notif) {
+                    // Visual Alert in Chat Log
+                    const div = document.createElement('div');
+                    div.className = 'message';
+                    div.innerHTML = `<span class="msg-time">[ALERT]</span> <span class="msg-notification">New PM from ${notif.from}</span>`;
+                    div.onclick = function() {
+                        // Logic to open PM chatroom would go here
+                        // For now, redirect to profile or a pm.html
+                        if(confirm(`Go to PMs with ${notif.from}?`)) {
+                             window.location.href = `pm.html?with=${notif.from}`;
+                        }
+                    };
+                    div.style.cursor = "pointer";
+                    chatLog.appendChild(div);
+                    chatLog.scrollTop = chatLog.scrollHeight;
+                    
+                    // Cleanup notification so it doesn't show on reload
+                    db.ref(`notifications/${myUsername}/${snapshot.key}`).remove();
                 }
             });
         }
@@ -450,8 +568,8 @@
             }
         }
 
-        // --- 8. UI HELPERS ---
-        function addLogMessage(user, text, isMe, isSystem, timestamp = Date.now(), msgId = null) {
+        // --- 10. UI HELPERS ---
+        function addLogMessage(user, text, isMe, isSystem, timestamp = Date.now(), msgId = null, mediaType = null, mediaData = null) {
             const div = document.createElement('div');
             div.className = 'message';
             if(msgId) div.id = `msg-${msgId}`;
@@ -459,7 +577,7 @@
             const dateObj = new Date(timestamp);
             const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-            if (text.startsWith('***')) {
+            if (text && text.startsWith('***')) {
                 div.innerHTML = `<span class="msg-time">[${timeStr}]</span> <span class="msg-alert">${text}</span>`;
                 chatLog.appendChild(div);
                 chatLog.scrollTop = chatLog.scrollHeight;
@@ -474,10 +592,27 @@
                 deleteHtml = `<span class="delete-btn" onclick="deleteMessage('${msgId}')">[x]</span>`;
             }
 
+            // Construct Content
+            let contentHtml = "";
+            
+            // Text content
+            if (text) {
+                contentHtml += `<span class="msg-text">${text}</span>`;
+            }
+
+            // Media content
+            if (mediaType && mediaData) {
+                if (mediaType === 'image') {
+                    contentHtml += `<img src="${mediaData}" class="chat-media" alt="image">`;
+                } else if (mediaType === 'video') {
+                    contentHtml += `<video src="${mediaData}" class="chat-media" controls></video>`;
+                }
+            }
+
             if (isSystem) {
                 div.innerHTML = `<span class="msg-time">[${timeStr}]</span> <span class="msg-system">${text}</span>`;
             } else {
-                div.innerHTML = `${deleteHtml}<span class="msg-time">[${timeStr}]</span> <span class="${userClass}" style="${userStyle}">${user}:</span> <span class="msg-text">${text}</span>`;
+                div.innerHTML = `${deleteHtml}<span class="msg-time">[${timeStr}]</span> <span class="${userClass}" style="${userStyle}">${user}:</span> ${contentHtml}`;
             }
             
             chatLog.appendChild(div);
@@ -489,7 +624,7 @@
             if (e.key === 'Enter') sendMessage();
         });
 
-        // --- 9. MUSIC PLAYER LOGIC ---
+        // --- 11. MUSIC PLAYER LOGIC ---
         const baseURL = "https://ewsmusic1.netlify.app/"; 
         const playlist = [
             { title: "Xtal", artist: "Aphex Twin", src: baseURL + "xtal.mp3", cover: baseURL + "aphex.jpg" },
@@ -534,24 +669,20 @@
         const miniPlayBtn = document.getElementById('mini-play');
         const playerCoverArt = document.getElementById('player-cover-art');
         let currentSongIndex = 0;
-        let isPlaying = false;
 
         function loadMiniSong(index) {
             const song = playlist[index];
             audioPlayer.src = song.src;
             miniTitle.textContent = song.title;
-            // FIXED: Update image src
             if (playerCoverArt) {
                 playerCoverArt.src = song.cover;
             }
         }
         
-        // Initial load so image isn't blank
         loadMiniSong(0);
 
         document.getElementById('mini-play').addEventListener('click', () => {
             if(audioPlayer.paused) {
-                // Check if src is set, if not load current
                 if(!audioPlayer.src) loadMiniSong(currentSongIndex);
                 audioPlayer.play();
                 miniPlayBtn.textContent = "||";
