@@ -3,395 +3,404 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>canvas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    
+    <title>ews</title>
     <style>
-        html, body { height: 100%; scroll-behavior: smooth; }
+        /* --- RESET & BASE STYLES (Placeholder Look) --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'VT323', monospace;
-            color: #e5e5e5;
-            background-color: #000000; 
-            /* Fallback */
-            background-image: url('IMG_4928.jpeg'); 
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            background-position: center;
+            background-color: #000;
+            color: #ccc;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            line-height: 1.4;
         }
-        .pixel-font {
-            font-family: 'VT323', monospace;
-            font-smooth: never;
-            -webkit-font-smoothing: none;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+        a { color: #fff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* --- LAYOUT CONTAINER --- */
+        .container { width: 900px; margin: 0 auto; padding-top: 50px; }
+
+        /* --- HEADER --- */
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 10px;
+            padding-left: 170px; /* Offset for sidebar */
+        }
+        .top-links { color: #666; }
+        .top-links span { margin: 0 5px; color: #444; }
+        .brand-logo {
+            font-family: "Times New Roman", serif;
+            font-size: 32px;
+            color: #fff;
+            letter-spacing: 2px;
         }
 
-        /* --- GREEN CHAT DOT --- */
-        .chat-dot {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 14px;
-            height: 14px;
-            background-color: #4ade80; /* Green-400 */
-            border-radius: 50%;
-            z-index: 100;
-            cursor: pointer;
-            box-shadow: 0 0 10px #4ade80;
-            animation: pulse-green 2s infinite;
-            border: 1px solid #fff;
-        }
-        .chat-dot:hover {
-            transform: scale(1.2);
-            background-color: #22c55e;
-        }
-        @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
-        }
-        
-        /* --- PLAYER CSS --- */
-        #music-player-widget {
-            position: fixed;
-            bottom: 1.5rem; 
-            right: 1.5rem;
-            z-index: 50;
-            width: 320px; 
-            height: auto;
-            background-color: rgba(0, 0, 0, 0.8);
-            border: none;
-            padding: 0.75rem;
+        /* --- MAIN GRID --- */
+        .main-layout { display: flex; gap: 15px; }
+
+        /* --- LEFT SIDEBAR (Navigation) --- */
+        .sidebar-left { width: 150px; text-align: right; padding-right: 10px; }
+        .nav-list { list-style: none; }
+        .nav-list li {
+            margin-bottom: 4px;
+            font-weight: bold;
+            color: #eee;
             display: flex;
+            justify-content: flex-end;
             align-items: center;
         }
+        .nav-list li a { color: #eee; }
+        .nav-list li::after {
+            content: ""; display: inline-block; width: 0; height: 0;
+            border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+            border-left: 4px solid #fff; margin-left: 8px;
+        }
+
+        /* --- CENTER COLUMN (Content) --- */
+        .content-center { width: 480px; }
+        .section-header {
+            background-color: #666; color: #fff;
+            padding: 3px 5px; font-size: 12px; font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .news-item { margin-bottom: 25px; }
+        .news-title-bar {
+            background-color: #333; color: #fff;
+            padding: 3px 5px; font-size: 12px; margin-bottom: 8px;
+        }
+        .news-text { color: #bbb; margin-bottom: 10px; }
+        
+        /* Splash Text Specific Style */
+        #splash-text { color: #facc15; font-style: italic; }
+
+        /* --- RIGHT SIDEBAR (Player & Links) --- */
+        .sidebar-right { width: 220px; }
+        
+        /* Music Player Styles to match Theme */
+        #music-player-container {
+            background-color: #222;
+            border: 1px solid #333;
+            padding: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
         #player-cover-art {
-            width: 64px;
-            height: 64px;
-            flex-shrink: 0; 
-            margin-right: 0.75rem; 
-            border: 2px dotted #969696; 
-            background-color: #111;
-            image-rendering: pixelated;
+            width: 100%; height: auto;
+            border: 1px solid #444;
+            margin-bottom: 8px;
+            background-color: #000;
         }
-        #player-main { flex-grow: 1; overflow: hidden; min-width: 0; }
-        #player-title {
-            color: #ffffff;
-            font-size: 1.125rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        #player-title { color: #fff; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        #player-artist { color: #888; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .player-controls { display: flex; justify-content: center; gap: 5px; margin-bottom: 5px; }
+        .player-btn {
+            background: #444; border: none; color: #fff;
+            width: 25px; height: 20px; font-size: 10px; cursor: pointer;
         }
-        #player-artist {
-            font-size: 0.875rem;
-            color: #969696;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-bottom: 4px;
+        .player-btn:hover { background: #666; }
+        #volume-slider { width: 100%; height: 5px; }
+
+        .related-list { list-style: none; margin-top: 10px; margin-bottom: 30px; }
+        .related-list li { margin-bottom: 4px; display: flex; align-items: center; }
+        .related-list li::before {
+            content: ""; display: inline-block; width: 4px; height: 6px;
+            background: #ccc; margin-right: 8px;
+            clip-path: polygon(0 0, 0% 100%, 100% 50%);
         }
-        .player-controls-row { display: flex; align-items: center; gap: 0.25rem; }
-        .player-controls-row button {
-            color: #facc15;
-            font-size: 1.25rem;
-            flex-shrink: 0;
-            padding: 0 0.25rem;
-        }
-        #play-pause-btn { font-size: 1.5rem; line-height: 1; }
-        #volume-slider {
-            -webkit-appearance: none;
-            width: 100%; 
-            flex-grow: 1;
-            height: 16px; 
-            background: transparent;
-            margin-left: 0.5rem; 
-        }
-        #volume-slider::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            background: #333;
-            border: 1px solid #969696;
-        }
-        #volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            background: #facc15; 
-            border: 1px solid #000;
-            border-radius: 50%;
-            margin-top: -7px; 
+
+        /* --- FOOTER --- */
+        .footer {
+            margin-top: 50px; border-top: 1px solid #333;
+            padding: 20px 0 50px; text-align: center;
+            color: #666; font-size: 10px;
         }
     </style>
 </head>
 <body>
 
-    <a href="chat.html" class="chat-dot" title="Open Global_Net"></a>
+    <div class="container">
+        
+        <div class="top-header">
+            <div class="top-links">
+                <span id="welcome-message">Welcome, ?</span> 
+                <span>|</span> 
+                <a href="account.html" id="auth-link">sign up / sign in</a>
+            </div>
+            <div class="brand-logo">ews</div>
+        </div>
 
-    <nav class="fixed left-0 top-1/2 -translate-y-1/2 p-6 sm:p-8 pixel-font z-10">
-        <h1 class="text-3xl lg:text-4xl text-gray-300 mb-2" style="color: #bebebe;"></h1>
-        <ul class="text-2xl lg:text-3xl space-y-1" style="color: #969696;">
-            <li><a href="/secrets" class="hover:text-red-900">home</a></li>
-            <li><a href="/list" class="hover:text-red-900">list</a></li>
-        </ul>
-    </nav>
+        <div class="main-layout">
 
-    <div class="fixed top-2/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pixel-font text-yellow-400 text-lg lg:text-xl text-center z-10 p-4">
-        <p id="splash-text"></p>
-    </div>
+            <aside class="sidebar-left">
+                <ul class="nav-list">
+                    <li><a href="/secrets">home</a></li>
+                    <li><a href="/list">list</a></li>
+                    <li><a href="chat.html">chat</a></li>
+                    <li></li>
+                </ul>
+            </aside>
 
-    <div class="fixed top-0 right-0 p-4 pixel-font text-yellow-400 text-sm sm:text-base text-right z-10" style="margin-right: 25px; margin-top: 5px;">
-        <p>2.0</p>
-        <p id="welcome-message">welcome, ?</p>
-        <a href="account.html" id="auth-link" class="text-xs hover:text-white" style="color: #969696;">sign up / sign in</a>
+            <main class="content-center">
+                
+                <div class="section-header">Status</div>
+                <div class="news-item">
+                    <div class="news-title-bar">System Message</div>
+                    <p class="news-text" id="splash-text">Loading message...</p>
+                </div>
+
+                <div class="section-header">Latest News</div>
+
+                <div class="news-item">
+                    <div style="width:100%; height:120px; background:#222; display:flex; align-items:center; justify-content:center; border:1px solid #333; color:#555;">
+                        
+                    </div>
+                    <div class="news-title-bar">the news</div>
+                    <p class="news-text">
+                     nothin' yet
+                    </p>
+                </div>
+
+            </main>
+
+            <aside class="sidebar-right">
+                
+                <div class="section-header">Audio Player</div>
+                
+                <div id="music-player-container">
+                    <img id="player-cover-art" src="https://placehold.co/200x200/000000/333333?text=No+Art" alt="Art">
+                    <div id="player-title">...</div>
+                    <div id="player-artist">loading...</div>
+                    
+                    <div class="player-controls">
+                        <button id="rewind-btn" class="player-btn">&lt;&lt;</button>
+                        <button id="play-pause-btn" class="player-btn">&gt;</button>
+                        <button id="skip-btn" class="player-btn">&gt;&gt;</button>
+                    </div>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+                </div>
+
+                <div class="section-header">Links</div>
+                <ul class="related-list">
+                    <li><a href="#"> </a></li>
+                    <li><a href="#"> </a></li>
+                </ul>
+
+            </aside>
+
+        </div>
+
+        <footer class="footer">
+with appreciation, root. <br>
+
+        </footer>
+
     </div>
 
     <audio id="audio-player"></audio>
-    <div id="music-player-widget" class="pixel-font">
-        <img id="player-cover-art" src="https://placehold.co/64x64/000000/333333?text=...&font=vt323" alt="Album Cover">
-        <div id="player-main">
-            <div id="player-info-container" title="...">
-                <div id="player-title">...</div>
-                <div id="player-artist">loading...</div>
-            </div>
-            <div class="player-controls-row">
-                <button id="rewind-btn" title="Previous">[<<]</button>
-                <button id="play-pause-btn" title="Play/Pause">[>]</button>
-                <button id="skip-btn" title="Next (Shuffle)">[>>]</button>
-                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" title="Volume">
-            </div>
-        </div>
-    </div>
 
     <script>
-        const baseURL = "https://ewsmusic1.netlify.app/"; 
-        const playlist = [
-            { title: "Xtal", artist: "Aphex Twin", src: baseURL + "xtal.mp3", cover: baseURL + "aphex.jpg" },
-            { title: "I Don't Wanna Be Me", artist: "Type O Negative", src: baseURL + "idontwannabeme.mp3", cover: baseURL + "ton.jpg" },
-            { title: "Life Is Killing Me", artist: "Type O Negative", src: baseURL + "lifeiskilling.mp3", cover: baseURL + "ton.jpg" },
-            { title: "Exit Music (For a Film)", artist: "Radiohead", src: baseURL + "exitmusic.mp3", cover: baseURL + "radiohead.jpg" },
-            { title: "Alternative Outro", artist: "LUCKI", src: baseURL + "alternativeoutro.mp3", cover: baseURL + "lucki.jpg" },
-            { title: "Bite My Lip", artist: "fakemink", src: baseURL + "bitemylip.mp3", cover: baseURL + "fakemink.jpg" },
-            { title: "Ambilux", artist: "fakemink", src: baseURL + "ambilux.mp3", cover: baseURL + "fakemink3.jpg" },
-            { title: "I'm Like Why", artist: "xaviersobased", src: baseURL + "imlikewhy.mp3", cover: baseURL + "xav.jpg" },
-            { title: "Love Hate", artist: "xaviersobased", src: baseURL + "lovehate.mp3", cover: baseURL + "xav2.jpg" },
-            { title: "Foamposite Interlude", artist: "smokedope2016", src: baseURL + "foamposite.mp3", cover: baseURL + "smokedope2016.jpg" },
-            { title: "Abysmal Depths Are Flooded", artist: "Xasthur", src: baseURL + "abysmaldepthsareflooded.mp3", cover: baseURL + "xasthur.jpg" },
-            { title: "Diamonds", artist: "Chris Travis", src: baseURL + "diamonds.mp3", cover: baseURL + "christravis.jpg" },
-            { title: "Black Magic", artist: "Ethel Wulf", src: baseURL + "blackmagic.mp3", cover: baseURL + "ethel.jpg" },
-            { title: "4 Raws", artist: "EsDeeKid", src: baseURL + "4raws.mp3", cover: baseURL + "esdee.jpg" },
-            { title: "Fever", artist: "fakemink/buckshot", src: baseURL + "fever.mp3", cover: baseURL + "buckshot.jpg" },
-            { title: "Stalks", artist: "Ghost Mountain", src: baseURL + "stalks.mp3", cover: baseURL + "ghostmountain.jpg" },
-            { title: "MIA", artist: "feng", src: baseURL + "mia.mp3", cover: baseURL + "feng.jpg" },
-            { title: "head in the ceiling fan", artist: "Title Fight", src: baseURL + "titlefight.mp3", cover: baseURL + "title-fih.jpg" },
-            { title: "Turn Me Loose", artist: "limpbizkit/eminem", src: baseURL + "turnmeloose.mp3", cover: baseURL + "limp.jpg" },
-            { title: "black beetles", artist: "esdeekid", src: baseURL + "bbr.mp3", cover: baseURL + "esdee2.jpg" },
-            { title: "apathy", artist: "esdeekid", src: baseURL + "apathy.mp3", cover: baseURL + "esdee3.jpg" },
-            { title: "bring it back", artist: "chris travis", src: baseURL + "bib.mp3", cover: baseURL + "chris2.jpg" },
-            { title: "die til you live", artist: "fakemink", src: baseURL + "dtyl.mp3", cover: baseURL + "fakemink5.jpg" },
-            { title: "worthit", artist: "xaviersobased", src: baseURL + "worthit.mp3", cover: baseURL + "81853ABB-FB87-4A20-9303-9624B777245B.jpeg" },
-            { title: "in da party", artist: "smokedope2016", src: baseURL + "indaparty.mp3", cover: baseURL + "smokedope4.jpg" },
-            { title: "say it aint dro", artist: "smokedope2016", src: baseURL + "dro.mp3", cover: baseURL + "smokedope3.jpg" },
-            { title: "blunts on my mind", artist: "ethel wulf", src: baseURL + "bluntsomm.mp3", cover: baseURL + "ethel2.jpg" },
-            { title: "luper", artist: "earl sweatshirt", src: baseURL + "luper.mp3", cover: baseURL + "earl.jpg" },
-            { title: "frat", artist: "smokedope2016", src: baseURL + "frat.mp3", cover: baseURL + "smokedope2.jpg" },
-            { title: "hit the home", artist: "the hand of peace", src: baseURL + "clock.mp3", cover: baseURL + "handofpeace.jpg" },
-            { title: "blow me", artist: "fakemink", src: baseURL + "blowme.mp3", cover: baseURL + "fakeminkk.jpg" },
-            { title: "minerva", artist: "deftones", src: baseURL + "minerva.mp3", cover: baseURL + "deftones.jpg" },
-            { title: "hold on", artist: "limpbizkit", src: baseURL + "holdon.mp3", cover: baseURL + "limpbizkit.jpg" },
-            { title: "my way", artist: "limpbizkit", src: baseURL + "myway.mp3", cover: baseURL + "limpbizkit.jpg" },
-            { title: "new update soon", artist: "-nl", src: baseURL + "xtal.mp3", cover: baseURL + "aphextwin.jpg" }
-        ];
-
         document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- 1. CONFIGURATION ---
+            const baseURL = "https://ewsmusic1.netlify.app/"; 
+            const playlist = [
+                { title: "Xtal", artist: "Aphex Twin", src: baseURL + "xtal.mp3", cover: baseURL + "aphex.jpg" },
+                { title: "I Don't Wanna Be Me", artist: "Type O Negative", src: baseURL + "idontwannabeme.mp3", cover: baseURL + "ton.jpg" },
+                { title: "Life Is Killing Me", artist: "Type O Negative", src: baseURL + "lifeiskilling.mp3", cover: baseURL + "ton.jpg" },
+                { title: "Exit Music (For a Film)", artist: "Radiohead", src: baseURL + "exitmusic.mp3", cover: baseURL + "radiohead.jpg" },
+                { title: "Alternative Outro", artist: "LUCKI", src: baseURL + "alternativeoutro.mp3", cover: baseURL + "lucki.jpg" },
+                { title: "Bite My Lip", artist: "fakemink", src: baseURL + "bitemylip.mp3", cover: baseURL + "fakemink.jpg" },
+                { title: "Ambilux", artist: "fakemink", src: baseURL + "ambilux.mp3", cover: baseURL + "fakemink3.jpg" },
+                { title: "I'm Like Why", artist: "xaviersobased", src: baseURL + "imlikewhy.mp3", cover: baseURL + "xav.jpg" },
+                { title: "Love Hate", artist: "xaviersobased", src: baseURL + "lovehate.mp3", cover: baseURL + "xav2.jpg" },
+                { title: "Foamposite Interlude", artist: "smokedope2016", src: baseURL + "foamposite.mp3", cover: baseURL + "smokedope2016.jpg" },
+                { title: "Abysmal Depths Are Flooded", artist: "Xasthur", src: baseURL + "abysmaldepthsareflooded.mp3", cover: baseURL + "xasthur.jpg" },
+                { title: "Diamonds", artist: "Chris Travis", src: baseURL + "diamonds.mp3", cover: baseURL + "christravis.jpg" },
+                { title: "Black Magic", artist: "Ethel Wulf", src: baseURL + "blackmagic.mp3", cover: baseURL + "ethel.jpg" },
+                { title: "4 Raws", artist: "EsDeeKid", src: baseURL + "4raws.mp3", cover: baseURL + "esdee.jpg" },
+                { title: "Fever", artist: "fakemink/buckshot", src: baseURL + "fever.mp3", cover: baseURL + "buckshot.jpg" },
+                { title: "Stalks", artist: "Ghost Mountain", src: baseURL + "stalks.mp3", cover: baseURL + "ghostmountain.jpg" },
+                { title: "MIA", artist: "feng", src: baseURL + "mia.mp3", cover: baseURL + "feng.jpg" },
+                { title: "head in the ceiling fan", artist: "Title Fight", src: baseURL + "titlefight.mp3", cover: baseURL + "title-fih.jpg" },
+                { title: "Turn Me Loose", artist: "limpbizkit/eminem", src: baseURL + "turnmeloose.mp3", cover: baseURL + "limp.jpg" },
+                { title: "black beetles", artist: "esdeekid", src: baseURL + "bbr.mp3", cover: baseURL + "esdee2.jpg" },
+                { title: "apathy", artist: "esdeekid", src: baseURL + "apathy.mp3", cover: baseURL + "esdee3.jpg" },
+                { title: "bring it back", artist: "chris travis", src: baseURL + "bib.mp3", cover: baseURL + "chris2.jpg" },
+                { title: "die til you live", artist: "fakemink", src: baseURL + "dtyl.mp3", cover: baseURL + "fakemink5.jpg" },
+                { title: "worthit", artist: "xaviersobased", src: baseURL + "worthit.mp3", cover: baseURL + "81853ABB-FB87-4A20-9303-9624B777245B.jpeg" },
+                { title: "in da party", artist: "smokedope2016", src: baseURL + "indaparty.mp3", cover: baseURL + "smokedope4.jpg" },
+                { title: "say it aint dro", artist: "smokedope2016", src: baseURL + "dro.mp3", cover: baseURL + "smokedope3.jpg" },
+                { title: "blunts on my mind", artist: "ethel wulf", src: baseURL + "bluntsomm.mp3", cover: baseURL + "ethel2.jpg" },
+                { title: "luper", artist: "earl sweatshirt", src: baseURL + "luper.mp3", cover: baseURL + "earl.jpg" },
+                { title: "frat", artist: "smokedope2016", src: baseURL + "frat.mp3", cover: baseURL + "smokedope2.jpg" },
+                { title: "hit the home", artist: "the hand of peace", src: baseURL + "clock.mp3", cover: baseURL + "handofpeace.jpg" },
+                { title: "blow me", artist: "fakemink", src: baseURL + "blowme.mp3", cover: baseURL + "fakeminkk.jpg" },
+                { title: "minerva", artist: "deftones", src: baseURL + "minerva.mp3", cover: baseURL + "deftones.jpg" },
+                { title: "hold on", artist: "limpbizkit", src: baseURL + "holdon.mp3", cover: baseURL + "limpbizkit.jpg" },
+                { title: "my way", artist: "limpbizkit", src: baseURL + "myway.mp3", cover: baseURL + "limpbizkit.jpg" },
+                { title: "new update soon", artist: "-nl", src: baseURL + "xtal.mp3", cover: baseURL + "aphextwin.jpg" }
+            ];
+
+            // --- 2. AUTH LOGIC ---
+            const welcomeMessage = document.getElementById('welcome-message');
+            const authLink = document.getElementById('auth-link');
+            
+            function updateUI() {
+                let username = localStorage.getItem('username');
+                if (username) {
+                    welcomeMessage.textContent = `welcome, ${username}`;
+                    authLink.textContent = 'settings';
+                    authLink.href = 'settings.html';
+                } else {
+                    welcomeMessage.textContent = 'welcome, ?';
+                    authLink.textContent = 'sign up / sign in';
+                    authLink.href = 'register.html';
+                }
+            }
+            updateUI();
+
+            // --- 3. SPLASH TEXT LOGIC ---
+            const splashElement = document.getElementById('splash-text');
+            if (splashElement) {
+                const splashOptions = [
+                    "fuhlatoogan or jitleang", "son", "i think my spirit animal is like, some kind of bird, not one of the government ones, a REAL bird, like a dodo, or something.", 
+                    "hood yaoi", "100 perkaholic or pounded by a margwa",
+                    "sigh, chud", "long live futtbucker", "six seven", "oh brother..",
+                    "are you even an ew student?", "i bet ur failing", "get the bawlls!!",
+                    "whats new?", "add jiggletip on clash", "new stuff soon",
+                    "WE yes WE are brainless and failing", "updates soon.. -nl", "bro youre old go home", "newgen", "IS texas the reason?", "thank u for all the love + support"
+                ];
+                splashElement.textContent = splashOptions[Math.floor(Math.random() * splashOptions.length)];
+            }
+
+            // --- 4. PLAYER LOGIC ---
+            const audioPlayer = document.getElementById('audio-player');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            const rewindBtn = document.getElementById('rewind-btn');
+            const skipBtn = document.getElementById('skip-btn');
             const playerTitleEl = document.getElementById('player-title');
             const playerArtistEl = document.getElementById('player-artist');
+            const volumeSlider = document.getElementById('volume-slider');
+            const playerCoverArt = document.getElementById('player-cover-art');
+            const placeholderCover = "https://placehold.co/200x200/000000/333333?text=No+Art";
             
-            try {
-                // --- BACKGROUND LOGIC ---
-                const specialBg = '81853ABB-FB87-4A20-9303-9624B777245B.jpeg';
-                const normalBackgrounds = [
-                    'IMG_4928.jpeg', 'IMG_4946.jpeg', 'IMG_4944.jpeg', 'IMG_4943.jpeg', 
-                    'IMG_5262.jpeg', 'IMG_5263.jpeg', 'IMG_5264.jpeg', 'IMG_4945.jpeg'
-                ];
-                const chance = Math.floor(Math.random() * 100); 
-                let chosenBg = (chance === 0) ? specialBg : normalBackgrounds[Math.floor(Math.random() * normalBackgrounds.length)];
-                document.body.style.backgroundImage = `url('${chosenBg}')`;
-                
-                // --- SPLASH TEXT ---
-                const splashElement = document.getElementById('splash-text');
-                if (splashElement) {
-                    const splashOptions = [
-                        "blacked out like an lv sandal", "son", "bbq chicken alert", 
-                        "trick or treat.. smell my.. donuts..", "100 perkaholic or pounded by a margwa",
-                        "considering a page", "long live futtbucker", "six seven", "oh brother..",
-                        "are you even an ew student?", "i bet ur failing", "get the bawlls!!",
-                        "six one", "add jiggletip on clash", "new stuff soon",
-                        "WE yes WE are brainless and failing", "updates soon.. -nl", "no super seniors", "considering a chat board"
-                    ];
-                    splashElement.textContent = splashOptions[Math.floor(Math.random() * splashOptions.length)];
+            let currentSongIndex = 0;
+            let isPlaying = false;
+
+            const secretSong = {
+                title: "hey, big guy said im an easter egg",
+                artist: "secret",
+                src: "clock.mp3",
+                cover: "handofpeace.jpg"
+            };
+
+            function loadSong(songIndex) {
+                const song = (songIndex === -1) ? secretSong : playlist[songIndex];
+                if (!song || !song.src) {
+                    skipSong(true); 
+                    return;
                 }
                 
-                // --- AUTH LOGIC (Updated to link to account.html) ---
-                const welcomeMessage = document.getElementById('welcome-message');
-                const authLink = document.getElementById('auth-link');
-                
-                function updateUI() {
-                    let username = localStorage.getItem('username');
-                    if (username) {
-                        welcomeMessage.textContent = `Welcome, ${username}`;
-                        authLink.textContent = 'settings';
-                        authLink.href = 'settings.html';
-                    } else {
-                        welcomeMessage.textContent = 'Welcome, ?';
-                        authLink.textContent = '(sign up / sign in)';
-                        authLink.href = 'account.html';
-                    }
-                }
-                updateUI();
-                
-                // --- MUSIC PLAYER LOGIC ---
-                const audioPlayer = document.getElementById('audio-player');
-                const playPauseBtn = document.getElementById('play-pause-btn');
-                const rewindBtn = document.getElementById('rewind-btn');
-                const skipBtn = document.getElementById('skip-btn');
-                const playerInfoContainer = document.getElementById('player-info-container');
-                const volumeSlider = document.getElementById('volume-slider');
-                const playerCoverArt = document.getElementById('player-cover-art');
-                const placeholderCover = "https://placehold.co/64x64/000000/333333?text=...&font=vt323";
-                
-                let currentSongIndex = 0;
-                let isPlaying = false;
-
-                const secretSong = {
-                    title: "hey, big guy said im an easter egg",
-                    artist: "i heard, if u put /secret at the end of the link",
-                    src: "clock.mp3",
-                    cover: "handofpeace.jpg"
-                };
-
-                function loadSong(songIndex) {
-                    const song = (songIndex === -1) ? secretSong : playlist[songIndex];
-                    if (!song || !song.src || !song.cover) {
-                        skipSong(true); 
-                        return;
-                    }
-                    
-                    audioPlayer.src = song.src; 
-                    playerInfoContainer.title = `${song.title} - ${song.artist}`; 
-                    playerTitleEl.textContent = song.title;
-                    playerArtistEl.textContent = song.artist;
-                    playerCoverArt.src = song.cover;
-                    playPauseBtn.textContent = '[>]';
-                    isPlaying = false;
-                }
-
-                function playSong() {
-                    if (!audioPlayer.src) { return; }
-                    audioPlayer.volume = volumeSlider.value; 
-                    
-                    const playPromise = audioPlayer.play();
-                    if (playPromise !== undefined) {
-                        playPromise.then(() => {
-                            playPauseBtn.textContent = '[||]';
-                            isPlaying = true;
-                        }).catch(error => {
-                            console.warn("Auto-play failed:", error.name);
-                            playerTitleEl.textContent = "Click Play";
-                            playerArtistEl.textContent = "to start music";
-                            isPlaying = false;
-                        });
-                    }
-                }
-
-                function pauseSong() {
-                    audioPlayer.pause();
-                    playPauseBtn.textContent = '[>]';
-                    isPlaying = false;
-                }
-
-                function togglePlayPause() {
-                    if (isPlaying) { pauseSong(); } else { playSong(); }
-                }
-
-                function skipSong(skipOnly = false) {
-                    let nextSongIndex = Math.floor(Math.random() * playlist.length);
-                    if (nextSongIndex === currentSongIndex && playlist.length > 1) {
-                        nextSongIndex = (nextSongIndex + 1) % playlist.length; 
-                    }
-                    currentSongIndex = nextSongIndex;
-                    loadSong(currentSongIndex);
-                    if (audioPlayer.src && !skipOnly) { playSong(); }
-                }
-
-                function rewindSong() {
-                    currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
-                    loadSong(currentSongIndex);
-                    if (audioPlayer.src) { playSong(); }
-                }
-                
-                // --- STORAGE SAVE/LOAD ---
-                window.addEventListener('beforeunload', () => {
-                    if (audioPlayer.currentTime > 0) {
-                        const musicState = {
-                            currentSongIndex: currentSongIndex,
-                            currentTime: audioPlayer.currentTime,
-                            volume: audioPlayer.volume,
-                            isPlaying: isPlaying
-                        };
-                        sessionStorage.setItem('musicPlayerState', JSON.stringify(musicState));
-                    } else {
-                        sessionStorage.removeItem('musicPlayerState');
-                    }
-                });
-                
-                function loadInitialState() {
-                    const savedStateJSON = sessionStorage.getItem('musicPlayerState');
-                    let savedState = null;
-                    if (savedStateJSON) {
-                        try { savedState = JSON.parse(savedStateJSON); } 
-                        catch (e) { sessionStorage.removeItem('musicPlayerState'); }
-                    }
-
-                    if (savedState) {
-                        currentSongIndex = savedState.currentSongIndex;
-                        loadSong(currentSongIndex);
-                        volumeSlider.value = savedState.volume || 1;
-                        audioPlayer.volume = savedState.volume || 1;
-                        audioPlayer.addEventListener('loadedmetadata', () => {
-                            audioPlayer.currentTime = savedState.currentTime || 0;
-                            if (savedState.isPlaying) { playSong(); }
-                        }, { once: true }); 
-                        
-                    } else {
-                        const rareSongChance = Math.floor(Math.random() * 50);
-                        currentSongIndex = (rareSongChance === 0) ? -1 : Math.floor(Math.random() * playlist.length);
-                        loadSong(currentSongIndex);
-                        audioPlayer.volume = volumeSlider.value;
-                    }
-                }
-                
-                playPauseBtn.addEventListener('click', togglePlayPause);
-                skipBtn.addEventListener('click', () => skipSong(false));
-                rewindBtn.addEventListener('click', rewindSong);
-                volumeSlider.addEventListener('input', (e) => { audioPlayer.volume = e.target.value; });
-                audioPlayer.addEventListener('ended', () => skipSong(false));
-                audioPlayer.addEventListener('error', (e) => {
-                    playerTitleEl.textContent = `Load Error (404)`;
-                    playerArtistEl.textContent = `Check file name`;
-                });
-                playerCoverArt.addEventListener('error', () => {
-                    playerCoverArt.src = placeholderCover;
-                    playerArtistEl.textContent = `${playerArtistEl.textContent} (no art)`;
-                });
-
-                loadInitialState();
-                
-            } catch (e) {
-                console.error("Global script error:", e);
-                playerTitleEl.textContent = "Code Error";
-                playerArtistEl.textContent = e.message;
+                audioPlayer.src = song.src; 
+                playerTitleEl.textContent = song.title;
+                playerArtistEl.textContent = song.artist;
+                playerCoverArt.src = song.cover || placeholderCover;
+                playPauseBtn.textContent = '>'; // Standard arrow
+                isPlaying = false;
             }
+
+            function playSong() {
+                if (!audioPlayer.src) { return; }
+                audioPlayer.volume = volumeSlider.value; 
+                
+                const playPromise = audioPlayer.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        playPauseBtn.textContent = '||';
+                        isPlaying = true;
+                    }).catch(error => {
+                        console.warn("Auto-play blocked", error);
+                        playerTitleEl.textContent = "Click Play";
+                        isPlaying = false;
+                    });
+                }
+            }
+
+            function pauseSong() {
+                audioPlayer.pause();
+                playPauseBtn.textContent = '>';
+                isPlaying = false;
+            }
+
+            function togglePlayPause() {
+                if (isPlaying) { pauseSong(); } else { playSong(); }
+            }
+
+            function skipSong(skipOnly = false) {
+                let nextSongIndex = Math.floor(Math.random() * playlist.length);
+                if (nextSongIndex === currentSongIndex && playlist.length > 1) {
+                    nextSongIndex = (nextSongIndex + 1) % playlist.length; 
+                }
+                currentSongIndex = nextSongIndex;
+                loadSong(currentSongIndex);
+                if (audioPlayer.src && !skipOnly) { playSong(); }
+            }
+
+            function rewindSong() {
+                currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
+                loadSong(currentSongIndex);
+                if (audioPlayer.src) { playSong(); }
+            }
+
+            // Persistence
+            window.addEventListener('beforeunload', () => {
+                if (audioPlayer.currentTime > 0) {
+                    const musicState = {
+                        currentSongIndex: currentSongIndex,
+                        currentTime: audioPlayer.currentTime,
+                        volume: audioPlayer.volume,
+                        isPlaying: isPlaying
+                    };
+                    sessionStorage.setItem('musicPlayerState', JSON.stringify(musicState));
+                }
+            });
+
+            function loadInitialState() {
+                const savedStateJSON = sessionStorage.getItem('musicPlayerState');
+                let savedState = null;
+                if (savedStateJSON) {
+                    try { savedState = JSON.parse(savedStateJSON); } catch (e) {}
+                }
+
+                if (savedState) {
+                    currentSongIndex = savedState.currentSongIndex;
+                    loadSong(currentSongIndex);
+                    volumeSlider.value = savedState.volume || 1;
+                    audioPlayer.volume = savedState.volume || 1;
+                    audioPlayer.addEventListener('loadedmetadata', () => {
+                        audioPlayer.currentTime = savedState.currentTime || 0;
+                        if (savedState.isPlaying) { playSong(); }
+                    }, { once: true }); 
+                } else {
+                    // Random start
+                    const rareSongChance = Math.floor(Math.random() * 50);
+                    currentSongIndex = (rareSongChance === 0) ? -1 : Math.floor(Math.random() * playlist.length);
+                    loadSong(currentSongIndex);
+                    audioPlayer.volume = volumeSlider.value;
+                }
+            }
+
+            // Events
+            playPauseBtn.addEventListener('click', togglePlayPause);
+            skipBtn.addEventListener('click', () => skipSong(false));
+            rewindBtn.addEventListener('click', rewindSong);
+            volumeSlider.addEventListener('input', (e) => { audioPlayer.volume = e.target.value; });
+            audioPlayer.addEventListener('ended', () => skipSong(false));
+            playerCoverArt.addEventListener('error', () => { playerCoverArt.src = placeholderCover; });
+
+            loadInitialState();
         });
     </script>
 </body>
