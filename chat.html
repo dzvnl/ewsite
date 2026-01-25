@@ -2,73 +2,125 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>canvas</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
     <style>
-        /* --- OPTIMIZED CSS --- */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background:#000; color:#ccc; font-family:Arial, sans-serif; font-size:11px; line-height:1.4; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
-        a { color:#fff; text-decoration:none; } a:hover { text-decoration:underline; }
+        /* --- RESET & BASE --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
-        .container { width:900px; margin:0 auto; padding:20px 0; display:flex; flex-direction:column; height:100%; }
-        .top-header { display:flex; justify-content:flex-end; align-items:center; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #333; height:40px; }
-        .top-links span { margin:0 5px; color:#444; }
+        /* Lock body to screen size, prevent bounce */
+        body { 
+            background: #000; color: #ccc; font-family: Arial, sans-serif; font-size: 12px; line-height: 1.4;
+            height: 100dvh; width: 100vw; overflow: hidden; position: fixed;
+            display: flex; flex-direction: column;
+        }
 
-        .chat-wrapper { display:flex; flex:1; gap:10px; min-height:0; }
-        .chat-main { flex:1; display:flex; flex-direction:column; border:1px solid #333; background:#111; }
-        .chat-sidebar { width:180px; border:1px solid #333; background:#111; display:flex; flex-direction:column; }
+        a { color: #fff; text-decoration: none; }
         
-        .chat-header-bar { background:#666; color:#fff; padding:3px 5px; font-size:12px; font-weight:bold; display:flex; justify-content:space-between; align-items:center; }
-        .filler-pattern { letter-spacing:2px; color:#ccc; font-family:monospace; }
-        
-        .chat-log { flex:1; overflow-y:auto; padding:10px; background:#000; scroll-behavior: smooth; }
-        .message { margin-bottom:8px; position:relative; word-wrap:break-word; }
-        .message:hover .delete-btn { display:inline; } 
-        
-        .msg-time { color:#555; font-size:10px; margin-right:5px; }
-        .msg-user { color:#fff; font-weight:bold; margin-right:2px; }
-        .msg-text { color:#ccc; }
-        .msg-system { color:#facc15; font-style:italic; }
-        .msg-alert { color:#f00; font-weight:bold; }
-        .msg-notification { color:#0ff; font-weight:bold; border:1px dashed #0ff; padding:2px 5px; display:inline-block; margin-top:5px; cursor:pointer;}
-        .delete-btn { display:none; color:#f00; cursor:pointer; font-size:10px; margin-right:5px; font-weight:bold; }
-        .chat-media { display:block; max-width:300px; max-height:200px; margin-top:5px; border:1px solid #333; }
+        /* --- FLEX CONTAINER --- */
+        .container { 
+            width: 100%; height: 100%; max-width: 1200px; margin: 0 auto; 
+            display: flex; flex-direction: column; padding: 0; 
+        }
 
-        /* Sidebar & Search */
-        .sidebar-search { padding:5px; background:#000; border-bottom:1px solid #333; }
-        .search-input { width:100%; background:#222; border:1px solid #444; color:#fff; padding:3px 5px; font-size:10px; }
-        .search-input:focus { outline:none; border-color:#666; }
-        .user-list { list-style:none; padding:5px; overflow-y:auto; flex:1; }
-        .user-list li { padding:2px 0; color:#888; display:flex; align-items:center; }
+        /* --- HEADER --- */
+        .top-header { 
+            display: flex; justify-content: flex-end; align-items: center; 
+            padding: 10px; border-bottom: 1px solid #333; height: 40px; background: #000; flex-shrink: 0;
+        }
+        .top-links span { margin: 0 5px; color: #444; }
+
+        /* --- CHAT WRAPPER (Responsive) --- */
+        .chat-wrapper { 
+            display: flex; flex: 1; min-height: 0; overflow: hidden; /* Crucial for keeping inner scroll */
+        }
+
+        /* MAIN CHAT AREA */
+        .chat-main { 
+            flex: 1; display: flex; flex-direction: column; 
+            border-right: 1px solid #333; background: #111; min-width: 0;
+        }
+
+        .chat-header-bar { 
+            background: #666; color: #fff; padding: 5px 10px; font-size: 12px; font-weight: bold; 
+            display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+        }
+        .filler-pattern { letter-spacing: 2px; color: #ccc; font-family: monospace; }
         
-        /* Dots */
-        .user-list li::before { content:""; display:inline-block; width:8px; height:8px; background:#444; margin-right:8px; border-radius:50%; transition:background .3s; }
-        .user-list li.online::before { background:#2ecc71; box-shadow:0 0 6px #2ecc71; }
+        .chat-log { 
+            flex: 1; overflow-y: auto; padding: 10px; background: #000; 
+            scroll-behavior: smooth; -webkit-overflow-scrolling: touch; 
+        }
         
-        .user-link { color:#bbb; cursor:pointer; } .user-link:hover { color:#fff; text-decoration:underline; }
-        .user-link.is-me { color:#fff; font-weight:bold; pointer-events:none; }
+        /* MESSAGES */
+        .message { margin-bottom: 8px; word-wrap: break-word; }
+        .msg-time { color: #555; font-size: 10px; margin-right: 5px; }
+        .msg-user { color: #fff; font-weight: bold; margin-right: 2px; }
+        .msg-text { color: #ccc; }
+        .msg-system { color: #facc15; font-style: italic; }
+        .msg-alert { color: #f00; font-weight: bold; }
+        .msg-notification { color: #0ff; font-weight: bold; border: 1px dashed #0ff; padding: 2px; display: inline-block; margin-top: 5px; cursor: pointer; }
+        .chat-media { display: block; max-width: 100%; max-height: 200px; margin-top: 5px; border: 1px solid #333; }
+        .delete-btn { display: none; color: #f00; cursor: pointer; margin-right: 5px; }
+        .message:hover .delete-btn { display: inline; }
 
-        /* Player & Inputs */
-        .mini-player { border-top:1px solid #333; background:#000; padding:8px; text-align:center; }
-        .player-cover-art { width:100%; aspect-ratio:1/1; object-fit:cover; border:1px solid #444; margin-bottom:8px; background:#111; display:block; }
-        .mini-track-info { font-size:10px; color:#fff; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .mini-controls { display:flex; justify-content:center; gap:5px; }
-        .mini-btn { background:#333; border:1px solid #444; color:#fff; width:20px; height:18px; font-size:9px; cursor:pointer; }
-        .mini-btn:hover { background:#555; }
+        /* INPUT AREA */
+        .chat-input-area { 
+            background: #222; padding: 8px; border-top: 1px solid #333; 
+            display: flex; gap: 8px; align-items: center; flex-shrink: 0;
+        }
+        .chat-input { 
+            flex: 1; background: #000; border: 1px solid #444; color: #fff; padding: 8px; 
+            border-radius: 4px; font-size: 14px; /* Larger font prevents zoom on mobile */
+        }
+        .chat-input:focus { outline: none; border-color: #888; }
+        .action-btn, .send-btn { 
+            background: #333; color: #fff; border: 1px solid #444; height: 34px; 
+            font-weight: bold; cursor: pointer; padding: 0 15px; border-radius: 4px;
+            touch-action: manipulation;
+        }
+        .action-btn:hover, .send-btn:hover { background: #555; }
 
-        .chat-input-area { margin-top:10px; background:#222; padding:5px; border:1px solid #333; display:flex; gap:5px; align-items:center; }
-        .chat-input { flex:1; background:#000; border:1px solid #444; color:#fff; padding:5px; font-size:12px; }
-        .chat-input:focus { outline:1px solid #666; }
-        .chat-input:disabled { background:#220000; cursor:not-allowed; }
-        .action-btn, .send-btn { background:#333; color:#fff; border:1px solid #444; height:26px; font-weight:bold; cursor:pointer; }
-        .action-btn:hover, .send-btn:hover { background:#555; }
-        .send-btn { background:#444; padding:0 15px; font-size:11px; }
+        /* --- SIDEBAR --- */
+        .chat-sidebar { 
+            width: 200px; background: #111; display: flex; flex-direction: column; 
+            border-left: 1px solid #333; flex-shrink: 0;
+        }
+        .sidebar-search { padding: 5px; background: #000; border-bottom: 1px solid #333; }
+        .search-input { width: 100%; background: #222; border: 1px solid #444; color: #fff; padding: 4px; font-size: 12px; }
+        .user-list { list-style: none; padding: 5px; overflow-y: auto; flex: 1; }
+        .user-list li { padding: 4px 0; color: #888; display: flex; align-items: center; }
+        .user-list li::before { content: ""; display: inline-block; width: 8px; height: 8px; background: #444; margin-right: 8px; border-radius: 50%; }
+        .user-list li.online::before { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
+        .user-link { color: #bbb; cursor: pointer; } 
+        .user-link:hover { color: #fff; }
 
-        ::-webkit-scrollbar { width:8px; } ::-webkit-scrollbar-track { background:#111; } ::-webkit-scrollbar-thumb { background:#333; }
+        /* PLAYER */
+        .mini-player { border-top: 1px solid #333; background: #000; padding: 8px; text-align: center; flex-shrink: 0; }
+        .player-cover-art { width: 60px; height: 60px; object-fit: cover; border: 1px solid #444; margin: 0 auto 5px auto; display: block; background: #111; }
+        .mini-track-info { font-size: 10px; color: #fff; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mini-controls { display: flex; justify-content: center; gap: 10px; }
+        .mini-btn { background: #333; border: 1px solid #444; color: #fff; width: 30px; height: 25px; cursor: pointer; touch-action: manipulation; }
+
+        /* --- MOBILE TWEAKS --- */
+        @media (max-width: 768px) {
+            .chat-wrapper { flex-direction: column; } /* Stack Chat on top of Sidebar */
+            .chat-sidebar { width: 100%; height: 35%; border-left: none; border-top: 1px solid #333; }
+            .chat-main { height: 65%; border-right: none; }
+            .chat-input { font-size: 16px; } /* Prevents iOS Zoom */
+            .filler-pattern { display: none; } /* Save header space */
+            .player-cover-art { display: none; } /* Save vertical space on mobile */
+            .mini-player { display: flex; align-items: center; justify-content: space-between; padding: 5px 10px; }
+            .mini-track-info { margin: 0; text-align: left; flex: 1; padding-right: 10px; }
+        }
+
+        ::-webkit-scrollbar { width: 6px; } 
+        ::-webkit-scrollbar-track { background: #111; } 
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -76,30 +128,44 @@
         <div class="top-header">
             <div class="top-links"><a href="index.html">home</a> <span>|</span> <a href="list.html">list</a> <span>|</span> <a href="settings.html">settings</a></div>
         </div>
+        
         <div class="chat-wrapper">
             <main class="chat-main">
-                <div class="chat-header-bar"><span class="filler-pattern">[>::<] [>::<] [>::<]</span><span id="user-count">online: 0</span></div>
-                <div class="chat-log" id="chat-log"><div class="message"><span class="msg-time">[SYSTEM]</span> <span class="msg-system">connecting...</span></div></div>
+                <div class="chat-header-bar">
+                    <span class="filler-pattern">[>::<]</span>
+                    <span id="user-count">Online: 0</span>
+                </div>
+                <div class="chat-log" id="chat-log">
+                    <div class="message"><span class="msg-time">[SYSTEM]</span> <span class="msg-system">connecting...</span></div>
+                </div>
                 <div class="chat-input-area">
                     <input type="file" id="media-input" accept="image/*,video/*" style="display: none;">
                     <button class="action-btn" id="upload-trigger" title="Upload">[+]</button>
-                    <input type="text" class="chat-input" id="message-input" placeholder="Type a message..." autocomplete="off">
+                    <input type="text" class="chat-input" id="message-input" placeholder="Message..." autocomplete="off">
                     <button class="send-btn" id="send-btn">SEND</button>
                 </div>
             </main>
+
             <aside class="chat-sidebar">
-                <div class="chat-header-bar">users</div>
-                <div class="sidebar-search"><input type="text" id="user-search" class="search-input" placeholder="Search..."></div>
+                <div class="chat-header-bar">Users</div>
+                <div class="sidebar-search">
+                    <input type="text" id="user-search" class="search-input" placeholder="Search...">
+                </div>
                 <ul class="user-list" id="user-list"></ul>
+                
                 <div class="mini-player">
-                    <img id="player-cover-art" class="player-cover-art" src="" alt="cover">
+                    <img id="player-cover-art" class="player-cover-art" src="" alt="art">
                     <div id="mini-track-info" class="mini-track-info">stopped</div>
-                    <div class="mini-controls"><button id="mini-prev" class="mini-btn">&lt;</button><button id="mini-play" class="mini-btn">&gt;</button><button id="mini-next" class="mini-btn">&gt;&gt;</button></div>
+                    <div class="mini-controls">
+                        <button id="mini-prev" class="mini-btn">&lt;</button>
+                        <button id="mini-play" class="mini-btn">&gt;</button>
+                        <button id="mini-next" class="mini-btn">&gt;&gt;</button>
+                    </div>
                 </div>
             </aside>
         </div>
-        <div style="text-align:center;color:#444;font-size:10px;margin-top:10px;">Connection Established.</div>
     </div>
+
     <audio id="audio-player"></audio>
 
     <script>
@@ -108,13 +174,11 @@
         if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db=firebase.database(), auth=firebase.auth(), ADMINS=["root","futtbucker67"];
         
-        // Short selector helper
         const $ = (id) => document.getElementById(id);
         const els = { input: $('message-input'), send: $('send-btn'), log: $('chat-log'), list: $('user-list'), count: $('user-count'), media: $('media-input'), upBtn: $('upload-trigger'), search: $('user-search') };
         
         let myName = localStorage.getItem('username'), myUid = null;
-        let allUsers = {}; // Holds full user list from 'users' node
-        let onlineStatus = {}; // Holds connectivity from 'status' node
+        let allUsers = {}, onlineStatus = {};
 
         // Force Username
         while(!myName || !myName.trim()) {
@@ -127,83 +191,59 @@
         auth.onAuthStateChanged(u => {
             if(u) {
                 myUid = u.uid;
-                // Register into permanent 'users' node
                 db.ref('users/' + myUid).update({ username: myName });
-                
                 initPresence(); initChat(); initMods(); initNotifs();
                 els.log.innerHTML = '';
                 addMsg("System", "welcome " + myName, false, true);
             }
         });
 
-        // --- PRESENCE & USER LIST SYSTEM ---
+        // --- PRESENCE ---
         function initPresence() {
-            // 1. Manage my online status
             const ref = db.ref('/status/' + myUid);
-            const online = { state:'online', last_changed: firebase.database.ServerValue.TIMESTAMP, username: myName };
-            const offline = { state:'offline', last_changed: firebase.database.ServerValue.TIMESTAMP, username: myName };
+            const online = { state:'online', last_changed: firebase.database.ServerValue.TIMESTAMP };
+            const offline = { state:'offline', last_changed: firebase.database.ServerValue.TIMESTAMP };
+            
             db.ref('.info/connected').on('value', s => {
                 if(s.val()) ref.onDisconnect().set(offline).then(() => ref.set(online));
             });
 
-            // 2. Fetch all users (Permanent Directory)
-            db.ref('users').on('value', s => {
-                allUsers = s.val() || {};
-                updateUserList();
-            });
-
-            // 3. Fetch online status (Realtime Connectivity)
-            db.ref('status').on('value', s => {
-                onlineStatus = s.val() || {};
-                updateUserList();
-            });
+            db.ref('users').on('value', s => { allUsers = s.val() || {}; updateList(); });
+            db.ref('status').on('value', s => { onlineStatus = s.val() || {}; updateList(); });
         }
 
-        function updateUserList() {
+        function updateList() {
             const term = els.search.value.toLowerCase();
             const frag = document.createDocumentFragment();
-            let onlineCount = 0;
+            let onCount = 0;
             let displayList = [];
 
-            // Merge 'users' and 'status' data
             Object.keys(allUsers).forEach(uid => {
                 const uData = allUsers[uid];
                 if(!uData.username || uData.username.startsWith("Guest_")) return;
-
-                // Check online status
                 const isOnline = (onlineStatus[uid] && onlineStatus[uid].state === 'online');
-                if(isOnline) onlineCount++;
-
+                if(isOnline) onCount++;
                 displayList.push({ uid, username: uData.username, isOnline });
             });
 
-            // Sort: Online first, then alphabetical
             displayList.sort((a,b) => (a.isOnline === b.isOnline) ? a.username.localeCompare(b.username) : (a.isOnline?-1:1));
             
-            // Render
             displayList.forEach(u => {
                 if(term && !u.username.toLowerCase().includes(term)) return;
-                
                 const li = document.createElement('li');
                 li.className = u.isOnline ? 'online' : 'offline';
-                
                 const a = document.createElement('a');
                 a.textContent = u.username;
                 a.className = "user-link" + (u.username === myName ? " is-me" : "");
                 a.href = (u.username === myName) ? "#" : `profile.html?user=${u.username}`;
-                
-                li.appendChild(a);
-                frag.appendChild(li);
+                li.appendChild(a); frag.appendChild(li);
             });
-
-            els.list.innerHTML = '';
-            els.list.appendChild(frag);
-            els.count.textContent = `online: ${onlineCount}`;
+            els.list.innerHTML = ''; els.list.appendChild(frag);
+            els.count.textContent = `Online: ${onCount}`;
         }
+        els.search.addEventListener('input', updateList);
 
-        els.search.addEventListener('input', updateUserList);
-
-        // --- CHAT LOGIC ---
+        // --- CHAT ---
         function initChat() {
             db.ref('messages').limitToLast(100).on('child_added', s => {
                 const d = s.val();
@@ -223,7 +263,6 @@
             els.input.value = '';
         }
 
-        // --- MEDIA & HELPERS ---
         els.upBtn.onclick = () => els.media.click();
         els.media.onchange = (e) => {
             const f = e.target.files[0];
@@ -251,86 +290,72 @@
             els.log.appendChild(div); els.log.scrollTop = els.log.scrollHeight;
         }
 
-        // --- MODS & NOTIFS ---
+        // --- COMMANDS ---
         function handleCmd(str) {
             const [c, dur, tgt] = str.split(' ');
             if(!tgt) return;
             const tid = Object.keys(allUsers).find(k => allUsers[k].username===tgt);
             if(!tid) return addMsg("System", "User not found", false, true);
-            
             let ms = 30000;
             if(dur==='inf') ms=3153600000000;
             else if(dur.endsWith('s')) ms=parseInt(dur)*1000;
             else if(dur.endsWith('m')) ms=parseInt(dur)*60000;
-            else if(dur.endsWith('h')) ms=parseInt(dur)*3600000;
-
             const type = (c==='/ban') ? 'ban' : 'mute';
-            db.ref('moderation/'+tid).set({ type, until: Date.now()+ms, reason:"Admin" });
-            db.ref('messages').push({ username:"System", text:`*** ${tgt} was ${type==='ban'?'banned':'muted'} for ${dur} ***`, timestamp:firebase.database.ServerValue.TIMESTAMP });
+            db.ref('moderation/'+tid).set({ type, until: Date.now()+ms });
+            db.ref('messages').push({ username:"System", text:`*** ${tgt} was ${type}ed for ${dur} ***`, timestamp:firebase.database.ServerValue.TIMESTAMP });
         }
 
         function initMods() {
             db.ref('moderation/'+myUid).on('value', s => {
                 const d = s.val();
                 if(d && d.until > Date.now()) {
-                    els.input.disabled = els.upBtn.disabled = true;
-                    els.input.placeholder = `You are ${d.type}ed until ${new Date(d.until).toLocaleTimeString()}`;
+                    els.input.disabled = els.upBtn.disabled = true; els.input.placeholder = `${d.type}ed...`;
                 } else {
-                    els.input.disabled = els.upBtn.disabled = false;
-                    els.input.placeholder = "Type a message...";
+                    els.input.disabled = els.upBtn.disabled = false; els.input.placeholder = "Message...";
                 }
             });
         }
-
         function initNotifs() {
             db.ref('notifications/'+myName).on('child_added', s => {
-                const n = s.val();
-                if(n) {
-                    const d = document.createElement('div'); d.className='message';
-                    d.innerHTML = `<span class="msg-time">[ALERT]</span> <span class="msg-notification">New PM from ${n.from}</span>`;
-                    d.onclick = () => { if(confirm("Go to PMs?")) window.location.href=`pm.html?with=${n.from}`; };
-                    els.log.appendChild(d); els.log.scrollTop = els.log.scrollHeight;
-                    db.ref(`notifications/${myName}/${s.key}`).remove();
-                }
+                const n = s.val(); if(!n) return;
+                const d = document.createElement('div'); d.className='message';
+                d.innerHTML = `<span class="msg-time">[ALERT]</span> <span class="msg-notification">PM from ${n.from}</span>`;
+                d.onclick = () => { if(confirm("Go to PMs?")) window.location.href=`pm.html?with=${n.from}`; };
+                els.log.appendChild(d); els.log.scrollTop = els.log.scrollHeight;
+                db.ref(`notifications/${myName}/${s.key}`).remove();
             });
         }
         window.delMsg = (id) => { if(confirm("Delete?")) db.ref('messages/'+id).remove(); };
         els.send.onclick = sendMsg;
         els.input.onkeypress = (e) => { if(e.key==='Enter') sendMsg(); };
 
-        // --- MUSIC PLAYER ---
-        const B = "https://ewsmusic1.netlify.app/";
-        const pl = [
-            {t:"Xtal",a:"Aphex Twin",s:"xtal.mp3",c:"aphex.jpg"}, {t:"I Don't Wanna Be Me",a:"Type O Negative",s:"idontwannabeme.mp3",c:"ton.jpg"},
-            {t:"Life Is Killing Me",a:"Type O Negative",s:"lifeiskilling.mp3",c:"ton.jpg"}, {t:"Exit Music",a:"Radiohead",s:"exitmusic.mp3",c:"radiohead.jpg"},
-            {t:"Alternative Outro",a:"LUCKI",s:"alternativeoutro.mp3",c:"lucki.jpg"}, {t:"Bite My Lip",a:"fakemink",s:"bitemylip.mp3",c:"fakemink.jpg"},
-            {t:"Ambilux",a:"fakemink",s:"ambilux.mp3",c:"fakemink3.jpg"}, {t:"I'm Like Why",a:"xaviersobased",s:"imlikewhy.mp3",c:"xav.jpg"},
-            {t:"Love Hate",a:"xaviersobased",s:"lovehate.mp3",c:"xav2.jpg"}, {t:"Foamposite",a:"smokedope2016",s:"foamposite.mp3",c:"smokedope2016.jpg"},
-            {t:"Abysmal Depths",a:"Xasthur",s:"abysmaldepthsareflooded.mp3",c:"xasthur.jpg"}, {t:"Diamonds",a:"Chris Travis",s:"diamonds.mp3",c:"christravis.jpg"},
-            {t:"Black Magic",a:"Ethel Wulf",s:"blackmagic.mp3",c:"ethel.jpg"}, {t:"4 Raws",a:"EsDeeKid",s:"4raws.mp3",c:"esdee.jpg"},
-            {t:"Fever",a:"fakemink",s:"fever.mp3",c:"buckshot.jpg"}, {t:"Stalks",a:"Ghost Mountain",s:"stalks.mp3",c:"ghostmountain.jpg"},
-            {t:"MIA",a:"feng",s:"mia.mp3",c:"feng.jpg"}, {t:"Ceiling Fan",a:"Title Fight",s:"titlefight.mp3",c:"title-fih.jpg"},
-            {t:"Turn Me Loose",a:"LB/Eminem",s:"turnmeloose.mp3",c:"limp.jpg"}, {t:"Black Beetles",a:"EsDeeKid",s:"bbr.mp3",c:"esdee2.jpg"},
-            {t:"Apathy",a:"EsDeeKid",s:"apathy.mp3",c:"esdee3.jpg"}, {t:"Bring it Back",a:"Chris Travis",s:"bib.mp3",c:"chris2.jpg"},
-            {t:"Die Til You Live",a:"fakemink",s:"dtyl.mp3",c:"fakemink5.jpg"}, {t:"Worth It",a:"xaviersobased",s:"worthit.mp3",c:"81853ABB-FB87-4A20-9303-9624B777245B.jpeg"},
-            {t:"In Da Party",a:"smokedope2016",s:"indaparty.mp3",c:"smokedope4.jpg"}, {t:"Say It Aint Dro",a:"smokedope2016",s:"dro.mp3",c:"smokedope3.jpg"},
-            {t:"Blunts On Mind",a:"Ethel Wulf",s:"bluntsomm.mp3",c:"ethel2.jpg"}, {t:"Luper",a:"Earl",s:"luper.mp3",c:"earl.jpg"},
-            {t:"Frat",a:"smokedope2016",s:"frat.mp3",c:"smokedope2.jpg"}, {t:"Hit The Home",a:"Peace",s:"clock.mp3",c:"handofpeace.jpg"},
-            {t:"Blow Me",a:"fakemink",s:"blowme.mp3",c:"fakeminkk.jpg"}, {t:"Minerva",a:"Deftones",s:"minerva.mp3",c:"deftones.jpg"},
-            {t:"Hold On",a:"Limp Bizkit",s:"holdon.mp3",c:"limpbizkit.jpg"}, {t:"My Way",a:"Limp Bizkit",s:"myway.mp3",c:"limpbizkit.jpg"}
+        // --- PLAYER ---
+        const B="https://ewsmusic1.netlify.app/", pl=[
+            {t:"Xtal",s:"xtal.mp3",c:"aphex.jpg"}, {t:"I Don't Wanna Be Me",s:"idontwannabeme.mp3",c:"ton.jpg"},
+            {t:"Life Is Killing Me",s:"lifeiskilling.mp3",c:"ton.jpg"}, {t:"Exit Music",s:"exitmusic.mp3",c:"radiohead.jpg"},
+            {t:"Alternative Outro",s:"alternativeoutro.mp3",c:"lucki.jpg"}, {t:"Bite My Lip",s:"bitemylip.mp3",c:"fakemink.jpg"},
+            {t:"Ambilux",s:"ambilux.mp3",c:"fakemink3.jpg"}, {t:"I'm Like Why",s:"imlikewhy.mp3",c:"xav.jpg"},
+            {t:"Love Hate",s:"lovehate.mp3",c:"xav2.jpg"}, {t:"Foamposite",s:"foamposite.mp3",c:"smokedope2016.jpg"},
+            {t:"Abysmal Depths",s:"abysmaldepthsareflooded.mp3",c:"xasthur.jpg"}, {t:"Diamonds",s:"diamonds.mp3",c:"christravis.jpg"},
+            {t:"Black Magic",s:"blackmagic.mp3",c:"ethel.jpg"}, {t:"4 Raws",s:"4raws.mp3",c:"esdee.jpg"},
+            {t:"Fever",s:"fever.mp3",c:"buckshot.jpg"}, {t:"Stalks",s:"stalks.mp3",c:"ghostmountain.jpg"},
+            {t:"MIA",s:"mia.mp3",c:"feng.jpg"}, {t:"Ceiling Fan",s:"titlefight.mp3",c:"title-fih.jpg"},
+            {t:"Turn Me Loose",s:"turnmeloose.mp3",c:"limp.jpg"}, {t:"Black Beetles",s:"bbr.mp3",c:"esdee2.jpg"},
+            {t:"Apathy",s:"apathy.mp3",c:"esdee3.jpg"}, {t:"Bring it Back",s:"bib.mp3",c:"chris2.jpg"},
+            {t:"Die Til You Live",s:"dtyl.mp3",c:"fakemink5.jpg"}, {t:"Worth It",s:"worthit.mp3",c:"81853ABB-FB87-4A20-9303-9624B777245B.jpeg"},
+            {t:"In Da Party",s:"indaparty.mp3",c:"smokedope4.jpg"}, {t:"Say It Aint Dro",s:"dro.mp3",c:"smokedope3.jpg"},
+            {t:"Blunts On Mind",s:"bluntsomm.mp3",c:"ethel2.jpg"}, {t:"Luper",s:"luper.mp3",c:"earl.jpg"},
+            {t:"Frat",s:"frat.mp3",c:"smokedope2.jpg"}, {t:"Hit The Home",s:"clock.mp3",c:"handofpeace.jpg"},
+            {t:"Blow Me",s:"blowme.mp3",c:"fakeminkk.jpg"}, {t:"Minerva",s:"minerva.mp3",c:"deftones.jpg"},
+            {t:"Hold On",s:"holdon.mp3",c:"limpbizkit.jpg"}, {t:"My Way",s:"myway.mp3",c:"limpbizkit.jpg"}
         ];
-        
-        const audio = $('audio-player'), mTit = $('mini-track-info'), mPlay = $('mini-play'), mArt = $('player-cover-art');
-        let cIdx = 0;
-
-        function loadSong(i) {
-            const s = pl[i]; audio.src = B + s.s; mTit.textContent = s.t; mArt.src = B + s.c;
-        }
+        const audio=$('audio-player'), mTit=$('mini-track-info'), mPlay=$('mini-play'), mArt=$('player-cover-art');
+        let cIdx=0;
+        function loadSong(i){ const s=pl[i]; audio.src=B+s.s; mTit.textContent=s.t; mArt.src=B+s.c; }
         loadSong(0);
-
-        mPlay.onclick = () => { if(audio.paused){ if(!audio.src) loadSong(cIdx); audio.play(); mPlay.textContent="||"; } else { audio.pause(); mPlay.textContent=">"; } };
-        $('mini-next').onclick = () => { cIdx=(cIdx+1)%pl.length; loadSong(cIdx); audio.play(); mPlay.textContent="||"; };
-        $('mini-prev').onclick = () => { cIdx=(cIdx-1+pl.length)%pl.length; loadSong(cIdx); audio.play(); mPlay.textContent="||"; };
+        mPlay.onclick=()=>{ if(audio.paused){ if(!audio.src)loadSong(cIdx); audio.play(); mPlay.textContent="||"; }else{ audio.pause(); mPlay.textContent=">"; }};
+        $('mini-next').onclick=()=>{ cIdx=(cIdx+1)%pl.length; loadSong(cIdx); audio.play(); mPlay.textContent="||"; };
+        $('mini-prev').onclick=()=>{ cIdx=(cIdx-1+pl.length)%pl.length; loadSong(cIdx); audio.play(); mPlay.textContent="||"; };
     </script>
 </body>
 </html>
