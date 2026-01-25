@@ -9,772 +9,328 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
     <style>
-        /* --- RESET & BASE STYLES --- */
+        /* --- OPTIMIZED CSS --- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background:#000; color:#ccc; font-family:Arial, sans-serif; font-size:11px; line-height:1.4; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+        a { color:#fff; text-decoration:none; } a:hover { text-decoration:underline; }
         
-        body {
-            background-color: #000;
-            color: #ccc;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 11px;
-            line-height: 1.4;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+        .container { width:900px; margin:0 auto; padding:20px 0; display:flex; flex-direction:column; height:100%; }
+        .top-header { display:flex; justify-content:flex-end; align-items:center; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #333; height:40px; }
+        .top-links span { margin:0 5px; color:#444; }
 
-        a { color: #fff; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-
-        /* --- LAYOUT CONTAINER --- */
-        .container {
-            width: 900px;
-            margin: 0 auto;
-            padding-top: 20px;
-            padding-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        /* --- HEADER --- */
-        .top-header {
-            display: flex;
-            justify-content: flex-end; 
-            align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #333;
-            height: 40px;
-        }
+        .chat-wrapper { display:flex; flex:1; gap:10px; min-height:0; }
+        .chat-main { flex:1; display:flex; flex-direction:column; border:1px solid #333; background:#111; }
+        .chat-sidebar { width:180px; border:1px solid #333; background:#111; display:flex; flex-direction:column; }
         
-        .top-links { font-size: 11px; }
-        .top-links span { margin: 0 5px; color: #444; }
-
-        /* --- CHAT WRAPPER --- */
-        .chat-wrapper {
-            display: flex;
-            flex: 1;
-            gap: 10px;
-            min-height: 0; 
-        }
-
-        /* --- MAIN CHAT WINDOW --- */
-        .chat-main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid #333;
-            background-color: #111;
-        }
-
-        .chat-header-bar {
-            background-color: #666;
-            color: #fff;
-            padding: 3px 5px;
-            font-size: 12px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .filler-pattern { letter-spacing: 2px; color: #ccc; font-family: monospace; }
-
-        .chat-log {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-            font-size: 12px;
-            background-color: #000;
-        }
-
-        /* --- MESSAGE STYLES --- */
-        .message { margin-bottom: 8px; line-height: 1.5; position: relative; word-wrap: break-word; }
-        .message:hover .delete-btn { display: inline; } 
+        .chat-header-bar { background:#666; color:#fff; padding:3px 5px; font-size:12px; font-weight:bold; display:flex; justify-content:space-between; align-items:center; }
+        .filler-pattern { letter-spacing:2px; color:#ccc; font-family:monospace; }
         
-        .msg-time { color: #555; font-size: 10px; margin-right: 5px; }
-        .msg-user { color: #fff; font-weight: bold; margin-right: 2px; }
-        .msg-text { color: #ccc; }
-        .msg-system { color: #facc15; font-style: italic; }
-        .msg-alert { color: #f00; font-weight: bold; }
-        .msg-notification { color: #0ff; font-weight: bold; border: 1px dashed #0ff; padding: 2px 5px; display:inline-block; margin-top:5px;}
-
-        /* MEDIA STYLES */
-        .chat-media {
-            display: block;
-            max-width: 300px;
-            max-height: 200px;
-            margin-top: 5px;
-            border: 1px solid #333;
-        }
+        .chat-log { flex:1; overflow-y:auto; padding:10px; background:#000; scroll-behavior: smooth; }
+        .message { margin-bottom:8px; position:relative; word-wrap:break-word; }
+        .message:hover .delete-btn { display:inline; } 
         
-        .delete-btn {
-            display: none;
-            color: #f00;
-            cursor: pointer;
-            font-size: 10px;
-            margin-right: 5px;
-            font-weight: bold;
-        }
+        .msg-time { color:#555; font-size:10px; margin-right:5px; }
+        .msg-user { color:#fff; font-weight:bold; margin-right:2px; }
+        .msg-text { color:#ccc; }
+        .msg-system { color:#facc15; font-style:italic; }
+        .msg-alert { color:#f00; font-weight:bold; }
+        .msg-notification { color:#0ff; font-weight:bold; border:1px dashed #0ff; padding:2px 5px; display:inline-block; margin-top:5px; cursor:pointer;}
+        .delete-btn { display:none; color:#f00; cursor:pointer; font-size:10px; margin-right:5px; font-weight:bold; }
+        .chat-media { display:block; max-width:300px; max-height:200px; margin-top:5px; border:1px solid #333; }
 
-        /* --- SIDEBAR --- */
-        .chat-sidebar {
-            width: 180px;
-            border: 1px solid #333;
-            background-color: #111;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Sidebar Search */
-        .sidebar-search {
-            padding: 5px;
-            background-color: #000;
-            border-bottom: 1px solid #333;
-        }
-        .search-input {
-            width: 100%;
-            background-color: #222;
-            border: 1px solid #444;
-            color: #fff;
-            padding: 3px 5px;
-            font-size: 10px;
-        }
-        .search-input:focus { outline: none; border-color: #666; }
+        /* Sidebar & Search */
+        .sidebar-search { padding:5px; background:#000; border-bottom:1px solid #333; }
+        .search-input { width:100%; background:#222; border:1px solid #444; color:#fff; padding:3px 5px; font-size:10px; }
+        .search-input:focus { outline:none; border-color:#666; }
+        .user-list { list-style:none; padding:5px; overflow-y:auto; flex:1; }
+        .user-list li { padding:2px 0; color:#888; display:flex; align-items:center; }
         
-        .user-list {
-            list-style: none;
-            padding: 5px;
-            overflow-y: auto;
-            flex: 1; 
-        }
-
-        .user-list li {
-            padding: 2px 0;
-            color: #888;
-            display: flex;
-            align-items: center;
-        }
-
-        /* --- SIDEBAR DOTS --- */
-        .user-list li::before {
-            content: ""; 
-            display: inline-block; 
-            width: 8px; 
-            height: 8px;
-            background-color: #444; /* Grey for OFFLINE */
-            margin-right: 8px; 
-            border-radius: 50%;
-            transition: background-color 0.3s ease;
-        }
+        /* Dots */
+        .user-list li::before { content:""; display:inline-block; width:8px; height:8px; background:#444; margin-right:8px; border-radius:50%; transition:background .3s; }
+        .user-list li.online::before { background:#2ecc71; box-shadow:0 0 6px #2ecc71; }
         
-        /* THE GREEN DOT */
-        .user-list li.online::before { 
-            background-color: #2ecc71; /* Bright Green */
-            box-shadow: 0 0 6px #2ecc71; /* Green Glow */
-        }
-        
-        /* Links in sidebar */
-        .user-link { color: #bbb; text-decoration: none; cursor: pointer; }
-        .user-link:hover { color: #fff; text-decoration: underline; }
-        .user-link.is-me { color: #fff; font-weight: bold; pointer-events: none; }
+        .user-link { color:#bbb; cursor:pointer; } .user-link:hover { color:#fff; text-decoration:underline; }
+        .user-link.is-me { color:#fff; font-weight:bold; pointer-events:none; }
 
-        /* --- MINI MUSIC PLAYER --- */
-        .mini-player {
-            border-top: 1px solid #333;
-            background: #000;
-            padding: 8px;
-            text-align: center;
-        }
-        .player-cover-art {
-            width: 100%; 
-            height: auto;
-            aspect-ratio: 1/1; 
-            object-fit: cover;
-            border: 1px solid #444;
-            margin-bottom: 8px;
-            background-color: #111;
-            display: block;
-        }
-        .mini-track-info {
-            font-size: 10px;
-            color: #fff;
-            margin-bottom: 4px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .mini-controls {
-            display: flex; justify-content: center; gap: 5px;
-        }
-        .mini-btn {
-            background: #333; border: 1px solid #444; color: #fff;
-            width: 20px; height: 18px; font-size: 9px; cursor: pointer;
-        }
-        .mini-btn:hover { background: #555; }
+        /* Player & Inputs */
+        .mini-player { border-top:1px solid #333; background:#000; padding:8px; text-align:center; }
+        .player-cover-art { width:100%; aspect-ratio:1/1; object-fit:cover; border:1px solid #444; margin-bottom:8px; background:#111; display:block; }
+        .mini-track-info { font-size:10px; color:#fff; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .mini-controls { display:flex; justify-content:center; gap:5px; }
+        .mini-btn { background:#333; border:1px solid #444; color:#fff; width:20px; height:18px; font-size:9px; cursor:pointer; }
+        .mini-btn:hover { background:#555; }
 
-        /* --- INPUT AREA --- */
-        .chat-input-area {
-            margin-top: 10px;
-            background-color: #222;
-            padding: 5px;
-            border: 1px solid #333;
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-        
-        .chat-input {
-            flex: 1;
-            background-color: #000;
-            border: 1px solid #444;
-            color: #fff;
-            padding: 5px;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 12px;
-        }
-        .chat-input:focus { outline: 1px solid #666; }
-        .chat-input:disabled { background-color: #220000; color: #777; border-color: #500; cursor: not-allowed; }
+        .chat-input-area { margin-top:10px; background:#222; padding:5px; border:1px solid #333; display:flex; gap:5px; align-items:center; }
+        .chat-input { flex:1; background:#000; border:1px solid #444; color:#fff; padding:5px; font-size:12px; }
+        .chat-input:focus { outline:1px solid #666; }
+        .chat-input:disabled { background:#220000; cursor:not-allowed; }
+        .action-btn, .send-btn { background:#333; color:#fff; border:1px solid #444; height:26px; font-weight:bold; cursor:pointer; }
+        .action-btn:hover, .send-btn:hover { background:#555; }
+        .send-btn { background:#444; padding:0 15px; font-size:11px; }
 
-        .action-btn {
-            background-color: #333;
-            color: #fff;
-            border: 1px solid #444;
-            padding: 0 10px;
-            height: 26px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .action-btn:hover { background-color: #555; }
-
-        .send-btn {
-            background-color: #444;
-            color: #fff;
-            border: 1px solid #555;
-            padding: 0 15px;
-            font-size: 11px;
-            font-weight: bold;
-            cursor: pointer;
-            height: 26px;
-        }
-        .send-btn:hover { background-color: #666; }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #111; }
-        ::-webkit-scrollbar-thumb { background: #333; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-
+        ::-webkit-scrollbar { width:8px; } ::-webkit-scrollbar-track { background:#111; } ::-webkit-scrollbar-thumb { background:#333; }
     </style>
 </head>
 <body>
-
     <div class="container">
-        
         <div class="top-header">
-            <div class="top-links">
-                <a href="index.html">home</a> <span>|</span>
-                <a href="list.html">list</a> <span>|</span> 
-                <a href="settings.html">settings</a>
-            </div>
+            <div class="top-links"><a href="index.html">home</a> <span>|</span> <a href="list.html">list</a> <span>|</span> <a href="settings.html">settings</a></div>
         </div>
-
         <div class="chat-wrapper">
-            
             <main class="chat-main">
-                <div class="chat-header-bar">
-                    <span class="filler-pattern">[>::<]  [>::<]  [>::<]</span>
-                    <span id="user-count">Users: 0</span>
-                </div>
-                
-                <div class="chat-log" id="chat-log">
-                    <div class="message"><span class="msg-time">[SYSTEM]</span> <span class="msg-system">connecting...</span></div>
-                </div>
-
+                <div class="chat-header-bar"><span class="filler-pattern">[>::<] [>::<] [>::<]</span><span id="user-count">Online: 0</span></div>
+                <div class="chat-log" id="chat-log"><div class="message"><span class="msg-time">[SYSTEM]</span> <span class="msg-system">connecting...</span></div></div>
                 <div class="chat-input-area">
                     <input type="file" id="media-input" accept="image/*,video/*" style="display: none;">
-                    
-                    <button class="action-btn" id="upload-trigger" title="Send Image/Video">[+]</button>
-                    
+                    <button class="action-btn" id="upload-trigger" title="Upload">[+]</button>
                     <input type="text" class="chat-input" id="message-input" placeholder="Type a message..." autocomplete="off">
                     <button class="send-btn" id="send-btn">SEND</button>
                 </div>
             </main>
-
             <aside class="chat-sidebar">
                 <div class="chat-header-bar">Users</div>
-                
-                <div class="sidebar-search">
-                    <input type="text" id="user-search" class="search-input" placeholder="Search users...">
-                </div>
-
-                <ul class="user-list" id="user-list">
-                    </ul>
-
+                <div class="sidebar-search"><input type="text" id="user-search" class="search-input" placeholder="Search..."></div>
+                <ul class="user-list" id="user-list"></ul>
                 <div class="mini-player">
                     <img id="player-cover-art" class="player-cover-art" src="" alt="cover">
                     <div id="mini-track-info" class="mini-track-info">stopped</div>
-                    <div class="mini-controls">
-                        <button id="mini-prev" class="mini-btn">&lt;</button>
-                        <button id="mini-play" class="mini-btn">&gt;</button>
-                        <button id="mini-next" class="mini-btn">&gt;&gt;</button>
-                    </div>
+                    <div class="mini-controls"><button id="mini-prev" class="mini-btn">&lt;</button><button id="mini-play" class="mini-btn">&gt;</button><button id="mini-next" class="mini-btn">&gt;&gt;</button></div>
                 </div>
             </aside>
-
         </div>
-
-        <div style="text-align: center; color: #444; font-size: 10px; margin-top: 10px;">
-            Connection Established. 
-        </div>
-
+        <div style="text-align:center;color:#444;font-size:10px;margin-top:10px;">Connection Established.</div>
     </div>
-
     <audio id="audio-player"></audio>
 
     <script>
-        // --- 1. FIREBASE CONFIGURATION ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
-            authDomain: "ewsitechat.firebaseapp.com",
-            databaseURL: "https://ewsitechat-default-rtdb.firebaseio.com",
-            projectId: "ewsitechat",
-            storageBucket: "ewsitechat.firebasestorage.app",
-            messagingSenderId: "282495574514",
-            appId: "1:282495574514:web:e2781da630d93fc1ce8b6b",
-            measurementId: "G-GTN3TL1P2K"
-        };
+        // --- CONFIG & UTILS ---
+        const firebaseConfig={apiKey:"AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",authDomain:"ewsitechat.firebaseapp.com",databaseURL:"https://ewsitechat-default-rtdb.firebaseio.com",projectId:"ewsitechat",storageBucket:"ewsitechat.firebasestorage.app",messagingSenderId:"282495574514",appId:"1:282495574514:web:e2781da630d93fc1ce8b6b",measurementId:"G-GTN3TL1P2K"};
+        if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db=firebase.database(), auth=firebase.auth(), ADMINS=["root","futtbucker67"];
         
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.database();
-        const auth = firebase.auth();
+        // Short selector helper
+        const $ = (id) => document.getElementById(id);
+        const els = { input: $('message-input'), send: $('send-btn'), log: $('chat-log'), list: $('user-list'), count: $('user-count'), media: $('media-input'), upBtn: $('upload-trigger'), search: $('user-search') };
+        
+        let myName = localStorage.getItem('username'), myUid = null;
+        let allUsers = {}; // Holds full user list from 'users' node
+        let onlineStatus = {}; // Holds connectivity from 'status' node
 
-        // --- 2. CONFIGURATION & STATE ---
-        const ADMINS = ["root", "futtbucker67"];
-        
-        // --- USERNAME ENFORCEMENT ---
-        // This prevents "Guest_9999" from being created. 
-        // It forces the user to pick a name before they can chat or appear in the list.
-        let myUsername = localStorage.getItem('username');
-        
-        while (!myUsername || myUsername.trim() === "") {
-            myUsername = prompt("Enter a username to join:");
-            if (myUsername && myUsername.trim() !== "") {
-                localStorage.setItem('username', myUsername);
-            }
+        // Force Username
+        while(!myName || !myName.trim()) {
+            myName = prompt("Enter a username to join:");
+            if(myName && myName.trim()) localStorage.setItem('username', myName);
         }
 
-        let myUid = null;
-        let onlineUsers = {}; 
-        let allCachedUsers = []; // Stores the full list from DB for searching
-
-        // --- 3. DOM ELEMENTS ---
-        const input = document.getElementById('message-input');
-        const sendBtn = document.getElementById('send-btn');
-        const chatLog = document.getElementById('chat-log');
-        const userListEl = document.getElementById('user-list');
-        const userCountEl = document.getElementById('user-count');
-        const mediaInput = document.getElementById('media-input');
-        const uploadTrigger = document.getElementById('upload-trigger');
-        const searchInput = document.getElementById('user-search');
-
-        // --- 4. AUTHENTICATION ---
-        auth.signInAnonymously().catch((error) => {
-            console.error("Auth Error:", error);
-            addLogMessage("System", "auth failed", false, true);
-        });
-
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                myUid = user.uid;
-                initPresence();
-                initChat();
-                initModerationListener();
-                initNotificationListener(); 
+        // --- AUTH & INIT ---
+        auth.signInAnonymously().catch(e => console.error(e));
+        auth.onAuthStateChanged(u => {
+            if(u) {
+                myUid = u.uid;
+                // Register into permanent 'users' node
+                db.ref('users/' + myUid).update({ username: myName });
                 
-                chatLog.innerHTML = '';
-                addLogMessage("System", "welcome " + myUsername, false, true);
+                initPresence(); initChat(); initMods(); initNotifs();
+                els.log.innerHTML = '';
+                addMsg("System", "welcome " + myName, false, true);
             }
         });
 
-        // --- 5. PRESENCE & USER LIST ---
+        // --- PRESENCE & USER LIST SYSTEM ---
         function initPresence() {
-            const userStatusRef = db.ref('/status/' + myUid);
-            const isOffline = { state: 'offline', last_changed: firebase.database.ServerValue.TIMESTAMP, username: myUsername };
-            const isOnline = { state: 'online', last_changed: firebase.database.ServerValue.TIMESTAMP, username: myUsername };
-
-            db.ref('.info/connected').on('value', (snapshot) => {
-                if (!snapshot.val()) return;
-                userStatusRef.onDisconnect().set(isOffline).then(() => {
-                    userStatusRef.set(isOnline);
-                });
+            // 1. Manage my online status
+            const ref = db.ref('/status/' + myUid);
+            const online = { state:'online', last_changed: firebase.database.ServerValue.TIMESTAMP, username: myName };
+            const offline = { state:'offline', last_changed: firebase.database.ServerValue.TIMESTAMP, username: myName };
+            db.ref('.info/connected').on('value', s => {
+                if(s.val()) ref.onDisconnect().set(offline).then(() => ref.set(online));
             });
 
-            db.ref('/status').on('value', (snapshot) => {
-                onlineUsers = {};
-                let onlineCount = 0;
-                allCachedUsers = [];
-                
-                snapshot.forEach((child) => {
-                    const data = child.val();
-                    const uid = child.key;
-                    
-                    // --- FILTERING LOGIC ---
-                    // Exclude names that look like "Guest_1234" or are empty
-                    if (!data.username) return;
-                    if (data.username.startsWith("Guest_")) return;
+            // 2. Fetch all users (Permanent Directory)
+            db.ref('users').on('value', s => {
+                allUsers = s.val() || {};
+                updateUserList();
+            });
 
-                    if(data.state === 'online') {
-                        onlineUsers[uid] = data.username;
-                        onlineCount++;
-                    }
-                    allCachedUsers.push({ uid: uid, ...data });
-                });
-
-                // Initial Sort: Online first, then alphabetical
-                allCachedUsers.sort((a, b) => {
-                    if (a.state === b.state) {
-                        return (a.username || "").toLowerCase().localeCompare((b.username || "").toLowerCase());
-                    }
-                    return a.state === 'online' ? -1 : 1;
-                });
-
-                // Update Header Count
-                userCountEl.textContent = `Online: ${onlineCount} / Total: ${allCachedUsers.length}`;
-
-                // Render with current search term (empty by default)
-                renderUserList(searchInput.value);
+            // 3. Fetch online status (Realtime Connectivity)
+            db.ref('status').on('value', s => {
+                onlineStatus = s.val() || {};
+                updateUserList();
             });
         }
 
-        // --- RENDER USER LIST FUNCTION ---
-        function renderUserList(filterText) {
-            userListEl.innerHTML = '';
+        function updateUserList() {
+            const term = els.search.value.toLowerCase();
+            const frag = document.createDocumentFragment();
+            let onlineCount = 0;
+            let displayList = [];
+
+            // Merge 'users' and 'status' data
+            Object.keys(allUsers).forEach(uid => {
+                const uData = allUsers[uid];
+                if(!uData.username || uData.username.startsWith("Guest_")) return;
+
+                // Check online status
+                const isOnline = (onlineStatus[uid] && onlineStatus[uid].state === 'online');
+                if(isOnline) onlineCount++;
+
+                displayList.push({ uid, username: uData.username, isOnline });
+            });
+
+            // Sort: Online first, then alphabetical
+            displayList.sort((a,b) => (a.isOnline === b.isOnline) ? a.username.localeCompare(b.username) : (a.isOnline?-1:1));
             
-            const lowerFilter = filterText.toLowerCase();
-
-            allCachedUsers.forEach((data) => {
-                // Search Filter
-                if (filterText && !data.username.toLowerCase().includes(lowerFilter)) {
-                    return; 
-                }
-
+            // Render
+            displayList.forEach(u => {
+                if(term && !u.username.toLowerCase().includes(term)) return;
+                
                 const li = document.createElement('li');
-                if (data.state === 'online') li.className = 'online';
-                else li.className = 'offline';
+                li.className = u.isOnline ? 'online' : 'offline';
                 
-                const link = document.createElement('a');
-                link.textContent = data.username; 
+                const a = document.createElement('a');
+                a.textContent = u.username;
+                a.className = "user-link" + (u.username === myName ? " is-me" : "");
+                a.href = (u.username === myName) ? "#" : `profile.html?user=${u.username}`;
                 
-                if (data.username === myUsername) {
-                    link.className = "user-link is-me";
-                    link.href = "#"; 
-                } else {
-                    link.className = "user-link";
-                    link.href = `profile.html?user=${data.username}`; 
-                }
-
-                li.appendChild(link);
-                userListEl.appendChild(li);
+                li.appendChild(a);
+                frag.appendChild(li);
             });
+
+            els.list.innerHTML = '';
+            els.list.appendChild(frag);
+            els.count.textContent = `Online: ${onlineCount}`;
         }
 
-        // --- SEARCH LISTENER ---
-        searchInput.addEventListener('input', (e) => {
-            renderUserList(e.target.value);
-        });
+        els.search.addEventListener('input', updateUserList);
 
-        // --- 6. CHAT LOGIC ---
+        // --- CHAT LOGIC ---
         function initChat() {
-            const messagesRef = db.ref('messages');
-            messagesRef.limitToLast(100).on('child_added', (snapshot) => {
-                const data = snapshot.val();
-                if (!data || !data.timestamp) return;
-                
-                addLogMessage(
-                    data.username, 
-                    data.text, 
-                    (data.username === myUsername), 
-                    false, 
-                    data.timestamp, 
-                    snapshot.key,
-                    data.mediaType, 
-                    data.mediaData  
-                );
+            db.ref('messages').limitToLast(100).on('child_added', s => {
+                const d = s.val();
+                if(d && d.timestamp) addMsg(d.username, d.text, d.username===myName, false, d.timestamp, s.key, d.mediaType, d.mediaData);
             });
-            messagesRef.on('child_removed', (snapshot) => {
-                const msgDiv = document.getElementById(`msg-${snapshot.key}`);
-                if (msgDiv) msgDiv.remove();
+            db.ref('messages').on('child_removed', s => {
+                const el = document.getElementById(`msg-${s.key}`);
+                if(el) el.remove();
             });
         }
 
-        function sendMessage() {
-            const text = input.value.trim();
-            if (text === "") return;
-
-            if (text.startsWith('/') && ADMINS.includes(myUsername)) {
-                handleCommand(text);
-                input.value = '';
-                return;
-            }
-
-            db.ref('messages').push({
-                username: myUsername,
-                text: text,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
-            input.value = '';
+        function sendMsg() {
+            const txt = els.input.value.trim();
+            if(!txt) return;
+            if(txt.startsWith('/') && ADMINS.includes(myName)) { handleCmd(txt); els.input.value=''; return; }
+            db.ref('messages').push({ username: myName, text: txt, timestamp: firebase.database.ServerValue.TIMESTAMP });
+            els.input.value = '';
         }
 
-        // --- 7. MEDIA UPLOAD LOGIC ---
-        uploadTrigger.addEventListener('click', () => {
-            mediaInput.click();
-        });
+        // --- MEDIA & HELPERS ---
+        els.upBtn.onclick = () => els.media.click();
+        els.media.onchange = (e) => {
+            const f = e.target.files[0];
+            if(!f || f.size > 2097152) return alert("Max 2MB");
+            const r = new FileReader();
+            r.onload = (ev) => db.ref('messages').push({ username:myName, text:"", mediaType:(f.type.startsWith('image')?'image':'video'), mediaData:ev.target.result, timestamp:firebase.database.ServerValue.TIMESTAMP });
+            r.readAsDataURL(f); els.media.value="";
+        };
 
-        mediaInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            if (file.size > 2097152) {
-                alert("File too large. Max 2MB.");
-                mediaInput.value = "";
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const base64 = evt.target.result;
-                const type = file.type.startsWith('image') ? 'image' : 'video';
-
-                db.ref('messages').push({
-                    username: myUsername,
-                    text: "", 
-                    mediaType: type,
-                    mediaData: base64,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                });
-            };
-            reader.readAsDataURL(file);
-            mediaInput.value = ""; 
-        });
-
-
-        // --- 8. MODERATION COMMANDS ---
-        function handleCommand(cmdStr) {
-            const parts = cmdStr.split(' ');
-            const command = parts[0];
-            const durationStr = parts[1];
-            const targetUser = parts[2];
-
-            if (!targetUser) return;
-
-            let targetUid = Object.keys(onlineUsers).find(key => onlineUsers[key] === targetUser);
-            if (!targetUid) {
-                addLogMessage("System", `User ${targetUser} not found or offline.`, false, true);
-                return;
-            }
-
-            let durationMs = 0;
-            if (durationStr === 'inf') durationMs = 3153600000000;
-            else if (durationStr.endsWith('s')) durationMs = parseInt(durationStr) * 1000;
-            else if (durationStr.endsWith('m')) durationMs = parseInt(durationStr) * 60000;
-            else if (durationStr.endsWith('h')) durationMs = parseInt(durationStr) * 3600000;
-            else { durationMs = 30000; } 
-
-            const endTime = Date.now() + durationMs;
-            const type = (command === '/ban') ? 'ban' : 'mute';
-
-            db.ref('moderation/' + targetUid).set({
-                type: type,
-                until: endTime,
-                reason: "Admin Action"
-            });
-
-            const verb = (type === 'ban') ? 'banned' : 'muted';
-            db.ref('messages').push({
-                username: "System",
-                text: `*** ${targetUser} was ${verb} for ${durationStr} ***`,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
-        }
-
-        function initModerationListener() {
-            db.ref('moderation/' + myUid).on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data && data.until > Date.now()) {
-                    input.disabled = true;
-                    input.value = "";
-                    input.placeholder = `You are ${data.type}ed until ${new Date(data.until).toLocaleTimeString()}`;
-                    uploadTrigger.disabled = true; 
-                } else {
-                    input.disabled = false;
-                    uploadTrigger.disabled = false;
-                    input.placeholder = "Type a message...";
-                }
-            });
-        }
-
-        // --- 9. NOTIFICATION LISTENER ---
-        function initNotificationListener() {
-            db.ref('notifications/' + myUsername).on('child_added', (snapshot) => {
-                const notif = snapshot.val();
-                if(notif) {
-                    const div = document.createElement('div');
-                    div.className = 'message';
-                    div.innerHTML = `<span class="msg-time">[ALERT]</span> <span class="msg-notification">New PM from ${notif.from}</span>`;
-                    div.onclick = function() {
-                        if(confirm(`Go to PMs with ${notif.from}?`)) {
-                             window.location.href = `pm.html?with=${notif.from}`;
-                        }
-                    };
-                    div.style.cursor = "pointer";
-                    chatLog.appendChild(div);
-                    chatLog.scrollTop = chatLog.scrollHeight;
-                    db.ref(`notifications/${myUsername}/${snapshot.key}`).remove();
-                }
-            });
-        }
-
-        function deleteMessage(msgId) {
-            if (confirm("Delete this message?")) {
-                db.ref('messages/' + msgId).remove();
-            }
-        }
-
-        // --- 10. UI HELPERS ---
-        function addLogMessage(user, text, isMe, isSystem, timestamp = Date.now(), msgId = null, mediaType = null, mediaData = null) {
-            const div = document.createElement('div');
-            div.className = 'message';
-            if(msgId) div.id = `msg-${msgId}`;
+        function addMsg(user, text, isMe, isSys, time=Date.now(), id=null, mType=null, mData=null) {
+            const div = document.createElement('div'); div.className='message'; if(id) div.id=`msg-${id}`;
+            const ts = new Date(time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
             
-            const dateObj = new Date(timestamp);
-            const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-            if (text && text.startsWith('***')) {
-                div.innerHTML = `<span class="msg-time">[${timeStr}]</span> <span class="msg-alert">${text}</span>`;
-                chatLog.appendChild(div);
-                chatLog.scrollTop = chatLog.scrollHeight;
-                return;
-            }
-
-            const userClass = isSystem ? "msg-system" : "msg-user";
-            let userStyle = (!isMe && !isSystem) ? "color: #888;" : "";
-            
-            let deleteHtml = "";
-            if (ADMINS.includes(myUsername) && !isSystem && msgId) {
-                deleteHtml = `<span class="delete-btn" onclick="deleteMessage('${msgId}')">[x]</span>`;
-            }
-
-            let contentHtml = "";
-            if (text) contentHtml += `<span class="msg-text">${text}</span>`;
-
-            if (mediaType && mediaData) {
-                if (mediaType === 'image') {
-                    contentHtml += `<img src="${mediaData}" class="chat-media" alt="image">`;
-                } else if (mediaType === 'video') {
-                    contentHtml += `<video src="${mediaData}" class="chat-media" controls></video>`;
-                }
-            }
-
-            if (isSystem) {
-                div.innerHTML = `<span class="msg-time">[${timeStr}]</span> <span class="msg-system">${text}</span>`;
+            if(text && text.startsWith('***')) {
+                div.innerHTML = `<span class="msg-time">[${ts}]</span> <span class="msg-alert">${text}</span>`;
+            } else if(isSys) {
+                div.innerHTML = `<span class="msg-time">[${ts}]</span> <span class="msg-system">${text}</span>`;
             } else {
-                div.innerHTML = `${deleteHtml}<span class="msg-time">[${timeStr}]</span> <span class="${userClass}" style="${userStyle}">${user}:</span> ${contentHtml}`;
+                let content = text ? `<span class="msg-text">${text}</span>` : "";
+                if(mType && mData) content += (mType==='image' ? `<img src="${mData}" class="chat-media">` : `<video src="${mData}" class="chat-media" controls></video>`);
+                const del = (ADMINS.includes(myName) && id) ? `<span class="delete-btn" onclick="delMsg('${id}')">[x]</span>` : "";
+                const style = (!isMe) ? "color:#888;" : "";
+                div.innerHTML = `${del}<span class="msg-time">[${ts}]</span> <span class="msg-user" style="${style}">${user}:</span> ${content}`;
             }
-            
-            chatLog.appendChild(div);
-            chatLog.scrollTop = chatLog.scrollHeight; 
+            els.log.appendChild(div); els.log.scrollTop = els.log.scrollHeight;
         }
 
-        sendBtn.addEventListener('click', sendMessage);
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
+        // --- MODS & NOTIFS ---
+        function handleCmd(str) {
+            const [c, dur, tgt] = str.split(' ');
+            if(!tgt) return;
+            const tid = Object.keys(allUsers).find(k => allUsers[k].username===tgt);
+            if(!tid) return addMsg("System", "User not found", false, true);
+            
+            let ms = 30000;
+            if(dur==='inf') ms=3153600000000;
+            else if(dur.endsWith('s')) ms=parseInt(dur)*1000;
+            else if(dur.endsWith('m')) ms=parseInt(dur)*60000;
+            else if(dur.endsWith('h')) ms=parseInt(dur)*3600000;
 
-        // --- 11. MUSIC PLAYER LOGIC ---
-        const baseURL = "https://ewsmusic1.netlify.app/"; 
-        const playlist = [
-            { title: "Xtal", artist: "Aphex Twin", src: baseURL + "xtal.mp3", cover: baseURL + "aphex.jpg" },
-            { title: "I Don't Wanna Be Me", artist: "Type O Negative", src: baseURL + "idontwannabeme.mp3", cover: baseURL + "ton.jpg" },
-            { title: "Life Is Killing Me", artist: "Type O Negative", src: baseURL + "lifeiskilling.mp3", cover: baseURL + "ton.jpg" },
-            { title: "Exit Music (For a Film)", artist: "Radiohead", src: baseURL + "exitmusic.mp3", cover: baseURL + "radiohead.jpg" },
-            { title: "Alternative Outro", artist: "LUCKI", src: baseURL + "alternativeoutro.mp3", cover: baseURL + "lucki.jpg" },
-            { title: "Bite My Lip", artist: "fakemink", src: baseURL + "bitemylip.mp3", cover: baseURL + "fakemink.jpg" },
-            { title: "Ambilux", artist: "fakemink", src: baseURL + "ambilux.mp3", cover: baseURL + "fakemink3.jpg" },
-            { title: "I'm Like Why", artist: "xaviersobased", src: baseURL + "imlikewhy.mp3", cover: baseURL + "xav.jpg" },
-            { title: "Love Hate", artist: "xaviersobased", src: baseURL + "lovehate.mp3", cover: baseURL + "xav2.jpg" },
-            { title: "Foamposite Interlude", artist: "smokedope2016", src: baseURL + "foamposite.mp3", cover: baseURL + "smokedope2016.jpg" },
-            { title: "Abysmal Depths Are Flooded", artist: "Xasthur", src: baseURL + "abysmaldepthsareflooded.mp3", cover: baseURL + "xasthur.jpg" },
-            { title: "Diamonds", artist: "Chris Travis", src: baseURL + "diamonds.mp3", cover: baseURL + "christravis.jpg" },
-            { title: "Black Magic", artist: "Ethel Wulf", src: baseURL + "blackmagic.mp3", cover: baseURL + "ethel.jpg" },
-            { title: "4 Raws", artist: "EsDeeKid", src: baseURL + "4raws.mp3", cover: baseURL + "esdee.jpg" },
-            { title: "Fever", artist: "fakemink/buckshot", src: baseURL + "fever.mp3", cover: baseURL + "buckshot.jpg" },
-            { title: "Stalks", artist: "Ghost Mountain", src: baseURL + "stalks.mp3", cover: baseURL + "ghostmountain.jpg" },
-            { title: "MIA", artist: "feng", src: baseURL + "mia.mp3", cover: baseURL + "feng.jpg" },
-            { title: "head in the ceiling fan", artist: "Title Fight", src: baseURL + "titlefight.mp3", cover: baseURL + "title-fih.jpg" },
-            { title: "Turn Me Loose", artist: "limpbizkit/eminem", src: baseURL + "turnmeloose.mp3", cover: baseURL + "limp.jpg" },
-            { title: "black beetles", artist: "esdeekid", src: baseURL + "bbr.mp3", cover: baseURL + "esdee2.jpg" },
-            { title: "apathy", artist: "esdeekid", src: baseURL + "apathy.mp3", cover: baseURL + "esdee3.jpg" },
-            { title: "bring it back", artist: "chris travis", src: baseURL + "bib.mp3", cover: baseURL + "chris2.jpg" },
-            { title: "die til you live", artist: "fakemink", src: baseURL + "dtyl.mp3", cover: baseURL + "fakemink5.jpg" },
-            { title: "worthit", artist: "xaviersobased", src: baseURL + "worthit.mp3", cover: baseURL + "81853ABB-FB87-4A20-9303-9624B777245B.jpeg" },
-            { title: "in da party", artist: "smokedope2016", src: baseURL + "indaparty.mp3", cover: baseURL + "smokedope4.jpg" },
-            { title: "say it aint dro", artist: "smokedope2016", src: baseURL + "dro.mp3", cover: baseURL + "smokedope3.jpg" },
-            { title: "blunts on my mind", artist: "ethel wulf", src: baseURL + "bluntsomm.mp3", cover: baseURL + "ethel2.jpg" },
-            { title: "luper", artist: "earl sweatshirt", src: baseURL + "luper.mp3", cover: baseURL + "earl.jpg" },
-            { title: "frat", artist: "smokedope2016", src: baseURL + "frat.mp3", cover: baseURL + "smokedope2.jpg" },
-            { title: "hit the home", artist: "the hand of peace", src: baseURL + "clock.mp3", cover: baseURL + "handofpeace.jpg" },
-            { title: "blow me", artist: "fakemink", src: baseURL + "blowme.mp3", cover: baseURL + "fakeminkk.jpg" },
-            { title: "minerva", artist: "deftones", src: baseURL + "minerva.mp3", cover: baseURL + "deftones.jpg" },
-            { title: "hold on", artist: "limpbizkit", src: baseURL + "holdon.mp3", cover: baseURL + "limpbizkit.jpg" },
-            { title: "my way", artist: "limpbizkit", src: baseURL + "myway.mp3", cover: baseURL + "limpbizkit.jpg" },
-            { title: "new update soon", artist: "-nl", src: baseURL + "xtal.mp3", cover: baseURL + "aphextwin.jpg" }
+            const type = (c==='/ban') ? 'ban' : 'mute';
+            db.ref('moderation/'+tid).set({ type, until: Date.now()+ms, reason:"Admin" });
+            db.ref('messages').push({ username:"System", text:`*** ${tgt} was ${type==='ban'?'banned':'muted'} for ${dur} ***`, timestamp:firebase.database.ServerValue.TIMESTAMP });
+        }
+
+        function initMods() {
+            db.ref('moderation/'+myUid).on('value', s => {
+                const d = s.val();
+                if(d && d.until > Date.now()) {
+                    els.input.disabled = els.upBtn.disabled = true;
+                    els.input.placeholder = `You are ${d.type}ed until ${new Date(d.until).toLocaleTimeString()}`;
+                } else {
+                    els.input.disabled = els.upBtn.disabled = false;
+                    els.input.placeholder = "Type a message...";
+                }
+            });
+        }
+
+        function initNotifs() {
+            db.ref('notifications/'+myName).on('child_added', s => {
+                const n = s.val();
+                if(n) {
+                    const d = document.createElement('div'); d.className='message';
+                    d.innerHTML = `<span class="msg-time">[ALERT]</span> <span class="msg-notification">New PM from ${n.from}</span>`;
+                    d.onclick = () => { if(confirm("Go to PMs?")) window.location.href=`pm.html?with=${n.from}`; };
+                    els.log.appendChild(d); els.log.scrollTop = els.log.scrollHeight;
+                    db.ref(`notifications/${myName}/${s.key}`).remove();
+                }
+            });
+        }
+        window.delMsg = (id) => { if(confirm("Delete?")) db.ref('messages/'+id).remove(); };
+        els.send.onclick = sendMsg;
+        els.input.onkeypress = (e) => { if(e.key==='Enter') sendMsg(); };
+
+        // --- MUSIC PLAYER ---
+        const B = "https://ewsmusic1.netlify.app/";
+        const pl = [
+            {t:"Xtal",a:"Aphex Twin",s:"xtal.mp3",c:"aphex.jpg"}, {t:"I Don't Wanna Be Me",a:"Type O Negative",s:"idontwannabeme.mp3",c:"ton.jpg"},
+            {t:"Life Is Killing Me",a:"Type O Negative",s:"lifeiskilling.mp3",c:"ton.jpg"}, {t:"Exit Music",a:"Radiohead",s:"exitmusic.mp3",c:"radiohead.jpg"},
+            {t:"Alternative Outro",a:"LUCKI",s:"alternativeoutro.mp3",c:"lucki.jpg"}, {t:"Bite My Lip",a:"fakemink",s:"bitemylip.mp3",c:"fakemink.jpg"},
+            {t:"Ambilux",a:"fakemink",s:"ambilux.mp3",c:"fakemink3.jpg"}, {t:"I'm Like Why",a:"xaviersobased",s:"imlikewhy.mp3",c:"xav.jpg"},
+            {t:"Love Hate",a:"xaviersobased",s:"lovehate.mp3",c:"xav2.jpg"}, {t:"Foamposite",a:"smokedope2016",s:"foamposite.mp3",c:"smokedope2016.jpg"},
+            {t:"Abysmal Depths",a:"Xasthur",s:"abysmaldepthsareflooded.mp3",c:"xasthur.jpg"}, {t:"Diamonds",a:"Chris Travis",s:"diamonds.mp3",c:"christravis.jpg"},
+            {t:"Black Magic",a:"Ethel Wulf",s:"blackmagic.mp3",c:"ethel.jpg"}, {t:"4 Raws",a:"EsDeeKid",s:"4raws.mp3",c:"esdee.jpg"},
+            {t:"Fever",a:"fakemink",s:"fever.mp3",c:"buckshot.jpg"}, {t:"Stalks",a:"Ghost Mountain",s:"stalks.mp3",c:"ghostmountain.jpg"},
+            {t:"MIA",a:"feng",s:"mia.mp3",c:"feng.jpg"}, {t:"Ceiling Fan",a:"Title Fight",s:"titlefight.mp3",c:"title-fih.jpg"},
+            {t:"Turn Me Loose",a:"LB/Eminem",s:"turnmeloose.mp3",c:"limp.jpg"}, {t:"Black Beetles",a:"EsDeeKid",s:"bbr.mp3",c:"esdee2.jpg"},
+            {t:"Apathy",a:"EsDeeKid",s:"apathy.mp3",c:"esdee3.jpg"}, {t:"Bring it Back",a:"Chris Travis",s:"bib.mp3",c:"chris2.jpg"},
+            {t:"Die Til You Live",a:"fakemink",s:"dtyl.mp3",c:"fakemink5.jpg"}, {t:"Worth It",a:"xaviersobased",s:"worthit.mp3",c:"81853ABB-FB87-4A20-9303-9624B777245B.jpeg"},
+            {t:"In Da Party",a:"smokedope2016",s:"indaparty.mp3",c:"smokedope4.jpg"}, {t:"Say It Aint Dro",a:"smokedope2016",s:"dro.mp3",c:"smokedope3.jpg"},
+            {t:"Blunts On Mind",a:"Ethel Wulf",s:"bluntsomm.mp3",c:"ethel2.jpg"}, {t:"Luper",a:"Earl",s:"luper.mp3",c:"earl.jpg"},
+            {t:"Frat",a:"smokedope2016",s:"frat.mp3",c:"smokedope2.jpg"}, {t:"Hit The Home",a:"Peace",s:"clock.mp3",c:"handofpeace.jpg"},
+            {t:"Blow Me",a:"fakemink",s:"blowme.mp3",c:"fakeminkk.jpg"}, {t:"Minerva",a:"Deftones",s:"minerva.mp3",c:"deftones.jpg"},
+            {t:"Hold On",a:"Limp Bizkit",s:"holdon.mp3",c:"limpbizkit.jpg"}, {t:"My Way",a:"Limp Bizkit",s:"myway.mp3",c:"limpbizkit.jpg"}
         ];
         
-        const audioPlayer = document.getElementById('audio-player');
-        const miniTitle = document.getElementById('mini-track-info');
-        const miniPlayBtn = document.getElementById('mini-play');
-        const playerCoverArt = document.getElementById('player-cover-art');
-        let currentSongIndex = 0;
+        const audio = $('audio-player'), mTit = $('mini-track-info'), mPlay = $('mini-play'), mArt = $('player-cover-art');
+        let cIdx = 0;
 
-        function loadMiniSong(index) {
-            const song = playlist[index];
-            audioPlayer.src = song.src;
-            miniTitle.textContent = song.title;
-            if (playerCoverArt) {
-                playerCoverArt.src = song.cover;
-            }
+        function loadSong(i) {
+            const s = pl[i]; audio.src = B + s.s; mTit.textContent = s.t; mArt.src = B + s.c;
         }
-        
-        loadMiniSong(0);
+        loadSong(0);
 
-        document.getElementById('mini-play').addEventListener('click', () => {
-            if(audioPlayer.paused) {
-                if(!audioPlayer.src) loadMiniSong(currentSongIndex);
-                audioPlayer.play();
-                miniPlayBtn.textContent = "||";
-            } else {
-                audioPlayer.pause();
-                miniPlayBtn.textContent = ">";
-            }
-        });
-
-        document.getElementById('mini-next').addEventListener('click', () => {
-            currentSongIndex = (currentSongIndex + 1) % playlist.length;
-            loadMiniSong(currentSongIndex);
-            audioPlayer.play();
-            miniPlayBtn.textContent = "||";
-        });
-
-        document.getElementById('mini-prev').addEventListener('click', () => {
-            currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
-            loadMiniSong(currentSongIndex);
-            audioPlayer.play();
-            miniPlayBtn.textContent = "||";
-        });
-
+        mPlay.onclick = () => { if(audio.paused){ if(!audio.src) loadSong(cIdx); audio.play(); mPlay.textContent="||"; } else { audio.pause(); mPlay.textContent=">"; } };
+        $('mini-next').onclick = () => { cIdx=(cIdx+1)%pl.length; loadSong(cIdx); audio.play(); mPlay.textContent="||"; };
+        $('mini-prev').onclick = () => { cIdx=(cIdx-1+pl.length)%pl.length; loadSong(cIdx); audio.play(); mPlay.textContent="||"; };
     </script>
 </body>
 </html>
