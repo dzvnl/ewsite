@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>canvas</title>
-    
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -139,9 +138,22 @@
             display: flex;
             align-items: center;
         }
+                /* --- SIDEBAR UPDATES --- */
         .user-list li::before {
-            content: ""; display: inline-block; width: 6px; height: 6px;
-            background-color: #444; margin-right: 6px; border-radius: 50%;
+            content: ""; 
+            display: inline-block; 
+            width: 8px; 
+            height: 8px;
+            background-color: #444; /* Grey dot for OFFLINE */
+            margin-right: 8px; 
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+        
+        /* THE GREEN DOT */
+        .user-list li.online::before { 
+            background-color: #2ecc71; /* Bright Green */
+            box-shadow: 0 0 6px #2ecc71; /* Green Glow */
         }
         .user-list li.online::before { background-color: #fff; box-shadow: 0 0 4px #fff; }
         
