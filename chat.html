@@ -364,6 +364,7 @@
         });
 
         // --- 5. PRESENCE & SIDEBAR LINKS ---
+                // --- 5. PRESENCE & SIDEBAR LINKS (UPDATED) ---
         function initPresence() {
             const userStatusRef = db.ref('/status/' + myUid);
             const isOffline = { state: 'offline', last_changed: firebase.database.ServerValue.TIMESTAMP, username: myUsername };
@@ -379,37 +380,62 @@
             db.ref('/status').on('value', (snapshot) => {
                 userListEl.innerHTML = ''; 
                 onlineUsers = {};
-                let count = 0;
+                let onlineCount = 0;
+                let allUsers = [];
                 
+                // 1. Collect all users first
                 snapshot.forEach((child) => {
                     const data = child.val();
                     const uid = child.key;
-                    onlineUsers[uid] = data.username;
-
-                    if (data.state === 'online') {
-                        count++;
-                        const li = document.createElement('li');
-                        li.className = 'online';
-                        
-                        // NEW: Create Link to Profile
-                        const link = document.createElement('a');
-                        
-                        if (data.username === myUsername) {
-                            link.textContent = data.username + " (You)";
-                            link.className = "user-link is-me";
-                            link.href = "#"; // Disable link to self
-                        } else {
-                            link.textContent = data.username;
-                            link.className = "user-link";
-                            // Sends user to profile.html with query param
-                            link.href = `profile.html?user=${data.username}`; 
-                        }
-
-                        li.appendChild(link);
-                        userListEl.appendChild(li);
+                    
+                    // Add to local online tracking if they are actually online
+                    if(data.state === 'online') {
+                        onlineUsers[uid] = data.username;
+                        onlineCount++;
                     }
+
+                    // Push to array for sorting/rendering
+                    allUsers.push({ uid: uid, ...data });
                 });
-                userCountEl.textContent = `Users: ${count}`;
+
+                // 2. Sort: Online users first, then alphabetical by name
+                allUsers.sort((a, b) => {
+                    if (a.state === b.state) {
+                        return (a.username || "").toLowerCase().localeCompare((b.username || "").toLowerCase());
+                    }
+                    return a.state === 'online' ? -1 : 1;
+                });
+
+                // 3. Render the list
+                allUsers.forEach((data) => {
+                    const li = document.createElement('li');
+                    
+                    // If online, add the class that triggers the Green Dot
+                    if (data.state === 'online') {
+                        li.className = 'online';
+                    } else {
+                        li.className = 'offline'; // Grey dot
+                    }
+                    
+                    // Create Link
+                    const link = document.createElement('a');
+                    
+                    if (data.username === myUsername) {
+                        link.textContent = data.username + " (You)";
+                        link.className = "user-link is-me";
+                        link.href = "#"; 
+                    } else {
+                        link.textContent = data.username;
+                        link.className = "user-link";
+                        link.href = `profile.html?user=${data.username}`; 
+                    }
+
+                    li.appendChild(link);
+                    userListEl.appendChild(li);
+                });
+
+                // Update counter
+                userCountEl.textContent = `Online: ${onlineCount} / Total: ${allUsers.length}`;
             });
         }
 
