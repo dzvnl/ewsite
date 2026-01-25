@@ -78,7 +78,7 @@
         </div>
         <div class="chat-wrapper">
             <main class="chat-main">
-                <div class="chat-header-bar"><span class="filler-pattern">[>::<] [>::<] [>::<]</span><span id="user-count">Online: 0</span></div>
+                <div class="chat-header-bar"><span class="filler-pattern">[>::<] [>::<] [>::<]</span><span id="user-count">online: 0</span></div>
                 <div class="chat-log" id="chat-log"><div class="message"><span class="msg-time">[SYSTEM]</span> <span class="msg-system">connecting...</span></div></div>
                 <div class="chat-input-area">
                     <input type="file" id="media-input" accept="image/*,video/*" style="display: none;">
@@ -88,7 +88,7 @@
                 </div>
             </main>
             <aside class="chat-sidebar">
-                <div class="chat-header-bar">Users</div>
+                <div class="chat-header-bar">users</div>
                 <div class="sidebar-search"><input type="text" id="user-search" class="search-input" placeholder="Search..."></div>
                 <ul class="user-list" id="user-list"></ul>
                 <div class="mini-player">
@@ -198,7 +198,7 @@
 
             els.list.innerHTML = '';
             els.list.appendChild(frag);
-            els.count.textContent = `Online: ${onlineCount}`;
+            els.count.textContent = `online: ${onlineCount}`;
         }
 
         els.search.addEventListener('input', updateUserList);
