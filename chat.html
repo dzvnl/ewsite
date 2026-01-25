@@ -132,19 +132,21 @@
             overflow-y: auto;
             flex: 1; 
         }
+
         .user-list li {
             padding: 2px 0;
             color: #888;
             display: flex;
             align-items: center;
         }
-                /* --- SIDEBAR UPDATES --- */
+
+        /* --- SIDEBAR DOTS --- */
         .user-list li::before {
             content: ""; 
             display: inline-block; 
             width: 8px; 
             height: 8px;
-            background-color: #444; /* Grey dot for OFFLINE */
+            background-color: #444; /* Grey for OFFLINE */
             margin-right: 8px; 
             border-radius: 50%;
             transition: background-color 0.3s ease;
@@ -155,14 +157,13 @@
             background-color: #2ecc71; /* Bright Green */
             box-shadow: 0 0 6px #2ecc71; /* Green Glow */
         }
-        .user-list li.online::before { background-color: #fff; box-shadow: 0 0 4px #fff; }
         
         /* Links in sidebar */
         .user-link { color: #bbb; text-decoration: none; cursor: pointer; }
         .user-link:hover { color: #fff; text-decoration: underline; }
         .user-link.is-me { color: #fff; font-weight: bold; pointer-events: none; }
 
-        /* --- MINI MUSIC PLAYER (Sidebar) --- */
+        /* --- MINI MUSIC PLAYER --- */
         .mini-player {
             border-top: 1px solid #333;
             background: #000;
@@ -222,7 +223,7 @@
             color: #fff;
             border: 1px solid #444;
             padding: 0 10px;
-            height: 26px; /* Match input height roughly */
+            height: 26px;
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
@@ -356,15 +357,14 @@
                 initPresence();
                 initChat();
                 initModerationListener();
-                initNotificationListener(); // NEW: Listen for PMs
+                initNotificationListener(); 
                 
                 chatLog.innerHTML = '';
                 addLogMessage("System", "welcome", false, true);
             }
         });
 
-        // --- 5. PRESENCE & SIDEBAR LINKS ---
-                // --- 5. PRESENCE & SIDEBAR LINKS (UPDATED) ---
+        // --- 5. PRESENCE & SIDEBAR LINKS (UPDATED) ---
         function initPresence() {
             const userStatusRef = db.ref('/status/' + myUid);
             const isOffline = { state: 'offline', last_changed: firebase.database.ServerValue.TIMESTAMP, username: myUsername };
@@ -383,22 +383,18 @@
                 let onlineCount = 0;
                 let allUsers = [];
                 
-                // 1. Collect all users first
                 snapshot.forEach((child) => {
                     const data = child.val();
                     const uid = child.key;
                     
-                    // Add to local online tracking if they are actually online
                     if(data.state === 'online') {
                         onlineUsers[uid] = data.username;
                         onlineCount++;
                     }
-
-                    // Push to array for sorting/rendering
                     allUsers.push({ uid: uid, ...data });
                 });
 
-                // 2. Sort: Online users first, then alphabetical by name
+                // Sort: Online first, then alphabetical
                 allUsers.sort((a, b) => {
                     if (a.state === b.state) {
                         return (a.username || "").toLowerCase().localeCompare((b.username || "").toLowerCase());
@@ -406,26 +402,17 @@
                     return a.state === 'online' ? -1 : 1;
                 });
 
-                // 3. Render the list
                 allUsers.forEach((data) => {
                     const li = document.createElement('li');
+                    if (data.state === 'online') li.className = 'online';
                     
-                    // If online, add the class that triggers the Green Dot
-                    if (data.state === 'online') {
-                        li.className = 'online';
-                    } else {
-                        li.className = 'offline'; // Grey dot
-                    }
-                    
-                    // Create Link
                     const link = document.createElement('a');
+                    link.textContent = data.username; // Removed (You)
                     
                     if (data.username === myUsername) {
-                        link.textContent = data.username + " (You)";
                         link.className = "user-link is-me";
                         link.href = "#"; 
                     } else {
-                        link.textContent = data.username;
                         link.className = "user-link";
                         link.href = `profile.html?user=${data.username}`; 
                     }
@@ -434,7 +421,6 @@
                     userListEl.appendChild(li);
                 });
 
-                // Update counter
                 userCountEl.textContent = `Online: ${onlineCount} / Total: ${allUsers.length}`;
             });
         }
@@ -444,9 +430,7 @@
             const messagesRef = db.ref('messages');
             messagesRef.limitToLast(100).on('child_added', (snapshot) => {
                 const data = snapshot.val();
-                if (!data) return;
-                // Basic cleanup for old messages if needed, here just checking basic validity
-                if (!data.timestamp) return;
+                if (!data || !data.timestamp) return;
                 
                 addLogMessage(
                     data.username, 
@@ -455,8 +439,8 @@
                     false, 
                     data.timestamp, 
                     snapshot.key,
-                    data.mediaType, // New: Image or Video?
-                    data.mediaData  // New: Base64 string
+                    data.mediaType, 
+                    data.mediaData  
                 );
             });
             messagesRef.on('child_removed', (snapshot) => {
@@ -469,7 +453,7 @@
             const text = input.value.trim();
             if (text === "") return;
 
-            if (text.startsWith('/') && admins.includes(myUsername)) {
+            if (text.startsWith('/') && ADMINS.includes(myUsername)) {
                 handleCommand(text);
                 input.value = '';
                 return;
@@ -492,7 +476,6 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            // Size limit check (2MB) because Realtime DB handles large strings poorly
             if (file.size > 2097152) {
                 alert("File too large. Max 2MB.");
                 mediaInput.value = "";
@@ -506,14 +489,14 @@
 
                 db.ref('messages').push({
                     username: myUsername,
-                    text: "", // Empty text for media messages
+                    text: "", 
                     mediaType: type,
                     mediaData: base64,
                     timestamp: firebase.database.ServerValue.TIMESTAMP
                 });
             };
             reader.readAsDataURL(file);
-            mediaInput.value = ""; // Reset
+            mediaInput.value = ""; 
         });
 
 
@@ -563,7 +546,7 @@
                     input.disabled = true;
                     input.value = "";
                     input.placeholder = `You are ${data.type}ed until ${new Date(data.until).toLocaleTimeString()}`;
-                    uploadTrigger.disabled = true; // Disable uploads too
+                    uploadTrigger.disabled = true; 
                 } else {
                     input.disabled = false;
                     uploadTrigger.disabled = false;
@@ -572,20 +555,15 @@
             });
         }
 
-        // --- 9. NOTIFICATION LISTENER (New) ---
+        // --- 9. NOTIFICATION LISTENER ---
         function initNotificationListener() {
-            // Listens for 'notifications/myUsername'
-            // Used when someone sends a PM from profile.html
             db.ref('notifications/' + myUsername).on('child_added', (snapshot) => {
                 const notif = snapshot.val();
                 if(notif) {
-                    // Visual Alert in Chat Log
                     const div = document.createElement('div');
                     div.className = 'message';
                     div.innerHTML = `<span class="msg-time">[ALERT]</span> <span class="msg-notification">New PM from ${notif.from}</span>`;
                     div.onclick = function() {
-                        // Logic to open PM chatroom would go here
-                        // For now, redirect to profile or a pm.html
                         if(confirm(`Go to PMs with ${notif.from}?`)) {
                              window.location.href = `pm.html?with=${notif.from}`;
                         }
@@ -593,8 +571,6 @@
                     div.style.cursor = "pointer";
                     chatLog.appendChild(div);
                     chatLog.scrollTop = chatLog.scrollHeight;
-                    
-                    // Cleanup notification so it doesn't show on reload
                     db.ref(`notifications/${myUsername}/${snapshot.key}`).remove();
                 }
             });
@@ -630,15 +606,9 @@
                 deleteHtml = `<span class="delete-btn" onclick="deleteMessage('${msgId}')">[x]</span>`;
             }
 
-            // Construct Content
             let contentHtml = "";
-            
-            // Text content
-            if (text) {
-                contentHtml += `<span class="msg-text">${text}</span>`;
-            }
+            if (text) contentHtml += `<span class="msg-text">${text}</span>`;
 
-            // Media content
             if (mediaType && mediaData) {
                 if (mediaType === 'image') {
                     contentHtml += `<img src="${mediaData}" class="chat-media" alt="image">`;
