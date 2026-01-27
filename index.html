@@ -158,7 +158,7 @@
 
     <div id="banned-screen">
         <div>not the time.</div>
-        <div style="font-size:12px; color:#555; margin-top:10px;">updating...</div>
+        <div style="font-size:12px; color:#555; margin-top:10px;">restricted access</div>
         
         <input type="password" id="unlock-input" placeholder="password">
     </div>
@@ -240,7 +240,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // --- YOUR CONFIG (Pasted) ---
+        // --- YOUR CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",
             authDomain: "ewsitechat.firebaseapp.com",
@@ -262,10 +262,10 @@
         const unlockInput = document.getElementById('unlock-input');
         unlockInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                if (unlockInput.value === "root123") { // CHANGE THIS PASSWORD IF YOU WANT
+                if (unlockInput.value === "root123") { // PASSWORD
                     localStorage.setItem('admin_bypass', 'true');
-                    alert("System Override Active. Welcome back, root.");
-                    location.reload(); // Reload to apply bypass
+                    alert("Override Active. Reloading...");
+                    location.reload(); 
                 } else {
                     alert("Invalid Key.");
                 }
@@ -373,10 +373,10 @@
                 if(!isAuthenticated) {
                     if(val === "root123") {
                         isAuthenticated = true;
-                        localStorage.setItem('admin_bypass', 'true'); // Save bypass for refresh
+                        localStorage.setItem('admin_bypass', 'true'); // AUTO BYPASS ON LOGIN
                         document.getElementById('auth-check').style.display = 'none';
                         adminInput.placeholder = "command...";
-                        adminLog.textContent = "Access Granted.\n" + adminLog.textContent;
+                        adminLog.textContent = "Access Granted. Bypass Active.\n" + adminLog.textContent;
                     } else {
                         adminLog.textContent = "Wrong password.\n" + adminLog.textContent;
                     }
@@ -388,15 +388,22 @@
                 const args = parts.slice(1).join(' ');
 
                 switch(cmd) {
+                    // GLOBAL BANS
                     case '/ban':
                         if(args === 'off') {
                             update(ref(db, 'bans'), { global: false });
-                            adminLog.textContent = "Site Unlocked.\n";
+                            adminLog.textContent = "Site Unlocked (Global).\n";
                         } else {
                             update(ref(db, 'bans'), { global: true });
                             adminLog.textContent = "Site LOCKED (Global).\n";
                         }
                         break;
+                    case '/unlock': // Alias for unbanning global
+                        update(ref(db, 'bans'), { global: false });
+                        adminLog.textContent = "Site Unlocked.\n";
+                        break;
+                    
+                    // SITE UPDATES
                     case '/announcement': set(ref(db, 'site/news'), args); adminLog.textContent = "News updated.\n"; break;
                     case '/notify': 
                         const target = parts[1];
@@ -405,24 +412,46 @@
                         adminLog.textContent = `Notified ${target}.\n`;
                         break;
                     case '/splash': set(ref(db, 'site/splash'), { text: args, timestamp: Date.now() }); adminLog.textContent = "Splash overridden for 10m.\n"; break;
+
+                    // FEATURE BANS
                     case '/chatban': update(ref(db, `bans/${args}`), { chat: true }); adminLog.textContent = `${args} chat banned.\n`; break;
                     case '/listban': update(ref(db, `bans/${args}`), { list: true }); adminLog.textContent = `${args} list banned.\n`; break;
                     case '/watchban': update(ref(db, `bans/${args}`), { watch: true }); adminLog.textContent = `${args} watch banned.\n`; break;
-                    case '/unban': set(ref(db, `bans/${args}`), null); adminLog.textContent = `Unbanned ${args}.\n`; break;
-                    case '/help': adminLog.textContent = "Commands: /ban [off], /announcement, /notify, /splash, /chatban, /unban\n"; break;
+                    
+                    // UN-BAN COMMANDS (SPECIFIC)
+                    case '/unchatban': 
+                        update(ref(db, `bans/${args}`), { chat: null }); 
+                        adminLog.textContent = `Removed CHAT ban for ${args}.\n`; 
+                        break;
+                    case '/unlistban': 
+                        update(ref(db, `bans/${args}`), { list: null }); 
+                        adminLog.textContent = `Removed LIST ban for ${args}.\n`; 
+                        break;
+                    case '/unwatchban': 
+                        update(ref(db, `bans/${args}`), { watch: null }); 
+                        adminLog.textContent = `Removed WATCH ban for ${args}.\n`; 
+                        break;
+                    
+                    // NUKE BAN (Removes all bans for user)
+                    case '/unban': 
+                        set(ref(db, `bans/${args}`), null); 
+                        adminLog.textContent = `Completely unbanned ${args}.\n`; 
+                        break;
+
+                    case '/help': adminLog.textContent = "CMDS: /ban [off], /unlock, /chatban, /unchatban, /listban, /unlistban, /watchban, /unwatchban, /unban\n"; break;
                     default: adminLog.textContent = "Unknown command.\n";
                 }
             }
         });
 
-        // Link Handler
+        // Link Handler (WITH ADMIN BYPASS)
         function checkLinkBan(e, type) {
-            // Bypass logic applies to links too if you want, but usually bans are specific
+            // Check if user is banned
             if(window.currentUserBans && window.currentUserBans[type] === true) {
-                // Admins can bypass link bans too if they have the token
+                // Check if user is ADMIN (Bypassed)
                 if (localStorage.getItem('admin_bypass') !== 'true') {
                     e.preventDefault();
-                    alert("ACCESS DENIED: Banned by admin.");
+                    alert("ACCESS DENIED: You are banned from this feature.");
                 }
             }
         }
