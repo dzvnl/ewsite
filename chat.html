@@ -59,7 +59,6 @@
         /* --- HYBRID PLAYER STYLES --- */
         .mini-player { border-top: 1px solid #333; background: #000; padding: 8px; text-align: center; flex-shrink: 0; }
         
-        /* The container handles swapping the IMG for the YT Iframe */
         .player-visual-container { 
             width: 100px; height: 80px; margin: 0 auto 5px auto; 
             background: #111; border: 1px solid #444; position: relative; overflow: hidden; 
@@ -68,18 +67,21 @@
         #yt-player-placeholder { width: 100%; height: 100%; position: absolute; top:0; left:0; z-index: 1; }
 
         .mini-track-info { font-size: 10px; color: #fff; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .mini-controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 5px; }
+        .mini-controls { display: flex; justify-content: center; gap: 5px; margin-bottom: 5px; }
         .mini-btn { background: #333; border: 1px solid #444; color: #fff; width: 30px; height: 25px; cursor: pointer; }
         
-        /* Custom Input Area */
-        .custom-music-controls { padding: 10px; border-top: 1px solid #333; background: #000; }
+        /* Custom Input Area - HIDDEN BY DEFAULT */
+        .custom-music-controls { 
+            display: none; /* <--- HIDDEN BY DEFAULT */
+            padding: 10px; border-top: 1px solid #333; background: #000; 
+        }
         .custom-input { width: 100%; background: #222; border: 1px solid #444; color: #fff; margin-bottom: 3px; font-size: 10px; padding: 3px; }
         
         /* Mobile */
         @media (max-width: 768px) {
             .chat-wrapper { flex-direction: column; }
             .chat-sidebar { width: 100%; height: 40%; border-left: none; border-top: 1px solid #333; }
-            .player-visual-container { display: none; } /* Hide video on mobile to save space */
+            .player-visual-container { display: none; } 
         }
         ::-webkit-scrollbar { width: 6px; } 
         ::-webkit-scrollbar-track { background: #111; } 
@@ -126,10 +128,11 @@
                         <button id="mini-prev" class="mini-btn">&lt;</button>
                         <button id="mini-play" class="mini-btn">&gt;</button>
                         <button id="mini-next" class="mini-btn">&gt;&gt;</button>
+                        <button id="toggle-custom-btn" class="mini-btn" style="color: #4ade80;" title="Add Song">+</button>
                     </div>
                 </div>
 
-                <div class="custom-music-controls">
+                <div class="custom-music-controls" id="custom-music-box">
                     <div style="color: #666; font-size: 10px; margin-bottom: 5px;">ADD SONG (MP3 OR YOUTUBE)</div>
                     <input type="text" id="custom-title" class="custom-input" placeholder="Song Title">
                     <input type="text" id="custom-url" class="custom-input" placeholder="URL (mp3 or youtube link)">
@@ -169,7 +172,7 @@
             }
         });
 
-        // --- CHAT & PRESENCE LOGIC (Unchanged) ---
+        // --- CHAT & PRESENCE LOGIC ---
         function initPresence() {
             const ref = db.ref('/status/' + myUid);
             const online = { state:'online', last_changed: firebase.database.ServerValue.TIMESTAMP };
@@ -267,12 +270,11 @@
         els.send.onclick = sendMsg; els.input.onkeypress = (e) => { if(e.key==='Enter') sendMsg(); };
 
         /* =========================================
-           HYBRID PLAYER LOGIC (MP3 + YOUTUBE) 
+           HYBRID PLAYER LOGIC
            ========================================= */
         let ytPlayer = null;
         let isYoutubeReady = false;
         
-        // Load YouTube API
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         const firstScriptTag = document.getElementsByTagName('script')[0];
@@ -282,20 +284,12 @@
             ytPlayer = new YT.Player('yt-player-placeholder', {
                 height: '100%', width: '100%',
                 playerVars: { 'playsinline': 1, 'controls': 0, 'disablekb': 1 },
-                events: {
-                    'onReady': () => { isYoutubeReady = true; },
-                    'onStateChange': onPlayerStateChange
-                }
+                events: { 'onReady': () => { isYoutubeReady = true; }, 'onStateChange': onPlayerStateChange }
             });
         };
 
-        function onPlayerStateChange(event) {
-            // 0 = Ended
-            if (event.data === YT.PlayerState.ENDED) {
-                // Play next song
-                playNext();
-            }
-        }
+        function onPlayerStateChange(event) { if (event.data === YT.PlayerState.ENDED) playNext(); }
+        function playNext() { $('mini-next').click(); }
 
         function initMusic() {
             const BASE_MUSIC_URL = "https://ewsmusic1.netlify.app/";
@@ -310,7 +304,7 @@
 
             let activePlaylist = [...defaultPlaylist];
             let cIdx = 0;
-            let currentMode = 'mp3'; // 'mp3' or 'youtube'
+            let currentMode = 'mp3';
 
             const audio = $('audio-player');
             const mTit = $('mini-track-info');
@@ -320,22 +314,25 @@
             const inpUrl = $('custom-url');
             const btnAdd = $('add-song-btn');
             const msgCustom = $('custom-msg');
+            const btnToggle = $('toggle-custom-btn');
+            const divCustom = $('custom-music-box');
 
-            // --- HELPER: DETECT URL TYPE ---
+            // --- TOGGLE HANDLER ---
+            btnToggle.onclick = () => {
+                const isHidden = (window.getComputedStyle(divCustom).display === 'none');
+                divCustom.style.display = isHidden ? 'block' : 'none';
+                // Auto scroll into view on mobile
+                if(isHidden) divCustom.scrollIntoView({ behavior: 'smooth' });
+            };
+
             function getLinkData(url) {
-                // Check YouTube
                 const ytReg = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
                 const ytMatch = url.match(ytReg);
-                
-                // Check Playlist
                 const listReg = /[?&]list=([^#\&\?]+)/;
                 const listMatch = url.match(listReg);
-
                 if (ytMatch && ytMatch[2].length === 11) {
                     return { type: 'youtube', id: ytMatch[2], list: listMatch ? listMatch[1] : null };
                 } else {
-                    // Assume MP3 if not YouTube
-                    // Handle relative vs absolute
                     const finalUrl = url.startsWith('http') ? url : BASE_MUSIC_URL + url;
                     return { type: 'mp3', src: finalUrl };
                 }
@@ -354,81 +351,53 @@
                 if(s.isCustom) mTit.style.color = "#4ade80"; else mTit.style.color = "#fff";
 
                 if (currentMode === 'mp3') {
-                    // HIDE YOUTUBE, SHOW ART
                     if(ytPlayer && typeof ytPlayer.stopVideo === 'function') ytPlayer.stopVideo();
                     $('yt-player-placeholder').style.zIndex = "-1"; 
-                    mArt.style.zIndex = "2"; 
-                    mArt.style.display = "block";
-                    
+                    mArt.style.zIndex = "2"; mArt.style.display = "block";
                     audio.src = linkData.src;
                     mArt.src = s.c ? (s.c.startsWith('http') ? s.c : BASE_MUSIC_URL + s.c) : "https://placehold.co/60x60/000/fff?text=MP3";
-                
                 } else if (currentMode === 'youtube') {
-                    // STOP AUDIO, SHOW YOUTUBE
                     audio.pause();
                     mArt.style.display = "none";
-                    $('yt-player-placeholder').style.zIndex = "2"; // Bring to front
-
+                    $('yt-player-placeholder').style.zIndex = "2";
                     if (isYoutubeReady) {
-                        if (linkData.list) {
-                            // If it's a playlist, load it
-                            ytPlayer.loadPlaylist({ list: linkData.list, listType: 'playlist', index: 0 });
-                        } else {
-                            ytPlayer.loadVideoById(linkData.id);
-                        }
+                        if (linkData.list) ytPlayer.loadPlaylist({ list: linkData.list, listType: 'playlist', index: 0 });
+                        else ytPlayer.loadVideoById(linkData.id);
                     }
                 }
-                
-                // Update Play Button
                 mPlay.textContent = "||"; 
             }
 
-            function playNext() { loadSong(cIdx + 1); if(currentMode === 'mp3') audio.play(); }
-            function playPrev() { loadSong(cIdx - 1); if(currentMode === 'mp3') audio.play(); }
-
-            // --- CONTROLS ---
             mPlay.onclick = () => {
                 if (currentMode === 'mp3') {
-                    if (audio.paused) {
-                        if(!audio.src) loadSong(cIdx);
-                        audio.play(); mPlay.textContent = "||";
-                    } else {
-                        audio.pause(); mPlay.textContent = ">";
-                    }
+                    if (audio.paused) { if(!audio.src) loadSong(cIdx); audio.play(); mPlay.textContent = "||"; }
+                    else { audio.pause(); mPlay.textContent = ">"; }
                 } else if (currentMode === 'youtube' && isYoutubeReady) {
                     const state = ytPlayer.getPlayerState();
-                    if (state === 1) { // Playing
-                        ytPlayer.pauseVideo(); mPlay.textContent = ">";
-                    } else {
-                        ytPlayer.playVideo(); mPlay.textContent = "||";
-                    }
+                    if (state === 1) { ytPlayer.pauseVideo(); mPlay.textContent = ">"; }
+                    else { ytPlayer.playVideo(); mPlay.textContent = "||"; }
                 }
             };
-            $('mini-next').onclick = playNext;
-            $('mini-prev').onclick = playPrev;
+            $('mini-next').onclick = () => { loadSong(cIdx + 1); if(currentMode === 'mp3') audio.play(); };
+            $('mini-prev').onclick = () => { loadSong(cIdx - 1); if(currentMode === 'mp3') audio.play(); };
             
-            audio.onended = playNext;
+            audio.onended = () => $('mini-next').click();
 
-            // --- USER PLAYLIST SYNC ---
             if (myUid) {
                 db.ref('users/' + myUid + '/playlist').on('value', (snapshot) => {
                     const data = snapshot.val();
-                    activePlaylist = [...defaultPlaylist]; // Reset
+                    activePlaylist = [...defaultPlaylist];
                     if (data) {
-                        const userSongs = Object.values(data).map(item => ({
-                            t: item.title, s: item.url, c: null, isCustom: true
-                        }));
+                        const userSongs = Object.values(data).map(item => ({ t: item.title, s: item.url, c: null, isCustom: true }));
                         activePlaylist = activePlaylist.concat(userSongs);
                     }
                 });
             }
 
-            // --- ADD SONG HANDLER ---
             btnAdd.onclick = () => {
                 const t = inpTitle.value.trim();
                 const u = inpUrl.value.trim();
                 if (!t || !u) return alert("Enter title and URL");
-                
                 db.ref('users/' + myUid + '/playlist').push({
                     title: t, url: u, addedAt: firebase.database.ServerValue.TIMESTAMP
                 }).then(() => {
@@ -438,9 +407,7 @@
                 });
             };
 
-            // Init
             loadSong(0);
-            // Don't auto-play on load to be polite
             if(currentMode==='mp3') audio.pause();
             if(currentMode==='youtube' && isYoutubeReady) ytPlayer.pauseVideo();
             mPlay.textContent = ">";
