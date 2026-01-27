@@ -180,10 +180,10 @@
         let myName = localStorage.getItem('username'), myUid = null;
         let allUsers = {}, onlineStatus = {};
 
-        // Force Username
-        while(!myName || !myName.trim()) {
-            myName = prompt("Enter a username to join:");
-            if(myName && myName.trim()) localStorage.setItem('username', myName);
+        // --- CHECK LOGIN STATUS ---
+        // If username is not present in storage, force redirect to register.html
+        if(!myName || !myName.trim()) {
+            window.location.href = "register.html";
         }
 
         // --- AUTH & INIT ---
