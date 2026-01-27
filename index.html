@@ -418,27 +418,35 @@
                     case '/listban': update(ref(db, `bans/${args}`), { list: true }); adminLog.textContent = `${args} list banned.\n`; break;
                     case '/watchban': update(ref(db, `bans/${args}`), { watch: true }); adminLog.textContent = `${args} watch banned.\n`; break;
                     
-                    // UN-BAN COMMANDS (SPECIFIC)
-                    case '/unchatban': 
-                        update(ref(db, `bans/${args}`), { chat: null }); 
-                        adminLog.textContent = `Removed CHAT ban for ${args}.\n`; 
-                        break;
-                    case '/unlistban': 
-                        update(ref(db, `bans/${args}`), { list: null }); 
-                        adminLog.textContent = `Removed LIST ban for ${args}.\n`; 
-                        break;
-                    case '/unwatchban': 
-                        update(ref(db, `bans/${args}`), { watch: null }); 
-                        adminLog.textContent = `Removed WATCH ban for ${args}.\n`; 
-                        break;
-                    
-                    // NUKE BAN (Removes all bans for user)
-                    case '/unban': 
-                        set(ref(db, `bans/${args}`), null); 
-                        adminLog.textContent = `Completely unbanned ${args}.\n`; 
+                    // NEW COMMAND: FULL BAN
+                    case '/fullban':
+                        update(ref(db, `bans/${args}`), {
+                            site: true,
+                            chat: true,
+                            list: true,
+                            watch: true
+                        });
+                        adminLog.textContent = `FULL BAN applied to ${args} (Site + Features).\n`;
                         break;
 
-                    case '/help': adminLog.textContent = "CMDS: /ban [off], /unlock, /chatban, /unchatban, /listban, /unlistban, /watchban, /unwatchban, /unban\n"; break;
+                    // NEW COMMAND: FULL UNBAN
+                    case '/fullunban':
+                        set(ref(db, `bans/${args}`), null);
+                        adminLog.textContent = `FULL UNBAN applied to ${args}. All restrictions removed.\n`;
+                        break;
+
+                    // SPECIFIC UNBANS
+                    case '/unchatban': update(ref(db, `bans/${args}`), { chat: null }); adminLog.textContent = `Removed CHAT ban for ${args}.\n`; break;
+                    case '/unlistban': update(ref(db, `bans/${args}`), { list: null }); adminLog.textContent = `Removed LIST ban for ${args}.\n`; break;
+                    case '/unwatchban': update(ref(db, `bans/${args}`), { watch: null }); adminLog.textContent = `Removed WATCH ban for ${args}.\n`; break;
+                    
+                    // STANDARD UNBAN (Alias for fullunban mostly)
+                    case '/unban': 
+                        set(ref(db, `bans/${args}`), null); 
+                        adminLog.textContent = `Unbanned ${args}.\n`; 
+                        break;
+
+                    case '/help': adminLog.textContent = "CMDS: /ban [off], /fullban, /fullunban, /chatban, /unchatban, /listban, /unlistban, /watchban, /unwatchban\n"; break;
                     default: adminLog.textContent = "Unknown command.\n";
                 }
             }
