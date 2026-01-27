@@ -24,6 +24,8 @@
         .top-links span { margin: 0 5px; color: #444; }
 
         .chat-wrapper { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+        
+        /* --- MAIN CHAT --- */
         .chat-main { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #333; background: #111; min-width: 0; }
         .chat-header-bar { background: #666; color: #fff; padding: 5px 10px; font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         .filler-pattern { letter-spacing: 2px; color: #ccc; font-family: monospace; }
@@ -46,17 +48,32 @@
         .action-btn, .send-btn { background: #333; color: #fff; border: 1px solid #444; height: 34px; font-weight: bold; cursor: pointer; padding: 0 15px; border-radius: 4px; }
 
         /* --- SIDEBAR --- */
-        .chat-sidebar { width: 200px; background: #111; display: flex; flex-direction: column; border-left: 1px solid #333; flex-shrink: 0; }
+        .chat-sidebar { 
+            width: 200px; 
+            background: #111; 
+            display: flex; 
+            flex-direction: column; 
+            border-left: 1px solid #333; 
+            flex-shrink: 0; 
+            overflow: hidden; /* Desktop: internal scrolling */
+        }
         .sidebar-search { padding: 5px; background: #000; border-bottom: 1px solid #333; }
         .search-input { width: 100%; background: #222; border: 1px solid #444; color: #fff; padding: 4px; font-size: 12px; }
-        .user-list { list-style: none; padding: 5px; overflow-y: auto; flex: 1; }
+        
+        .user-list { 
+            list-style: none; 
+            padding: 5px; 
+            overflow-y: auto; 
+            flex: 1; 
+            min-height: 50px;
+        }
         .user-list li { padding: 4px 0; color: #888; display: flex; align-items: center; }
         .user-list li.online::before { content: ""; display: inline-block; width: 8px; height: 8px; background: #2ecc71; margin-right: 8px; border-radius: 50%; box-shadow: 0 0 5px #2ecc71; }
         .user-list li.offline::before { content: ""; display: inline-block; width: 8px; height: 8px; background: #444; margin-right: 8px; border-radius: 50%; }
         .user-link { color: #bbb; cursor: pointer; } 
         .user-link:hover { color: #fff; }
 
-        /* --- HYBRID PLAYER STYLES --- */
+        /* --- PLAYER STYLES --- */
         .mini-player { border-top: 1px solid #333; background: #000; padding: 8px; text-align: center; flex-shrink: 0; }
         
         .player-visual-container { 
@@ -70,19 +87,41 @@
         .mini-controls { display: flex; justify-content: center; gap: 5px; margin-bottom: 5px; }
         .mini-btn { background: #333; border: 1px solid #444; color: #fff; width: 30px; height: 25px; cursor: pointer; }
         
-        /* Custom Input Area - HIDDEN BY DEFAULT */
+        /* CUSTOM MUSIC FORM (Hidden by default) */
         .custom-music-controls { 
-            display: none; /* <--- HIDDEN BY DEFAULT */
+            display: none; 
             padding: 10px; border-top: 1px solid #333; background: #000; 
+            flex-shrink: 0; 
         }
         .custom-input { width: 100%; background: #222; border: 1px solid #444; color: #fff; margin-bottom: 3px; font-size: 10px; padding: 3px; }
         
-        /* Mobile */
+        /* --- MOBILE FIXES --- */
         @media (max-width: 768px) {
             .chat-wrapper { flex-direction: column; }
-            .chat-sidebar { width: 100%; height: 40%; border-left: none; border-top: 1px solid #333; }
-            .player-visual-container { display: none; } 
+            
+            /* Chat takes 60% */
+            .chat-main { height: 60%; flex: none; }
+            
+            /* Sidebar takes rest, and SCROLLS AS A WHOLE BLOCK */
+            .chat-sidebar { 
+                width: 100%; 
+                flex: 1; 
+                border-left: none; 
+                border-top: 1px solid #333; 
+                overflow-y: auto; /* <--- CRITICAL FIX */
+                display: block;
+            }
+            
+            /* Limit user list so we can see player */
+            .user-list { 
+                max-height: 120px; 
+                overflow-y: auto;
+                border-bottom: 1px solid #333;
+            }
+            
+            .player-visual-container { display: none; } /* Hide video on mobile to save space */
         }
+
         ::-webkit-scrollbar { width: 6px; } 
         ::-webkit-scrollbar-track { background: #111; } 
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
@@ -133,10 +172,13 @@
                 </div>
 
                 <div class="custom-music-controls" id="custom-music-box">
-                    <div style="color: #666; font-size: 10px; margin-bottom: 5px;">ADD SONG (MP3 OR YOUTUBE)</div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span style="color: #666; font-size: 10px;">ADD SONG</span>
+                        <span id="close-custom-btn" style="color: #f00; cursor: pointer; font-size: 10px; font-weight: bold;">[X]</span>
+                    </div>
                     <input type="text" id="custom-title" class="custom-input" placeholder="Song Title">
-                    <input type="text" id="custom-url" class="custom-input" placeholder="URL (mp3 or youtube link)">
-                    <button id="add-song-btn" style="width: 100%; background: #333; color: #fff; border: 1px solid #444; cursor: pointer; font-size: 10px;">+ ADD TO PLAYLIST</button>
+                    <input type="text" id="custom-url" class="custom-input" placeholder="URL (mp3/youtube)">
+                    <button id="add-song-btn" style="width: 100%; background: #333; color: #fff; border: 1px solid #444; cursor: pointer; font-size: 10px; padding: 4px;">+ SAVE</button>
                     <div id="custom-msg" style="color: green; font-size: 9px; display:none; margin-top:3px;">Saved!</div>
                 </div>
             </aside>
@@ -270,11 +312,12 @@
         els.send.onclick = sendMsg; els.input.onkeypress = (e) => { if(e.key==='Enter') sendMsg(); };
 
         /* =========================================
-           HYBRID PLAYER LOGIC
+           HYBRID PLAYER LOGIC (MP3 + YOUTUBE)
            ========================================= */
         let ytPlayer = null;
         let isYoutubeReady = false;
         
+        // YouTube API
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         const firstScriptTag = document.getElementsByTagName('script')[0];
@@ -306,6 +349,7 @@
             let cIdx = 0;
             let currentMode = 'mp3';
 
+            // UI Refs
             const audio = $('audio-player');
             const mTit = $('mini-track-info');
             const mPlay = $('mini-play');
@@ -314,17 +358,22 @@
             const inpUrl = $('custom-url');
             const btnAdd = $('add-song-btn');
             const msgCustom = $('custom-msg');
+            
+            // Toggle UI Refs
             const btnToggle = $('toggle-custom-btn');
+            const btnClose = $('close-custom-btn');
             const divCustom = $('custom-music-box');
 
-            // --- TOGGLE HANDLER ---
+            // --- TOGGLE HANDLERS ---
             btnToggle.onclick = () => {
                 const isHidden = (window.getComputedStyle(divCustom).display === 'none');
                 divCustom.style.display = isHidden ? 'block' : 'none';
-                // Auto scroll into view on mobile
-                if(isHidden) divCustom.scrollIntoView({ behavior: 'smooth' });
+                if(isHidden) setTimeout(() => divCustom.scrollIntoView({ behavior: 'smooth' }), 100);
             };
+            
+            btnClose.onclick = () => { divCustom.style.display = 'none'; };
 
+            // --- PLAYER LOGIC ---
             function getLinkData(url) {
                 const ytReg = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
                 const ytMatch = url.match(ytReg);
