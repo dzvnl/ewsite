@@ -26,24 +26,73 @@
         .chat-wrapper { display: flex; flex: 1; min-height: 0; overflow: hidden; }
         
         /* --- MAIN CHAT --- */
-        .chat-main { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #333; background: #111; min-width: 0; }
+        .chat-main { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #333; background: #111; min-width: 0; position: relative; }
         .chat-header-bar { background: #666; color: #fff; padding: 5px 10px; font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         .filler-pattern { letter-spacing: 2px; color: #ccc; font-family: monospace; }
         .chat-log { flex: 1; overflow-y: auto; padding: 10px; background: #000; scroll-behavior: smooth; }
         
         /* MESSAGES */
-        .message { margin-bottom: 8px; word-wrap: break-word; }
+        .message { margin-bottom: 12px; word-wrap: break-word; position: relative; }
+        
+        /* NEW: Founder Badge */
+        .founder-badge { 
+            display: block; 
+            font-size: 9px; 
+            color: #fff; 
+            font-weight: 900; 
+            letter-spacing: 1px; 
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 2px rgba(255,255,255,0.5);
+        }
+
+        /* NEW: Reply Context inside messages */
+        .reply-context-display {
+            border-left: 2px solid #555;
+            padding-left: 6px;
+            margin-bottom: 4px;
+            color: #777;
+            font-size: 10px;
+            font-style: italic;
+        }
+
         .msg-time { color: #555; font-size: 10px; margin-right: 5px; }
-        .msg-user { color: #fff; font-weight: bold; margin-right: 2px; }
+        
+        /* UPDATED: User Pointer */
+        .msg-user { color: #fff; font-weight: bold; margin-right: 2px; cursor: pointer; }
+        .msg-user:hover { text-decoration: underline; color: #ddd; }
+
         .msg-text { color: #ccc; }
         .msg-system { color: #facc15; font-style: italic; }
         .msg-alert { color: #f00; font-weight: bold; }
         .msg-notification { color: #0ff; font-weight: bold; border: 1px dashed #0ff; padding: 2px; cursor: pointer; }
         .chat-media { display: block; max-width: 100%; max-height: 200px; margin-top: 5px; border: 1px solid #333; }
-        .delete-btn { display: none; color: #f00; cursor: pointer; margin-right: 5px; }
-        .message:hover .delete-btn { display: inline; }
+        
+        /* ACTION BUTTONS (Delete & Reply) */
+        .msg-actions { display: none; float: right; margin-left: 5px; }
+        .message:hover .msg-actions { display: inline-block; }
+        .action-icon { cursor: pointer; margin-left: 5px; font-size: 10px; }
+        .delete-btn { color: #f00; }
+        .reply-btn { color: #0af; font-weight: bold; font-size: 14px; line-height: 10px;}
 
-        .chat-input-area { background: #222; padding: 8px; border-top: 1px solid #333; display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+        /* INPUT AREA */
+        .input-wrapper { flex-shrink: 0; background: #222; border-top: 1px solid #333; }
+        
+        /* NEW: Reply Bar above input */
+        .reply-bar { 
+            background: #1a1a1a; 
+            color: #aaa; 
+            padding: 6px 10px; 
+            font-size: 11px; 
+            border-bottom: 1px solid #333; 
+            display: none; /* Hidden by default */
+            justify-content: space-between; 
+            align-items: center;
+        }
+        .reply-info { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%; }
+        .reply-close { color: #f00; cursor: pointer; font-weight: bold; padding: 0 5px; }
+
+        .chat-input-area { padding: 8px; display: flex; gap: 8px; align-items: center; }
         .chat-input { flex: 1; background: #000; border: 1px solid #444; color: #fff; padding: 8px; border-radius: 4px; font-size: 14px; }
         .action-btn, .send-btn { background: #333; color: #fff; border: 1px solid #444; height: 34px; font-weight: bold; cursor: pointer; padding: 0 15px; border-radius: 4px; }
 
@@ -55,7 +104,7 @@
             flex-direction: column; 
             border-left: 1px solid #333; 
             flex-shrink: 0; 
-            overflow: hidden; /* Desktop: internal scrolling */
+            overflow: hidden; 
         }
         .sidebar-search { padding: 5px; background: #000; border-bottom: 1px solid #333; }
         .search-input { width: 100%; background: #222; border: 1px solid #444; color: #fff; padding: 4px; font-size: 12px; }
@@ -87,7 +136,7 @@
         .mini-controls { display: flex; justify-content: center; gap: 5px; margin-bottom: 5px; }
         .mini-btn { background: #333; border: 1px solid #444; color: #fff; width: 30px; height: 25px; cursor: pointer; }
         
-        /* CUSTOM MUSIC FORM (Hidden by default) */
+        /* CUSTOM MUSIC FORM */
         .custom-music-controls { 
             display: none; 
             padding: 10px; border-top: 1px solid #333; background: #000; 
@@ -98,28 +147,17 @@
         /* --- MOBILE FIXES --- */
         @media (max-width: 768px) {
             .chat-wrapper { flex-direction: column; }
-            
-            /* Chat takes 60% */
             .chat-main { height: 60%; flex: none; }
-            
-            /* Sidebar takes rest, and SCROLLS AS A WHOLE BLOCK */
             .chat-sidebar { 
                 width: 100%; 
                 flex: 1; 
                 border-left: none; 
                 border-top: 1px solid #333; 
-                overflow-y: auto; /* <--- CRITICAL FIX */
+                overflow-y: auto; 
                 display: block;
             }
-            
-            /* Limit user list so we can see player */
-            .user-list { 
-                max-height: 120px; 
-                overflow-y: auto;
-                border-bottom: 1px solid #333;
-            }
-            
-            .player-visual-container { display: none; } /* Hide video on mobile to save space */
+            .user-list { max-height: 120px; overflow-y: auto; border-bottom: 1px solid #333; }
+            .player-visual-container { display: none; }
         }
 
         ::-webkit-scrollbar { width: 6px; } 
@@ -142,11 +180,19 @@
                 <div class="chat-log" id="chat-log">
                     <div class="message"><span class="msg-time">[SYSTEM]</span> <span class="msg-system">connecting...</span></div>
                 </div>
-                <div class="chat-input-area">
-                    <input type="file" id="media-input" accept="image/*,video/*" style="display: none;">
-                    <button class="action-btn" id="upload-trigger" title="Upload">[+]</button>
-                    <input type="text" class="chat-input" id="message-input" placeholder="Message..." autocomplete="off">
-                    <button class="send-btn" id="send-btn">SEND</button>
+                
+                <div class="input-wrapper">
+                    <div id="reply-bar" class="reply-bar">
+                        <span id="reply-info" class="reply-info">Replying...</span>
+                        <span id="reply-close" class="reply-close">[x]</span>
+                    </div>
+
+                    <div class="chat-input-area">
+                        <input type="file" id="media-input" accept="image/*,video/*" style="display: none;">
+                        <button class="action-btn" id="upload-trigger" title="Upload">[+]</button>
+                        <input type="text" class="chat-input" id="message-input" placeholder="Message..." autocomplete="off">
+                        <button class="send-btn" id="send-btn">SEND</button>
+                    </div>
                 </div>
             </main>
 
@@ -191,13 +237,18 @@
         // --- CONFIG & UTILS ---
         const firebaseConfig={apiKey:"AIzaSyAlUyqTb9onQ0PyOxLfZkDddeSnYdB2PlQ",authDomain:"ewsitechat.firebaseapp.com",databaseURL:"https://ewsitechat-default-rtdb.firebaseio.com",projectId:"ewsitechat",storageBucket:"ewsitechat.firebasestorage.app",messagingSenderId:"282495574514",appId:"1:282495574514:web:e2781da630d93fc1ce8b6b",measurementId:"G-GTN3TL1P2K"};
         if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db=firebase.database(), auth=firebase.auth(), ADMINS=["root","futtbucker67"];
-        
+        const db=firebase.database(), auth=firebase.auth();
+        const ADMINS=["root","futtbucker67"];
+        const FOUNDERS=["root","futtbucker67"]; // Founder List
+
         const $ = (id) => document.getElementById(id);
-        const els = { input: $('message-input'), send: $('send-btn'), log: $('chat-log'), list: $('user-list'), count: $('user-count'), media: $('media-input'), upBtn: $('upload-trigger'), search: $('user-search') };
+        const els = { input: $('message-input'), send: $('send-btn'), log: $('chat-log'), list: $('user-list'), count: $('user-count'), media: $('media-input'), upBtn: $('upload-trigger'), search: $('user-search'), replyBar: $('reply-bar'), replyInfo: $('reply-info'), replyClose: $('reply-close') };
         
         let myName = localStorage.getItem('username'), myUid = null;
         let allUsers = {}, onlineStatus = {};
+        
+        // --- REPLY STATE ---
+        let currentReplyData = null; // { user: string, text: string, id: string }
 
         // --- CHECK LOGIN STATUS ---
         if(!myName || !myName.trim()) window.location.href = "register.html";
@@ -241,26 +292,59 @@
                 const li = document.createElement('li'); li.className = u.isOnline ? 'online' : 'offline';
                 const a = document.createElement('a'); a.textContent = u.username;
                 a.className = "user-link" + (u.username === myName ? " is-me" : "");
-                a.href = (u.username === myName) ? "#" : `profile.html?user=${u.username}`;
+                // FEATURE 1: Click to Profile
+                a.href = `profile.html?user=${u.username}`; 
                 li.appendChild(a); frag.appendChild(li);
             });
             els.list.innerHTML = ''; els.list.appendChild(frag);
             els.count.textContent = `online: ${onCount}`;
         }
         els.search.addEventListener('input', updateList);
+
         function initChat() {
             db.ref('messages').limitToLast(100).on('child_added', s => {
                 const d = s.val();
-                if(d && d.timestamp) addMsg(d.username, d.text, d.username===myName, false, d.timestamp, s.key, d.mediaType, d.mediaData);
+                if(d && d.timestamp) {
+                    // Added: Pass replyTo info to addMsg
+                    addMsg(d.username, d.text, d.username===myName, false, d.timestamp, s.key, d.mediaType, d.mediaData, d.replyTo);
+                }
             });
             db.ref('messages').on('child_removed', s => { const el = document.getElementById(`msg-${s.key}`); if(el) el.remove(); });
         }
+
+        // --- REPLY FUNCTIONS ---
+        window.triggerReply = (user, text) => {
+            currentReplyData = { user: user, text: text || "[Media]" };
+            els.replyInfo.textContent = `Replying to ${user}: ${currentReplyData.text}`;
+            els.replyBar.style.display = 'flex';
+            els.input.focus();
+        };
+        
+        els.replyClose.onclick = () => {
+            currentReplyData = null;
+            els.replyBar.style.display = 'none';
+        };
+
         function sendMsg() {
             const txt = els.input.value.trim(); if(!txt) return;
             if(txt.startsWith('/') && ADMINS.includes(myName)) { handleCmd(txt); els.input.value=''; return; }
-            db.ref('messages').push({ username: myName, text: txt, timestamp: firebase.database.ServerValue.TIMESTAMP });
+            
+            const msgData = { 
+                username: myName, 
+                text: txt, 
+                timestamp: firebase.database.ServerValue.TIMESTAMP 
+            };
+            
+            // Add reply data if active
+            if(currentReplyData) {
+                msgData.replyTo = currentReplyData;
+                els.replyClose.click(); // Reset reply state
+            }
+
+            db.ref('messages').push(msgData);
             els.input.value = '';
         }
+
         els.upBtn.onclick = () => els.media.click();
         els.media.onchange = (e) => {
             const f = e.target.files[0]; if(!f || f.size > 2097152) return alert("Max 2MB");
@@ -268,20 +352,56 @@
             r.onload = (ev) => db.ref('messages').push({ username:myName, text:"", mediaType:(f.type.startsWith('image')?'image':'video'), mediaData:ev.target.result, timestamp:firebase.database.ServerValue.TIMESTAMP });
             r.readAsDataURL(f); els.media.value="";
         };
-        function addMsg(user, text, isMe, isSys, time=Date.now(), id=null, mType=null, mData=null) {
+
+        function addMsg(user, text, isMe, isSys, time=Date.now(), id=null, mType=null, mData=null, replyTo=null) {
             const div = document.createElement('div'); div.className='message'; if(id) div.id=`msg-${id}`;
             const ts = new Date(time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-            if(text && text.startsWith('***')) { div.innerHTML = `<span class="msg-time">[${ts}]</span> <span class="msg-alert">${text}</span>`; }
-            else if(isSys) { div.innerHTML = `<span class="msg-time">[${ts}]</span> <span class="msg-system">${text}</span>`; }
-            else {
+            
+            if(text && text.startsWith('***')) { 
+                div.innerHTML = `<span class="msg-time">[${ts}]</span> <span class="msg-alert">${text}</span>`; 
+            } else if(isSys) { 
+                div.innerHTML = `<span class="msg-time">[${ts}]</span> <span class="msg-system">${text}</span>`; 
+            } else {
+                // FEATURE 3: Founder Badge
+                let founderHtml = "";
+                if(FOUNDERS.includes(user)) {
+                    founderHtml = `<div class="founder-badge">FOUNDER</div>`;
+                }
+
+                // FEATURE 2a: Reply Context Display
+                let replyHtml = "";
+                if(replyTo) {
+                    replyHtml = `<div class="reply-context-display">Replying to ${replyTo.user}: ${replyTo.text}</div>`;
+                }
+
                 let content = text ? `<span class="msg-text">${text}</span>` : "";
                 if(mType && mData) content += (mType==='image' ? `<img src="${mData}" class="chat-media">` : `<video src="${mData}" class="chat-media" controls></video>`);
-                const del = (ADMINS.includes(myName) && id) ? `<span class="delete-btn" onclick="delMsg('${id}')">[x]</span>` : "";
+                
+                // Actions container (Delete + Reply)
+                const delBtn = (ADMINS.includes(myName) && id) ? `<span class="action-icon delete-btn" onclick="delMsg('${id}')">[x]</span>` : "";
+                
+                // Escape text for JS function safely
+                const safeText = text ? text.replace(/'/g, "\\'").replace(/"/g, '&quot;') : "";
+                // FEATURE 2b: Reply Button
+                const replyBtn = `<span class="action-icon reply-btn" onclick="triggerReply('${user}', '${safeText}')" title="Reply">↰</span>`;
+                
                 const style = (!isMe) ? "color:#888;" : "";
-                div.innerHTML = `${del}<span class="msg-time">[${ts}]</span> <span class="msg-user" style="${style}">${user}:</span> ${content}`;
+                
+                // FEATURE 1: Clickable User
+                const userHtml = `<span class="msg-user" style="${style}" onclick="window.location.href='profile.html?user=${user}'">${user}:</span>`;
+
+                div.innerHTML = `
+                    ${founderHtml}
+                    ${replyHtml}
+                    <span class="msg-time">[${ts}]</span> 
+                    ${userHtml} 
+                    ${content}
+                    <div class="msg-actions">${replyBtn}${delBtn}</div>
+                `;
             }
             els.log.appendChild(div); els.log.scrollTop = els.log.scrollHeight;
         }
+
         function handleCmd(str) {
             const [c, dur, tgt] = str.split(' '); if(!tgt) return;
             const tid = Object.keys(allUsers).find(k => allUsers[k].username===tgt);
