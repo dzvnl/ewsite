@@ -182,6 +182,18 @@
             color: #000;
         }
 
+        /* --- LOGOUT BUTTON --- */
+        .btn-logout {
+            margin-top: 15px;
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+        .btn-logout:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+
         .status-msg {
             text-align: center;
             margin-top: 15px;
@@ -339,6 +351,8 @@
             <button id="btn-save">Save Changes</button>
         </div>
 
+        <button id="btn-logout" class="btn-logout">LOG OUT</button>
+
         <div id="status" class="status-msg"></div>
 
     </div>
@@ -420,6 +434,14 @@
         
         document.getElementById('btn-back').addEventListener('click', () => {
             window.location.href = 'index.html';
+        });
+
+        // --- LOGOUT LOGIC ---
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            // Clear the session identifier
+            localStorage.removeItem('username');
+            // Redirect to login page
+            window.location.href = 'login.html';
         });
 
         document.getElementById('btn-save').addEventListener('click', async () => {
